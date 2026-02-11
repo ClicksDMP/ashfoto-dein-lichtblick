@@ -151,7 +151,7 @@ const AdminCalendar = ({ bookings, onUpdateBooking, onDeleteBooking, onCancelBoo
   return (
     <div className="grid md:grid-cols-[auto_1fr] gap-8">
       {/* Calendar */}
-      <div className="bg-card rounded-xl p-4 shadow-card self-start [&_.rdp-day]:text-foreground [&_.rdp-head_cell]:text-muted-foreground [&_.rdp-caption_label]:text-foreground [&_.rdp-nav_button]:text-foreground">
+      <div className="bg-card rounded-xl p-4 shadow-card self-start [&_.rdp-day]:text-foreground [&_.rdp-head_cell]:text-muted-foreground [&_.rdp-caption_label]:text-foreground [&_.rdp-nav_button]:text-foreground [&_.rdp-day_today]:bg-accent [&_.rdp-day_today]:text-accent-foreground [&_.rdp-button]:text-foreground [&_.rdp-button:hover]:bg-accent/50">
         <Calendar
           mode="single"
           selected={selectedDate}
