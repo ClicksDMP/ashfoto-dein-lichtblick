@@ -9,7 +9,6 @@ import { Textarea } from "@/components/ui/textarea";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { format } from "date-fns";
-import { de } from "date-fns/locale";
 import { LogOut, Users, Calendar, Tag, Search, RefreshCw, CalendarDays } from "lucide-react";
 import type { Tables } from "@/integrations/supabase/types";
 import AdminCalendar from "@/components/admin/AdminCalendar";
@@ -100,25 +99,25 @@ const AdminDashboard = () => {
 
   const formatPrice = (p: number) => p.toFixed(2).replace(".", ",") + " €";
 
-  if (loading) return <div className="min-h-screen flex items-center justify-center bg-background"><p>Laden...</p></div>;
+  if (loading) return <div className="dark min-h-screen flex items-center justify-center bg-background"><p className="text-foreground">Loading...</p></div>;
 
   return (
-    <div className="min-h-screen bg-background">
+    <div className="dark min-h-screen bg-background">
       <header className="bg-card border-b border-border px-6 py-4 flex items-center justify-between">
         <h1 className="font-display text-2xl font-bold text-foreground">Admin Dashboard</h1>
         <div className="flex items-center gap-4">
-          <Button variant="ghost" onClick={() => navigate("/")}>Zur Website</Button>
-          <Button variant="outline" size="sm" onClick={signOut}><LogOut className="w-4 h-4 mr-2" />Abmelden</Button>
+          <Button variant="ghost" onClick={() => navigate("/")}>Go to Website</Button>
+          <Button variant="outline" size="sm" onClick={signOut}><LogOut className="w-4 h-4 mr-2" />Sign Out</Button>
         </div>
       </header>
 
       <div className="container mx-auto px-6 py-8 max-w-7xl">
         <Tabs defaultValue="calendar">
           <TabsList className="mb-6">
-            <TabsTrigger value="calendar" className="gap-2"><CalendarDays className="w-4 h-4" />Kalender</TabsTrigger>
-            <TabsTrigger value="bookings" className="gap-2"><Calendar className="w-4 h-4" />Buchungen</TabsTrigger>
-            <TabsTrigger value="clients" className="gap-2"><Users className="w-4 h-4" />Kunden</TabsTrigger>
-            <TabsTrigger value="offers" className="gap-2"><Tag className="w-4 h-4" />Angebote</TabsTrigger>
+            <TabsTrigger value="calendar" className="gap-2"><CalendarDays className="w-4 h-4" />Calendar</TabsTrigger>
+            <TabsTrigger value="bookings" className="gap-2"><Calendar className="w-4 h-4" />Bookings</TabsTrigger>
+            <TabsTrigger value="clients" className="gap-2"><Users className="w-4 h-4" />Clients</TabsTrigger>
+            <TabsTrigger value="offers" className="gap-2"><Tag className="w-4 h-4" />Offers</TabsTrigger>
           </TabsList>
 
           {/* CALENDAR TAB */}
@@ -136,27 +135,27 @@ const AdminDashboard = () => {
             <div className="flex items-center gap-4 mb-4">
               <div className="relative flex-1 max-w-sm">
                 <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
-                <Input placeholder="Suchen..." value={searchTerm} onChange={e => setSearchTerm(e.target.value)} className="pl-10" />
+                <Input placeholder="Search..." value={searchTerm} onChange={e => setSearchTerm(e.target.value)} className="pl-10" />
               </div>
-              <p className="text-sm text-muted-foreground">{filteredBookings.length} Buchungen</p>
+              <p className="text-sm text-muted-foreground">{filteredBookings.length} bookings</p>
             </div>
             <div className="bg-card rounded-xl shadow-card overflow-hidden">
               <Table>
                 <TableHeader>
                   <TableRow>
-                    <TableHead>Datum</TableHead>
+                    <TableHead>Date</TableHead>
                     <TableHead>Name</TableHead>
-                    <TableHead>Shooting</TableHead>
-                    <TableHead>Termin</TableHead>
-                    <TableHead>Preis</TableHead>
+                    <TableHead>Session</TableHead>
+                    <TableHead>Appointment</TableHead>
+                    <TableHead>Price</TableHead>
                     <TableHead>Status</TableHead>
-                    <TableHead>Aktionen</TableHead>
+                    <TableHead>Actions</TableHead>
                   </TableRow>
                 </TableHeader>
                 <TableBody>
                   {filteredBookings.map(b => (
                     <TableRow key={b.id}>
-                      <TableCell className="text-sm">{format(new Date(b.created_at), "dd.MM.yyyy", { locale: de })}</TableCell>
+                      <TableCell className="text-sm">{format(new Date(b.created_at), "MM/dd/yyyy")}</TableCell>
                       <TableCell>
                         <div>
                           <p className="font-medium">{b.first_name} {b.last_name}</p>
@@ -165,15 +164,15 @@ const AdminDashboard = () => {
                       </TableCell>
                       <TableCell className="text-sm">{b.service}</TableCell>
                       <TableCell className="text-sm">
-                        {b.booking_date ? format(new Date(b.booking_date), "dd.MM.yyyy", { locale: de }) : "-"}{" "}
+                        {b.booking_date ? format(new Date(b.booking_date), "MM/dd/yyyy") : "-"}{" "}
                         {b.booking_time || ""}
                       </TableCell>
                       <TableCell className="font-medium">{formatPrice(b.total_price)}</TableCell>
                       <TableCell>
                         <span className={`px-2 py-1 rounded-full text-xs font-medium ${
-                          b.status === "confirmed" ? "bg-green-100 text-green-800" :
-                          b.status === "cancelled" ? "bg-red-100 text-red-800" :
-                          "bg-yellow-100 text-yellow-800"
+                          b.status === "confirmed" ? "bg-green-900/30 text-green-400" :
+                          b.status === "cancelled" ? "bg-red-900/30 text-red-400" :
+                          "bg-yellow-900/30 text-yellow-400"
                         }`}>{b.status}</span>
                       </TableCell>
                       <TableCell>
@@ -181,14 +180,14 @@ const AdminDashboard = () => {
                           <Button size="sm" variant="ghost" onClick={() => updateBookingStatus(b.id, "confirmed")}>✓</Button>
                           <Button size="sm" variant="ghost" onClick={() => updateBookingStatus(b.id, "cancelled")}>✗</Button>
                           <Button size="sm" variant="ghost" className="text-destructive" onClick={() => {
-                            if (confirm("Buchung endgültig löschen?")) deleteBooking(b.id);
+                            if (confirm("Permanently delete this booking?")) deleteBooking(b.id);
                           }}>🗑</Button>
                         </div>
                       </TableCell>
                     </TableRow>
                   ))}
                   {filteredBookings.length === 0 && (
-                    <TableRow><TableCell colSpan={7} className="text-center py-8 text-muted-foreground">Keine Buchungen gefunden</TableCell></TableRow>
+                    <TableRow><TableCell colSpan={7} className="text-center py-8 text-muted-foreground">No bookings found</TableCell></TableRow>
                   )}
                 </TableBody>
               </Table>
@@ -204,43 +203,43 @@ const AdminDashboard = () => {
           <TabsContent value="offers">
             <div className="grid md:grid-cols-2 gap-8">
               <div className="bg-card rounded-xl p-6 shadow-card space-y-4">
-                <h3 className="font-display text-xl font-bold text-foreground">Neues Angebot erstellen</h3>
+                <h3 className="font-display text-xl font-bold text-foreground">Create New Offer</h3>
                 <div>
-                  <Label>Titel</Label>
+                  <Label>Title</Label>
                   <Input value={newOffer.title} onChange={e => setNewOffer(p => ({ ...p, title: e.target.value }))} className="mt-1" />
                 </div>
                 <div>
-                  <Label>Beschreibung</Label>
+                  <Label>Description</Label>
                   <Textarea value={newOffer.description} onChange={e => setNewOffer(p => ({ ...p, description: e.target.value }))} className="mt-1" />
                 </div>
                 <div className="grid grid-cols-2 gap-4">
                   <div>
-                    <Label>Rabatt %</Label>
+                    <Label>Discount %</Label>
                     <Input type="number" value={newOffer.discount_percent} onChange={e => setNewOffer(p => ({ ...p, discount_percent: e.target.value }))} className="mt-1" />
                   </div>
                   <div>
-                    <Label>Rabatt € (Betrag)</Label>
+                    <Label>Discount € (Amount)</Label>
                     <Input type="number" value={newOffer.discount_amount} onChange={e => setNewOffer(p => ({ ...p, discount_amount: e.target.value }))} className="mt-1" />
                   </div>
                 </div>
                 <div>
                   <Label>Code</Label>
                   <div className="flex gap-2 mt-1">
-                    <Input value={newOffer.code} onChange={e => setNewOffer(p => ({ ...p, code: e.target.value.toUpperCase() }))} placeholder="16-stelliger Code" className="font-mono tracking-wider" />
-                    <Button type="button" variant="outline" size="icon" onClick={generateCode} title="Code generieren">
+                    <Input value={newOffer.code} onChange={e => setNewOffer(p => ({ ...p, code: e.target.value.toUpperCase() }))} placeholder="16-character code" className="font-mono tracking-wider" />
+                    <Button type="button" variant="outline" size="icon" onClick={generateCode} title="Generate code">
                       <RefreshCw className="w-4 h-4" />
                     </Button>
                   </div>
                 </div>
                 <div>
-                  <Label>Gültig bis</Label>
+                  <Label>Valid Until</Label>
                   <Input type="date" value={newOffer.valid_until} onChange={e => setNewOffer(p => ({ ...p, valid_until: e.target.value }))} className="mt-1" />
                 </div>
-                <Button variant="booking" onClick={createOffer}>Angebot erstellen</Button>
+                <Button variant="booking" onClick={createOffer}>Create Offer</Button>
               </div>
 
               <div className="space-y-4">
-                <h3 className="font-display text-xl font-bold text-foreground">Aktive Angebote</h3>
+                <h3 className="font-display text-xl font-bold text-foreground">Active Offers</h3>
                 {offers.filter(o => o.source !== "welcome_discount").map(o => (
                   <div key={o.id} className="bg-card rounded-xl p-4 shadow-soft border border-border">
                     <div className="flex justify-between items-start">
@@ -248,29 +247,29 @@ const AdminDashboard = () => {
                         <p className="font-semibold text-foreground">{o.title}</p>
                         <p className="text-sm text-muted-foreground">{o.description}</p>
                         {o.code && <p className="text-sm font-mono mt-1 text-primary">Code: {o.code}</p>}
-                        {o.discount_percent && <p className="text-sm text-primary">{o.discount_percent}% Rabatt</p>}
+                        {o.discount_percent && <p className="text-sm text-primary">{o.discount_percent}% discount</p>}
                       </div>
                       <Button variant="ghost" size="sm" onClick={() => deleteOffer(o.id)}>✗</Button>
                     </div>
                   </div>
                 ))}
-                {offers.filter(o => o.source !== "welcome_discount").length === 0 && <p className="text-muted-foreground text-sm">Keine Angebote vorhanden</p>}
+                {offers.filter(o => o.source !== "welcome_discount").length === 0 && <p className="text-muted-foreground text-sm">No offers available</p>}
               </div>
             </div>
 
             {/* Welcome Codes Tracking */}
             <div className="mt-10">
-              <h3 className="font-display text-xl font-bold text-foreground mb-4">Willkommenscodes (10% Rabatt)</h3>
+              <h3 className="font-display text-xl font-bold text-foreground mb-4">Welcome Codes (10% Discount)</h3>
               <div className="bg-card rounded-xl shadow-card overflow-hidden">
                 <Table>
                   <TableHeader>
                     <TableRow>
-                      <TableHead>Erstellt am</TableHead>
-                      <TableHead>Kunde</TableHead>
+                      <TableHead>Created</TableHead>
+                      <TableHead>Client</TableHead>
                       <TableHead>Code</TableHead>
-                      <TableHead>Gültig bis</TableHead>
+                      <TableHead>Valid Until</TableHead>
                       <TableHead>Status</TableHead>
-                      <TableHead>Verwendet am</TableHead>
+                      <TableHead>Used On</TableHead>
                     </TableRow>
                   </TableHeader>
                   <TableBody>
@@ -280,7 +279,7 @@ const AdminDashboard = () => {
                       const customer = bookings.find(b => b.user_id === o.target_user_id);
                       return (
                         <TableRow key={o.id}>
-                          <TableCell className="text-sm">{format(new Date(o.created_at), "dd.MM.yyyy", { locale: de })}</TableCell>
+                          <TableCell className="text-sm">{format(new Date(o.created_at), "MM/dd/yyyy")}</TableCell>
                           <TableCell>
                             {customer ? (
                               <div>
@@ -293,25 +292,25 @@ const AdminDashboard = () => {
                           </TableCell>
                           <TableCell className="font-mono text-sm">{o.code}</TableCell>
                           <TableCell className="text-sm">
-                            {o.valid_until ? format(new Date(o.valid_until), "dd.MM.yyyy", { locale: de }) : "-"}
+                            {o.valid_until ? format(new Date(o.valid_until), "MM/dd/yyyy") : "-"}
                           </TableCell>
                           <TableCell>
                             <span className={`px-2 py-1 rounded-full text-xs font-medium ${
-                              isUsed ? "bg-green-100 text-green-800" :
-                              isExpired ? "bg-red-100 text-red-800" :
-                              "bg-yellow-100 text-yellow-800"
+                              isUsed ? "bg-green-900/30 text-green-400" :
+                              isExpired ? "bg-red-900/30 text-red-400" :
+                              "bg-yellow-900/30 text-yellow-400"
                             }`}>
-                              {isUsed ? "Verwendet" : isExpired ? "Abgelaufen" : "Aktiv"}
+                              {isUsed ? "Used" : isExpired ? "Expired" : "Active"}
                             </span>
                           </TableCell>
                           <TableCell className="text-sm">
-                            {o.used_at ? format(new Date(o.used_at), "dd.MM.yyyy", { locale: de }) : "-"}
+                            {o.used_at ? format(new Date(o.used_at), "MM/dd/yyyy") : "-"}
                           </TableCell>
                         </TableRow>
                       );
                     })}
                     {offers.filter(o => o.source === "welcome_discount").length === 0 && (
-                      <TableRow><TableCell colSpan={6} className="text-center py-8 text-muted-foreground">Keine Willkommenscodes vergeben</TableCell></TableRow>
+                      <TableRow><TableCell colSpan={6} className="text-center py-8 text-muted-foreground">No welcome codes issued</TableCell></TableRow>
                     )}
                   </TableBody>
                 </Table>

@@ -1,7 +1,7 @@
 import { useState, useMemo, useEffect } from "react";
 import { Calendar } from "@/components/ui/calendar";
 import { format, isSameDay, parseISO } from "date-fns";
-import { de } from "date-fns/locale";
+import { enUS } from "date-fns/locale";
 import { Button } from "@/components/ui/button";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
@@ -105,7 +105,7 @@ const AdminCalendar = ({ bookings, onUpdateBooking, onDeleteBooking, onCancelBoo
     await supabase.from("blocked_slots").insert({
       blocked_date: selectedDateStr,
       blocked_time: null,
-      reason: blockReason || "Ganzer Tag gesperrt",
+      reason: blockReason || "Full day blocked",
     });
     setBlockReason("");
     fetchBlockedSlots();
@@ -126,7 +126,7 @@ const AdminCalendar = ({ bookings, onUpdateBooking, onDeleteBooking, onCancelBoo
       await supabase.from("blocked_slots").insert({
         blocked_date: selectedDateStr,
         blocked_time: slot,
-        reason: "Zeitfenster gesperrt",
+        reason: "Time slot blocked",
       });
     }
     fetchBlockedSlots();
@@ -143,9 +143,9 @@ const AdminCalendar = ({ bookings, onUpdateBooking, onDeleteBooking, onCancelBoo
   };
 
   const statusColor = (status: string) => {
-    if (status === "confirmed") return "bg-green-100 text-green-800";
-    if (status === "cancelled") return "bg-red-100 text-red-800";
-    return "bg-yellow-100 text-yellow-800";
+    if (status === "confirmed") return "bg-green-900/30 text-green-400";
+    if (status === "cancelled") return "bg-red-900/30 text-red-400";
+    return "bg-yellow-900/30 text-yellow-400";
   };
 
   return (
@@ -156,7 +156,7 @@ const AdminCalendar = ({ bookings, onUpdateBooking, onDeleteBooking, onCancelBoo
           mode="single"
           selected={selectedDate}
           onSelect={(d) => d && setSelectedDate(d)}
-          locale={de}
+          locale={enUS}
           modifiers={{
             booked: (date) => bookedDates.has(format(date, "yyyy-MM-dd")),
             blocked: (date) => blockedDates.has(format(date, "yyyy-MM-dd")),
@@ -169,36 +169,36 @@ const AdminCalendar = ({ bookings, onUpdateBooking, onDeleteBooking, onCancelBoo
         <div className="mt-3 space-y-1 text-xs text-muted-foreground px-2">
           <div className="flex items-center gap-2">
             <span className="w-3 h-3 rounded-full bg-primary/20 inline-block" />
-            <span>Tage mit Terminen</span>
+            <span>Days with appointments</span>
           </div>
           <div className="flex items-center gap-2">
             <span className="w-3 h-3 rounded-full bg-destructive/20 inline-block" />
-            <span>Gesperrte Tage</span>
+            <span>Blocked days</span>
           </div>
         </div>
       </div>
 
       {/* Day view */}
       <div>
-        <div className="flex items-center justify-between mb-4">
+        <div className="flex items-center justify-between mb-4 flex-wrap gap-2">
           <h3 className="font-display text-xl font-bold text-foreground">
-            {format(selectedDate, "EEEE, dd. MMMM yyyy", { locale: de })}
+            {format(selectedDate, "EEEE, MMMM dd, yyyy", { locale: enUS })}
           </h3>
           <div className="flex gap-2">
             {isDayBlocked ? (
               <Button size="sm" variant="outline" onClick={handleUnblockDay}>
-                <Unlock className="w-4 h-4 mr-1" /> Tag freigeben
+                <Unlock className="w-4 h-4 mr-1" /> Unblock Day
               </Button>
             ) : (
               <div className="flex gap-2 items-center">
                 <Input
-                  placeholder="Grund (optional)"
+                  placeholder="Reason (optional)"
                   value={blockReason}
                   onChange={e => setBlockReason(e.target.value)}
                   className="w-40 h-8 text-sm"
                 />
                 <Button size="sm" variant="destructive" onClick={handleBlockDay}>
-                  <Lock className="w-4 h-4 mr-1" /> Ganzen Tag sperren
+                  <Lock className="w-4 h-4 mr-1" /> Block Full Day
                 </Button>
               </div>
             )}
@@ -207,12 +207,12 @@ const AdminCalendar = ({ bookings, onUpdateBooking, onDeleteBooking, onCancelBoo
 
         {isDayBlocked && (
           <div className="bg-destructive/10 border border-destructive/20 rounded-lg p-4 mb-4">
-            <p className="text-destructive font-medium text-sm">Dieser Tag ist vollständig gesperrt.</p>
+            <p className="text-destructive font-medium text-sm">This day is fully blocked.</p>
           </div>
         )}
 
         {dayBookings.length === 0 && !isDayBlocked ? (
-          <p className="text-muted-foreground text-sm">Keine Termine an diesem Tag.</p>
+          <p className="text-muted-foreground text-sm">No appointments on this day.</p>
         ) : (
           <div className="space-y-3">
             {dayBookings.map(b => (
@@ -233,11 +233,11 @@ const AdminCalendar = ({ bookings, onUpdateBooking, onDeleteBooking, onCancelBoo
                       setEditingBooking(b);
                       setEditDate(b.booking_date || "");
                       setEditTime(b.booking_time || "");
-                    }}>Bearbeiten</Button>
+                    }}>Edit</Button>
                     <Button size="sm" variant="ghost" onClick={() => onUpdateBooking(b.id, { status: "confirmed" })}>✓</Button>
                     <Button size="sm" variant="ghost" className="text-destructive" onClick={() => onCancelBooking(b.id)}>✗</Button>
                     <Button size="sm" variant="ghost" className="text-destructive" onClick={() => {
-                      if (confirm("Buchung endgültig löschen?")) onDeleteBooking(b.id);
+                      if (confirm("Permanently delete this booking?")) onDeleteBooking(b.id);
                     }}><Trash2 className="w-4 h-4" /></Button>
                   </div>
                 </div>
@@ -246,10 +246,10 @@ const AdminCalendar = ({ bookings, onUpdateBooking, onDeleteBooking, onCancelBoo
           </div>
         )}
 
-        {/* Time slot overview - clickable to block/unblock */}
+        {/* Time slot overview */}
         <div className="mt-8">
-          <h4 className="font-semibold text-foreground mb-1 text-sm">Zeitfenster Übersicht</h4>
-          <p className="text-xs text-muted-foreground mb-3">Klicke auf ein Zeitfenster, um es zu sperren oder freizugeben.</p>
+          <h4 className="font-semibold text-foreground mb-1 text-sm">Time Slots Overview</h4>
+          <p className="text-xs text-muted-foreground mb-3">Click a time slot to block or unblock it.</p>
           <div className="grid grid-cols-6 sm:grid-cols-8 gap-2">
             {TIME_SLOTS.map(slot => {
               const isOccupied = occupiedSlots.has(slot);
@@ -264,7 +264,7 @@ const AdminCalendar = ({ bookings, onUpdateBooking, onDeleteBooking, onCancelBoo
                       ? "bg-primary/10 text-primary font-bold cursor-not-allowed"
                       : isBlocked
                         ? "bg-destructive/10 text-destructive line-through cursor-pointer hover:bg-destructive/20"
-                        : "bg-green-50 text-green-700 cursor-pointer hover:bg-green-100"
+                        : "bg-green-900/20 text-green-400 cursor-pointer hover:bg-green-900/30"
                   }`}
                 >
                   {slot}
@@ -273,9 +273,9 @@ const AdminCalendar = ({ bookings, onUpdateBooking, onDeleteBooking, onCancelBoo
             })}
           </div>
           <div className="flex gap-4 mt-3 text-xs text-muted-foreground">
-            <div className="flex items-center gap-1"><span className="w-3 h-3 rounded bg-green-50 inline-block border border-green-200" /> Frei</div>
-            <div className="flex items-center gap-1"><span className="w-3 h-3 rounded bg-primary/10 inline-block border border-primary/20" /> Gebucht</div>
-            <div className="flex items-center gap-1"><span className="w-3 h-3 rounded bg-destructive/10 inline-block border border-destructive/20" /> Gesperrt</div>
+            <div className="flex items-center gap-1"><span className="w-3 h-3 rounded bg-green-900/20 inline-block border border-green-800/30" /> Available</div>
+            <div className="flex items-center gap-1"><span className="w-3 h-3 rounded bg-primary/10 inline-block border border-primary/20" /> Booked</div>
+            <div className="flex items-center gap-1"><span className="w-3 h-3 rounded bg-destructive/10 inline-block border border-destructive/20" /> Blocked</div>
           </div>
         </div>
       </div>
@@ -284,7 +284,7 @@ const AdminCalendar = ({ bookings, onUpdateBooking, onDeleteBooking, onCancelBoo
       <Dialog open={!!editingBooking} onOpenChange={(open) => !open && setEditingBooking(null)}>
         <DialogContent>
           <DialogHeader>
-            <DialogTitle>Termin bearbeiten</DialogTitle>
+            <DialogTitle>Edit Appointment</DialogTitle>
           </DialogHeader>
           {editingBooking && (
             <div className="space-y-4">
@@ -292,25 +292,25 @@ const AdminCalendar = ({ bookings, onUpdateBooking, onDeleteBooking, onCancelBoo
                 {editingBooking.first_name} {editingBooking.last_name} – {editingBooking.service}
               </p>
               <div>
-                <Label>Datum</Label>
+                <Label>Date</Label>
                 <Input type="date" value={editDate} onChange={e => setEditDate(e.target.value)} className="mt-1" />
               </div>
               <div>
-                <Label>Uhrzeit</Label>
+                <Label>Time</Label>
                 <Select value={editTime} onValueChange={setEditTime}>
                   <SelectTrigger className="mt-1">
-                    <SelectValue placeholder="Zeit wählen" />
+                    <SelectValue placeholder="Select time" />
                   </SelectTrigger>
                   <SelectContent>
                     {TIME_SLOTS.map(t => (
-                      <SelectItem key={t} value={t}>{t} Uhr</SelectItem>
+                      <SelectItem key={t} value={t}>{t}</SelectItem>
                     ))}
                   </SelectContent>
                 </Select>
               </div>
               <div className="flex gap-2 justify-end">
-                <Button variant="outline" onClick={() => setEditingBooking(null)}>Abbrechen</Button>
-                <Button variant="booking" onClick={handleEditSave}>Speichern</Button>
+                <Button variant="outline" onClick={() => setEditingBooking(null)}>Cancel</Button>
+                <Button variant="booking" onClick={handleEditSave}>Save</Button>
               </div>
             </div>
           )}
