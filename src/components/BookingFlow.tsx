@@ -950,6 +950,11 @@ const BookingFlow = () => {
                             city: booking.city,
                           }).eq("user_id", userId);
                         }
+
+                        // Send welcome email
+                        supabase.functions.invoke("send-email", {
+                          body: { type: "welcome", to: booking.email, data: { firstName: booking.firstName } },
+                        }).catch(console.error);
                       }
 
                       // Save booking
@@ -975,6 +980,21 @@ const BookingFlow = () => {
                         total_price: totalPrice(),
                       });
                       if (bookingError) throw new Error(bookingError.message);
+
+                      // Send booking confirmation email
+                      supabase.functions.invoke("send-email", {
+                        body: {
+                          type: "booking_confirmation",
+                          to: booking.email,
+                          data: {
+                            firstName: booking.firstName,
+                            service: booking.service,
+                            date: booking.date ? format(booking.date, "PPP", { locale: de }) : "Noch offen",
+                            time: booking.time || "Noch offen",
+                            totalPrice: formatPrice(totalPrice()),
+                          },
+                        },
+                      }).catch(console.error);
 
                       setConfirmed(true);
                     } catch (err: any) {
