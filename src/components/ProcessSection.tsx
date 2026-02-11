@@ -5,15 +5,26 @@ interface ProcessSectionProps {
 }
 
 const steps = [
-  { num: 1, text: "Shooting auswählen" },
-  { num: 2, text: "Teilnehmer angeben" },
-  { num: 3, text: "Dauer auswählen" },
-  { num: 4, text: "Bildpaket wählen" },
-  { num: 5, text: "Termin auswählen" },
-  { num: 6, text: "Daten eingeben" },
-  { num: 7, text: "Buchung bestätigen" },
-  { num: 8, text: "Shooting bei dir vor Ort" },
-  { num: 9, text: "Bilder auswählen und digital erhalten" },
+  {
+    num: 1,
+    title: "Shooting und Teilnehmer",
+    items: ["Shooting auswählen", "Teilnehmer angeben"],
+  },
+  {
+    num: 2,
+    title: "Dauer und Bildpaket",
+    items: ["Dauer auswählen", "Bildpaket wählen"],
+  },
+  {
+    num: 3,
+    title: "Termin und Daten",
+    items: ["Termin auswählen", "Daten eingeben", "Buchung bestätigen"],
+  },
+  {
+    num: 4,
+    title: "Shooting und Ergebnis",
+    items: ["Shooting bei dir vor Ort", "Bilder auswählen und digital erhalten"],
+  },
 ];
 
 const ProcessSection = ({ onCtaClick }: ProcessSectionProps) => {
@@ -29,16 +40,21 @@ const ProcessSection = ({ onCtaClick }: ProcessSectionProps) => {
             So läuft dein Shooting ab
           </h2>
 
-          <div className="grid sm:grid-cols-2 md:grid-cols-3 gap-6 mb-16">
+          <div className="grid sm:grid-cols-2 md:grid-cols-4 gap-6 mb-16">
             {steps.map((step) => (
               <div
                 key={step.num}
                 className="relative bg-card rounded-lg p-6 shadow-soft text-left group hover:shadow-card transition-shadow"
               >
-                <span className="text-3xl font-display font-bold text-accent/60 mb-2 block">
+                <span className="text-3xl font-display font-bold text-accent/60 mb-3 block">
                   {String(step.num).padStart(2, "0")}
                 </span>
-                <p className="text-foreground font-medium">{step.text}</p>
+                <p className="text-foreground font-semibold mb-2">{step.title}</p>
+                <ul className="space-y-1">
+                  {step.items.map((item, i) => (
+                    <li key={i} className="text-muted-foreground text-sm">{item}</li>
+                  ))}
+                </ul>
               </div>
             ))}
           </div>
