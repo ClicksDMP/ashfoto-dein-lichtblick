@@ -23,6 +23,7 @@ const AdminDashboard = () => {
   const [searchTerm, setSearchTerm] = useState("");
   const [offers, setOffers] = useState<Offer[]>([]);
   const [clientFilter, setClientFilter] = useState<"all" | "confirmed" | "unconfirmed">("all");
+  const [clientSearch, setClientSearch] = useState("");
   const [newOffer, setNewOffer] = useState({ title: "", description: "", discount_percent: "", discount_amount: "", code: "", valid_until: "" });
 
   const generateCode = () => {
@@ -170,10 +171,16 @@ const AdminDashboard = () => {
           </TabsContent>
 
           <TabsContent value="clients">
-            <div className="flex items-center gap-2 mb-4">
-              <Button size="sm" variant={clientFilter === "all" ? "default" : "outline"} onClick={() => setClientFilter("all")}>Alle</Button>
-              <Button size="sm" variant={clientFilter === "confirmed" ? "default" : "outline"} onClick={() => setClientFilter("confirmed")}>Bestätigt</Button>
-              <Button size="sm" variant={clientFilter === "unconfirmed" ? "default" : "outline"} onClick={() => setClientFilter("unconfirmed")}>Ausstehend</Button>
+            <div className="flex items-center gap-4 mb-4">
+              <div className="relative flex-1 max-w-sm">
+                <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
+                <Input placeholder="Name oder E-Mail suchen..." value={clientSearch} onChange={e => setClientSearch(e.target.value)} className="pl-10" />
+              </div>
+              <div className="flex items-center gap-2">
+                <Button size="sm" variant={clientFilter === "all" ? "default" : "outline"} onClick={() => setClientFilter("all")}>Alle</Button>
+                <Button size="sm" variant={clientFilter === "confirmed" ? "default" : "outline"} onClick={() => setClientFilter("confirmed")}>Bestätigt</Button>
+                <Button size="sm" variant={clientFilter === "unconfirmed" ? "default" : "outline"} onClick={() => setClientFilter("unconfirmed")}>Ausstehend</Button>
+              </div>
             </div>
             <div className="bg-card rounded-xl shadow-card overflow-hidden">
               <Table>
@@ -190,6 +197,7 @@ const AdminDashboard = () => {
                 <TableBody>
                   {Array.from(new Map(bookings.map(b => [b.email, b])).values())
                     .filter(b => {
+                      if (clientSearch && !`${b.first_name} ${b.last_name} ${b.email}`.toLowerCase().includes(clientSearch.toLowerCase())) return false;
                       if (clientFilter === "all") return true;
                       const confirmed = offers.some(o => o.source === "welcome_discount" && o.target_user_id === b.user_id);
                       return clientFilter === "confirmed" ? confirmed : !confirmed;
