@@ -4,6 +4,7 @@ import AboutSection from "@/components/AboutSection";
 import ProcessSection from "@/components/ProcessSection";
 import BookingFlow from "@/components/BookingFlow";
 import Footer from "@/components/Footer";
+import Header from "@/components/Header";
 
 const Index = () => {
   const bookingRef = useRef<HTMLDivElement>(null);
@@ -14,10 +15,15 @@ const Index = () => {
 
   return (
     <main className="min-h-screen">
+      <Header onBookClick={scrollToBooking} />
       <HeroSection onBookClick={scrollToBooking} onConsultClick={scrollToBooking} />
-      <AboutSection onCtaClick={scrollToBooking} />
-      <ProcessSection onCtaClick={scrollToBooking} />
-      <div ref={bookingRef} className="scroll-mt-8">
+      <div id="about">
+        <AboutSection onCtaClick={scrollToBooking} />
+      </div>
+      <div id="process">
+        <ProcessSection onCtaClick={scrollToBooking} />
+      </div>
+      <div id="booking" ref={bookingRef} className="scroll-mt-8">
         <BookingFlow />
       </div>
       <Footer />
