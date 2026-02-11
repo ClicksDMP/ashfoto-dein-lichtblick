@@ -3,8 +3,20 @@ import { supabase } from "@/integrations/supabase/client";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { Trash2, Upload, GripVertical, ImageIcon } from "lucide-react";
+import { Badge } from "@/components/ui/badge";
+import {
+  Trash2,
+  Upload,
+  ImageIcon,
+  ChevronDown,
+  ChevronRight,
+  Eye,
+  GripVertical,
+  Image as ImageLucide,
+  FolderOpen,
+  ArrowUp,
+  ArrowDown,
+} from "lucide-react";
 import { SERVICES_DATA } from "@/data/serviceData";
 
 interface GalleryPhoto {
@@ -15,39 +27,64 @@ interface GalleryPhoto {
   sort_order: number;
 }
 
-const AdminGallery = () => {
-  const [selectedSlug, setSelectedSlug] = useState(SERVICES_DATA[0]?.slug || "");
-  const [photos, setPhotos] = useState<GalleryPhoto[]>([]);
-  const [uploading, setUploading] = useState(false);
-  const [loading, setLoading] = useState(false);
+interface ServicePhotoData {
+  slug: string;
+  title: string;
+  heroImage: string;
+  photos: GalleryPhoto[];
+  loading: boolean;
+}
 
-  const fetchPhotos = useCallback(async () => {
-    if (!selectedSlug) return;
-    setLoading(true);
+const AdminGallery = () => {
+  const [expandedSlug, setExpandedSlug] = useState<string | null>(null);
+  const [allPhotos, setAllPhotos] = useState<Record<string, GalleryPhoto[]>>({});
+  const [uploading, setUploading] = useState<string | null>(null);
+  const [initialLoading, setInitialLoading] = useState(true);
+  const [deletingId, setDeletingId] = useState<string | null>(null);
+
+  // Fetch all photos for all services in one query
+  const fetchAllPhotos = useCallback(async () => {
+    setInitialLoading(true);
     const { data } = await supabase
       .from("service_gallery_photos")
       .select("*")
-      .eq("service_slug", selectedSlug)
       .order("sort_order", { ascending: true });
-    if (data) setPhotos(data);
-    setLoading(false);
-  }, [selectedSlug]);
+
+    if (data) {
+      const grouped: Record<string, GalleryPhoto[]> = {};
+      SERVICES_DATA.forEach((s) => {
+        grouped[s.slug] = [];
+      });
+      data.forEach((photo) => {
+        if (grouped[photo.service_slug]) {
+          grouped[photo.service_slug].push(photo);
+        }
+      });
+      setAllPhotos(grouped);
+    }
+    setInitialLoading(false);
+  }, []);
 
   useEffect(() => {
-    fetchPhotos();
-  }, [fetchPhotos]);
+    fetchAllPhotos();
+  }, [fetchAllPhotos]);
 
-  const handleUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
+  const toggleExpand = (slug: string) => {
+    setExpandedSlug((prev) => (prev === slug ? null : slug));
+  };
+
+  const handleUpload = async (slug: string, e: React.ChangeEvent<HTMLInputElement>) => {
     const files = e.target.files;
     if (!files || files.length === 0) return;
-    setUploading(true);
+    setUploading(slug);
 
-    const maxOrder = photos.length > 0 ? Math.max(...photos.map(p => p.sort_order)) : 0;
+    const existing = allPhotos[slug] || [];
+    const maxOrder = existing.length > 0 ? Math.max(...existing.map((p) => p.sort_order)) : 0;
 
     for (let i = 0; i < files.length; i++) {
       const file = files[i];
       const fileExt = file.name.split(".").pop();
-      const fileName = `${selectedSlug}/${Date.now()}-${i}.${fileExt}`;
+      const fileName = `${slug}/${Date.now()}-${i}.${fileExt}`;
 
       const { error: uploadError } = await supabase.storage
         .from("service-gallery")
@@ -63,20 +100,20 @@ const AdminGallery = () => {
         .getPublicUrl(fileName);
 
       await supabase.from("service_gallery_photos").insert({
-        service_slug: selectedSlug,
+        service_slug: slug,
         file_url: urlData.publicUrl,
         file_name: file.name,
         sort_order: maxOrder + i + 1,
       });
     }
 
-    setUploading(false);
-    fetchPhotos();
+    setUploading(null);
+    fetchAllPhotos();
     e.target.value = "";
   };
 
   const handleDelete = async (photo: GalleryPhoto) => {
-    // Extract path from URL
+    setDeletingId(photo.id);
     const urlParts = photo.file_url.split("/service-gallery/");
     const filePath = urlParts.length > 1 ? urlParts[1] : "";
 
@@ -84,98 +121,279 @@ const AdminGallery = () => {
       await supabase.storage.from("service-gallery").remove([filePath]);
     }
     await supabase.from("service_gallery_photos").delete().eq("id", photo.id);
-    fetchPhotos();
+    setDeletingId(null);
+    fetchAllPhotos();
   };
 
-  const serviceLabel = SERVICES_DATA.find(s => s.slug === selectedSlug)?.title || selectedSlug;
+  const handleMovePhoto = async (slug: string, photoId: string, direction: "up" | "down") => {
+    const photos = [...(allPhotos[slug] || [])];
+    const idx = photos.findIndex((p) => p.id === photoId);
+    if (idx < 0) return;
+
+    const swapIdx = direction === "up" ? idx - 1 : idx + 1;
+    if (swapIdx < 0 || swapIdx >= photos.length) return;
+
+    const tempOrder = photos[idx].sort_order;
+    const otherOrder = photos[swapIdx].sort_order;
+
+    await Promise.all([
+      supabase.from("service_gallery_photos").update({ sort_order: otherOrder }).eq("id", photos[idx].id),
+      supabase.from("service_gallery_photos").update({ sort_order: tempOrder }).eq("id", photos[swapIdx].id),
+    ]);
+
+    fetchAllPhotos();
+  };
+
+  const totalPhotos = Object.values(allPhotos).reduce((sum, arr) => sum + arr.length, 0);
+  const servicesWithPhotos = Object.values(allPhotos).filter((arr) => arr.length > 0).length;
+
+  if (initialLoading) {
+    return (
+      <div className="space-y-4">
+        <h2 className="text-xl font-bold text-foreground">Gallery Management</h2>
+        <div className="grid grid-cols-1 gap-3">
+          {[1, 2, 3, 4, 5].map((i) => (
+            <div key={i} className="h-16 bg-secondary/30 rounded-lg animate-pulse" />
+          ))}
+        </div>
+      </div>
+    );
+  }
 
   return (
     <div className="space-y-6">
-      <div className="flex items-center justify-between">
-        <h2 className="text-xl font-bold text-foreground">Gallery Management</h2>
-      </div>
-
-      {/* Service selector */}
-      <div className="flex flex-col sm:flex-row gap-4 items-start sm:items-end">
-        <div className="w-full sm:w-80">
-          <Label className="text-foreground mb-2 block">Select Service</Label>
-          <Select value={selectedSlug} onValueChange={setSelectedSlug}>
-            <SelectTrigger>
-              <SelectValue placeholder="Select service..." />
-            </SelectTrigger>
-            <SelectContent>
-              {SERVICES_DATA.map(s => (
-                <SelectItem key={s.slug} value={s.slug}>{s.title}</SelectItem>
-              ))}
-            </SelectContent>
-          </Select>
-        </div>
-
+      {/* Header with stats */}
+      <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
         <div>
-          <Label htmlFor="gallery-upload" className="cursor-pointer">
-            <div className="inline-flex items-center gap-2 px-4 py-2 bg-primary text-primary-foreground rounded-md hover:bg-primary/90 transition-colors text-sm font-medium">
-              <Upload className="w-4 h-4" />
-              {uploading ? "Uploading..." : "Upload Photos"}
-            </div>
-          </Label>
-          <Input
-            id="gallery-upload"
-            type="file"
-            accept="image/*"
-            multiple
-            onChange={handleUpload}
-            disabled={uploading}
-            className="hidden"
-          />
+          <h2 className="text-xl font-bold text-foreground">Gallery Management</h2>
+          <p className="text-sm text-muted-foreground mt-1">
+            Manage photos for all service landing pages
+          </p>
+        </div>
+        <div className="flex gap-3">
+          <Badge variant="secondary" className="text-sm px-3 py-1.5">
+            <FolderOpen className="w-3.5 h-3.5 mr-1.5" />
+            {servicesWithPhotos}/{SERVICES_DATA.length} Services
+          </Badge>
+          <Badge variant="secondary" className="text-sm px-3 py-1.5">
+            <ImageLucide className="w-3.5 h-3.5 mr-1.5" />
+            {totalPhotos} Photos
+          </Badge>
         </div>
       </div>
 
-      {/* Photo count */}
-      <p className="text-sm text-muted-foreground">
-        {serviceLabel}: {photos.length} photo{photos.length !== 1 ? "s" : ""}
-      </p>
+      {/* Service list */}
+      <div className="space-y-2">
+        {SERVICES_DATA.map((service) => {
+          const photos = allPhotos[service.slug] || [];
+          const isExpanded = expandedSlug === service.slug;
+          const isUploading = uploading === service.slug;
 
-      {/* Photo grid */}
-      {loading ? (
-        <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
-          {[1, 2, 3, 4].map(i => (
-            <div key={i} className="aspect-[4/3] bg-secondary/30 rounded-lg animate-pulse" />
-          ))}
-        </div>
-      ) : photos.length === 0 ? (
-        <div className="text-center py-16 border border-dashed border-border rounded-xl">
-          <ImageIcon className="w-12 h-12 text-muted-foreground mx-auto mb-4" />
-          <p className="text-muted-foreground">No photos uploaded yet for this service.</p>
-          <p className="text-sm text-muted-foreground mt-1">Upload photos to display them on the landing page gallery.</p>
-        </div>
-      ) : (
-        <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4">
-          {photos.map((photo) => (
-            <div key={photo.id} className="group relative aspect-[4/3] rounded-lg overflow-hidden border border-border">
-              <img
-                src={photo.file_url}
-                alt={photo.file_name}
-                className="w-full h-full object-cover"
-                loading="lazy"
-              />
-              <div className="absolute inset-0 bg-black/0 group-hover:bg-black/40 transition-colors flex items-center justify-center">
-                <Button
-                  variant="destructive"
-                  size="sm"
-                  className="opacity-0 group-hover:opacity-100 transition-opacity"
-                  onClick={() => handleDelete(photo)}
+          return (
+            <div
+              key={service.slug}
+              className="bg-card border border-border rounded-xl overflow-hidden transition-colors"
+            >
+              {/* Service row header */}
+              <button
+                onClick={() => toggleExpand(service.slug)}
+                className="w-full flex items-center gap-4 px-4 py-3 hover:bg-secondary/30 transition-colors text-left"
+              >
+                {/* Hero thumbnail */}
+                <div className="w-12 h-12 rounded-lg overflow-hidden flex-shrink-0 border border-border bg-secondary/20">
+                  <img
+                    src={service.heroImage}
+                    alt={service.title}
+                    className="w-full h-full object-cover"
+                  />
+                </div>
+
+                {/* Title + info */}
+                <div className="flex-1 min-w-0">
+                  <p className="font-medium text-foreground text-sm truncate">
+                    {service.title}
+                  </p>
+                  <p className="text-xs text-muted-foreground truncate">
+                    /shooting/{service.slug}
+                  </p>
+                </div>
+
+                {/* Photo count badge */}
+                <Badge
+                  variant={photos.length > 0 ? "default" : "outline"}
+                  className="text-xs flex-shrink-0"
                 >
-                  <Trash2 className="w-4 h-4 mr-1" />
-                  Delete
-                </Button>
-              </div>
-              <div className="absolute bottom-0 left-0 right-0 bg-black/60 px-2 py-1">
-                <p className="text-xs text-white truncate">{photo.file_name}</p>
-              </div>
+                  {photos.length} {photos.length === 1 ? "Photo" : "Photos"}
+                </Badge>
+
+                {/* Expand icon */}
+                {isExpanded ? (
+                  <ChevronDown className="w-4 h-4 text-muted-foreground flex-shrink-0" />
+                ) : (
+                  <ChevronRight className="w-4 h-4 text-muted-foreground flex-shrink-0" />
+                )}
+              </button>
+
+              {/* Expanded content */}
+              {isExpanded && (
+                <div className="border-t border-border px-4 py-4 space-y-5">
+                  {/* Hero Image Section */}
+                  <div>
+                    <div className="flex items-center justify-between mb-2">
+                      <h4 className="text-sm font-semibold text-foreground flex items-center gap-2">
+                        <ImageLucide className="w-4 h-4 text-primary" />
+                        Hero Image
+                      </h4>
+                      <span className="text-xs text-muted-foreground">
+                        Static asset (from codebase)
+                      </span>
+                    </div>
+                    <div className="flex items-start gap-4">
+                      <div className="w-48 aspect-[16/9] rounded-lg overflow-hidden border border-border bg-secondary/10">
+                        <img
+                          src={service.heroImage}
+                          alt={`Hero: ${service.title}`}
+                          className="w-full h-full object-cover"
+                        />
+                      </div>
+                      <div className="text-xs text-muted-foreground space-y-1 pt-1">
+                        <p>This hero image is defined in <code className="bg-secondary/50 px-1.5 py-0.5 rounded text-[11px]">serviceData.ts</code></p>
+                        <p>To change it, upload a new image to the chat and ask to replace it.</p>
+                      </div>
+                    </div>
+                  </div>
+
+                  {/* Gallery Photos Section */}
+                  <div>
+                    <div className="flex items-center justify-between mb-3">
+                      <h4 className="text-sm font-semibold text-foreground flex items-center gap-2">
+                        <FolderOpen className="w-4 h-4 text-primary" />
+                        Gallery Photos ({photos.length})
+                      </h4>
+                      <div>
+                        <Label htmlFor={`upload-${service.slug}`} className="cursor-pointer">
+                          <div className="inline-flex items-center gap-2 px-3 py-1.5 bg-primary text-primary-foreground rounded-md hover:bg-primary/90 transition-colors text-xs font-medium">
+                            <Upload className="w-3.5 h-3.5" />
+                            {isUploading ? "Uploading..." : "Upload Photos"}
+                          </div>
+                        </Label>
+                        <Input
+                          id={`upload-${service.slug}`}
+                          type="file"
+                          accept="image/*"
+                          multiple
+                          onChange={(e) => handleUpload(service.slug, e)}
+                          disabled={isUploading}
+                          className="hidden"
+                        />
+                      </div>
+                    </div>
+
+                    {photos.length === 0 ? (
+                      <div className="text-center py-10 border border-dashed border-border rounded-lg bg-secondary/5">
+                        <ImageIcon className="w-10 h-10 text-muted-foreground/40 mx-auto mb-3" />
+                        <p className="text-sm text-muted-foreground">
+                          No gallery photos uploaded yet.
+                        </p>
+                        <p className="text-xs text-muted-foreground mt-1">
+                          Upload photos to display them in the gallery carousel on this landing page.
+                        </p>
+                      </div>
+                    ) : (
+                      <div className="space-y-1.5">
+                        {photos.map((photo, idx) => (
+                          <div
+                            key={photo.id}
+                            className="flex items-center gap-3 bg-secondary/10 hover:bg-secondary/20 rounded-lg px-3 py-2 transition-colors group"
+                          >
+                            {/* Order number */}
+                            <span className="text-xs text-muted-foreground w-5 text-center font-mono flex-shrink-0">
+                              {idx + 1}
+                            </span>
+
+                            {/* Thumbnail */}
+                            <div className="w-16 h-12 rounded overflow-hidden flex-shrink-0 border border-border">
+                              <img
+                                src={photo.file_url}
+                                alt={photo.file_name}
+                                className="w-full h-full object-cover"
+                                loading="lazy"
+                              />
+                            </div>
+
+                            {/* Filename */}
+                            <p className="text-xs text-foreground truncate flex-1 min-w-0">
+                              {photo.file_name}
+                            </p>
+
+                            {/* Reorder buttons */}
+                            <div className="flex items-center gap-0.5 opacity-0 group-hover:opacity-100 transition-opacity">
+                              <Button
+                                variant="ghost"
+                                size="sm"
+                                className="h-7 w-7 p-0"
+                                disabled={idx === 0}
+                                onClick={() => handleMovePhoto(service.slug, photo.id, "up")}
+                              >
+                                <ArrowUp className="w-3.5 h-3.5" />
+                              </Button>
+                              <Button
+                                variant="ghost"
+                                size="sm"
+                                className="h-7 w-7 p-0"
+                                disabled={idx === photos.length - 1}
+                                onClick={() => handleMovePhoto(service.slug, photo.id, "down")}
+                              >
+                                <ArrowDown className="w-3.5 h-3.5" />
+                              </Button>
+                            </div>
+
+                            {/* Preview link */}
+                            <a
+                              href={photo.file_url}
+                              target="_blank"
+                              rel="noopener noreferrer"
+                              className="opacity-0 group-hover:opacity-100 transition-opacity"
+                            >
+                              <Button variant="ghost" size="sm" className="h-7 w-7 p-0">
+                                <Eye className="w-3.5 h-3.5" />
+                              </Button>
+                            </a>
+
+                            {/* Delete */}
+                            <Button
+                              variant="ghost"
+                              size="sm"
+                              className="h-7 w-7 p-0 text-destructive hover:text-destructive opacity-0 group-hover:opacity-100 transition-opacity"
+                              onClick={() => handleDelete(photo)}
+                              disabled={deletingId === photo.id}
+                            >
+                              <Trash2 className="w-3.5 h-3.5" />
+                            </Button>
+                          </div>
+                        ))}
+                      </div>
+                    )}
+                  </div>
+
+                  {/* Quick link */}
+                  <div className="pt-2 border-t border-border">
+                    <a
+                      href={`/shooting/${service.slug}`}
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      className="text-xs text-primary hover:underline inline-flex items-center gap-1"
+                    >
+                      <Eye className="w-3 h-3" />
+                      Preview landing page
+                    </a>
+                  </div>
+                </div>
+              )}
             </div>
-          ))}
-        </div>
-      )}
+          );
+        })}
+      </div>
     </div>
   );
 };
