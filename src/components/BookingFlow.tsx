@@ -110,7 +110,7 @@ const TOTAL_STEPS = 7;
 
 // ── Component ──────────────────────────────────────────────────
 const BookingFlow = () => {
-  const [currentStep, setCurrentStep] = useState(0); // 0 = nothing selected yet
+  const [currentStep, setCurrentStep] = useState(1); // start at step 1
   const [booking, setBooking] = useState<BookingData>(INITIAL_BOOKING);
   const [showFoodMessage, setShowFoodMessage] = useState(false);
   const [confirmed, setConfirmed] = useState(false);
@@ -220,7 +220,7 @@ const BookingFlow = () => {
 
   // ── Render Steps ─────────────────────────────────────────────
   const renderProgress = () => {
-    if (currentStep < 1 || confirmed) return null;
+    if (confirmed) return null;
     const displayStep = Math.min(currentStep, TOTAL_STEPS);
     return (
       <div className="text-center mb-8">
