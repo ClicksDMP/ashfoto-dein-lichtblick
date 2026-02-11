@@ -18,6 +18,7 @@ import {
   ArrowDown,
 } from "lucide-react";
 import { SERVICES_DATA } from "@/data/serviceData";
+import { toast } from "sonner";
 
 interface GalleryPhoto {
   id: string;
@@ -41,6 +42,31 @@ const AdminGallery = () => {
   const [uploading, setUploading] = useState<string | null>(null);
   const [initialLoading, setInitialLoading] = useState(true);
   const [deletingId, setDeletingId] = useState<string | null>(null);
+  const [heroImages, setHeroImages] = useState<Record<string, string | null>>({});
+  const [uploadingHero, setUploadingHero] = useState<string | null>(null);
+
+  // Fetch hero images from storage
+  const fetchHeroImages = useCallback(async () => {
+    const heroes: Record<string, string | null> = {};
+    for (const service of SERVICES_DATA) {
+      const { data } = await supabase.storage
+        .from("service-gallery")
+        .list(service.slug, { search: "hero-" });
+
+      if (data && data.length > 0) {
+        const heroFile = data.sort((a, b) =>
+          (b.created_at || "").localeCompare(a.created_at || "")
+        )[0];
+        const { data: urlData } = supabase.storage
+          .from("service-gallery")
+          .getPublicUrl(`${service.slug}/${heroFile.name}`);
+        heroes[service.slug] = urlData?.publicUrl || null;
+      } else {
+        heroes[service.slug] = null;
+      }
+    }
+    setHeroImages(heroes);
+  }, []);
 
   // Fetch all photos for all services in one query
   const fetchAllPhotos = useCallback(async () => {
@@ -67,7 +93,57 @@ const AdminGallery = () => {
 
   useEffect(() => {
     fetchAllPhotos();
-  }, [fetchAllPhotos]);
+    fetchHeroImages();
+  }, [fetchAllPhotos, fetchHeroImages]);
+
+  const handleHeroUpload = async (slug: string, e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+    setUploadingHero(slug);
+
+    // Remove existing hero images for this service
+    const { data: existing } = await supabase.storage
+      .from("service-gallery")
+      .list(slug, { search: "hero-" });
+
+    if (existing && existing.length > 0) {
+      await supabase.storage
+        .from("service-gallery")
+        .remove(existing.map((f) => `${slug}/${f.name}`));
+    }
+
+    const fileExt = file.name.split(".").pop();
+    const fileName = `${slug}/hero-${Date.now()}.${fileExt}`;
+
+    const { error } = await supabase.storage
+      .from("service-gallery")
+      .upload(fileName, file);
+
+    if (error) {
+      toast.error("Hero upload failed: " + error.message);
+    } else {
+      toast.success("Hero image updated!");
+    }
+
+    setUploadingHero(null);
+    fetchHeroImages();
+    e.target.value = "";
+  };
+
+  const handleHeroDelete = async (slug: string) => {
+    const { data: existing } = await supabase.storage
+      .from("service-gallery")
+      .list(slug, { search: "hero-" });
+
+    if (existing && existing.length > 0) {
+      await supabase.storage
+        .from("service-gallery")
+        .remove(existing.map((f) => `${slug}/${f.name}`));
+    }
+
+    toast.success("Hero image removed – falling back to default.");
+    fetchHeroImages();
+  };
 
   const toggleExpand = (slug: string) => {
     setExpandedSlug((prev) => (prev === slug ? null : slug));
@@ -202,7 +278,7 @@ const AdminGallery = () => {
                 {/* Hero thumbnail */}
                 <div className="w-12 h-12 rounded-lg overflow-hidden flex-shrink-0 border border-border bg-secondary/20">
                   <img
-                    src={service.heroImage}
+                    src={heroImages[service.slug] || service.heroImage}
                     alt={service.title}
                     className="w-full h-full object-cover"
                   />
@@ -244,21 +320,53 @@ const AdminGallery = () => {
                         <ImageLucide className="w-4 h-4 text-primary" />
                         Hero Image
                       </h4>
-                      <span className="text-xs text-muted-foreground">
-                        Static asset (from codebase)
-                      </span>
+                      {heroImages[service.slug] ? (
+                        <Badge variant="default" className="text-[10px]">Custom</Badge>
+                      ) : (
+                        <Badge variant="outline" className="text-[10px]">Default</Badge>
+                      )}
                     </div>
                     <div className="flex items-start gap-4">
                       <div className="w-48 aspect-[16/9] rounded-lg overflow-hidden border border-border bg-secondary/10">
                         <img
-                          src={service.heroImage}
+                          src={heroImages[service.slug] || service.heroImage}
                           alt={`Hero: ${service.title}`}
                           className="w-full h-full object-cover"
                         />
                       </div>
-                      <div className="text-xs text-muted-foreground space-y-1 pt-1">
-                        <p>This hero image is defined in <code className="bg-secondary/50 px-1.5 py-0.5 rounded text-[11px]">serviceData.ts</code></p>
-                        <p>To change it, upload a new image to the chat and ask to replace it.</p>
+                      <div className="space-y-2 pt-1">
+                        <p className="text-xs text-muted-foreground">
+                          {heroImages[service.slug]
+                            ? "Custom hero image uploaded. It replaces the default on the landing page."
+                            : "Using default hero image. Upload a custom one to override it."}
+                        </p>
+                        <div className="flex gap-2">
+                          <Label htmlFor={`hero-upload-${service.slug}`} className="cursor-pointer">
+                            <div className="inline-flex items-center gap-1.5 px-3 py-1.5 bg-primary text-primary-foreground rounded-md hover:bg-primary/90 transition-colors text-xs font-medium">
+                              <Upload className="w-3 h-3" />
+                              {uploadingHero === service.slug ? "Uploading..." : heroImages[service.slug] ? "Replace" : "Upload Hero"}
+                            </div>
+                          </Label>
+                          <Input
+                            id={`hero-upload-${service.slug}`}
+                            type="file"
+                            accept="image/*"
+                            onChange={(e) => handleHeroUpload(service.slug, e)}
+                            disabled={uploadingHero === service.slug}
+                            className="hidden"
+                          />
+                          {heroImages[service.slug] && (
+                            <Button
+                              variant="ghost"
+                              size="sm"
+                              className="h-7 text-xs text-destructive hover:text-destructive"
+                              onClick={() => handleHeroDelete(service.slug)}
+                            >
+                              <Trash2 className="w-3 h-3 mr-1" />
+                              Remove
+                            </Button>
+                          )}
+                        </div>
                       </div>
                     </div>
                   </div>
