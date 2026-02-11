@@ -22,6 +22,7 @@ const AdminDashboard = () => {
   const [bookings, setBookings] = useState<Booking[]>([]);
   const [searchTerm, setSearchTerm] = useState("");
   const [offers, setOffers] = useState<Offer[]>([]);
+  const [clientFilter, setClientFilter] = useState<"all" | "confirmed" | "unconfirmed">("all");
   const [newOffer, setNewOffer] = useState({ title: "", description: "", discount_percent: "", discount_amount: "", code: "", valid_until: "" });
 
   const generateCode = () => {
@@ -169,6 +170,11 @@ const AdminDashboard = () => {
           </TabsContent>
 
           <TabsContent value="clients">
+            <div className="flex items-center gap-2 mb-4">
+              <Button size="sm" variant={clientFilter === "all" ? "default" : "outline"} onClick={() => setClientFilter("all")}>Alle</Button>
+              <Button size="sm" variant={clientFilter === "confirmed" ? "default" : "outline"} onClick={() => setClientFilter("confirmed")}>Bestätigt</Button>
+              <Button size="sm" variant={clientFilter === "unconfirmed" ? "default" : "outline"} onClick={() => setClientFilter("unconfirmed")}>Ausstehend</Button>
+            </div>
             <div className="bg-card rounded-xl shadow-card overflow-hidden">
               <Table>
                 <TableHeader>
@@ -182,26 +188,31 @@ const AdminDashboard = () => {
                   </TableRow>
                 </TableHeader>
                 <TableBody>
-                  {/* Deduplicate by email */}
-                  {Array.from(new Map(bookings.map(b => [b.email, b])).values()).map(b => {
-                    const hasWelcomeCode = offers.some(o => o.source === "welcome_discount" && o.target_user_id === b.user_id);
-                    return (
-                      <TableRow key={b.email}>
-                        <TableCell className="font-medium">{b.first_name} {b.last_name}</TableCell>
-                        <TableCell>{b.email}</TableCell>
-                        <TableCell>{b.phone}</TableCell>
-                        <TableCell className="text-sm">{b.street}, {b.zip} {b.city}</TableCell>
-                        <TableCell>
-                          <span className={`px-2 py-1 rounded-full text-xs font-medium ${
-                            hasWelcomeCode ? "bg-green-100 text-green-800" : "bg-muted text-muted-foreground"
-                          }`}>
-                            {hasWelcomeCode ? "Bestätigt" : "Ausstehend"}
-                          </span>
-                        </TableCell>
-                        <TableCell>{bookings.filter(x => x.email === b.email).length}</TableCell>
-                      </TableRow>
-                    );
-                  })}
+                  {Array.from(new Map(bookings.map(b => [b.email, b])).values())
+                    .filter(b => {
+                      if (clientFilter === "all") return true;
+                      const confirmed = offers.some(o => o.source === "welcome_discount" && o.target_user_id === b.user_id);
+                      return clientFilter === "confirmed" ? confirmed : !confirmed;
+                    })
+                    .map(b => {
+                      const hasWelcomeCode = offers.some(o => o.source === "welcome_discount" && o.target_user_id === b.user_id);
+                      return (
+                        <TableRow key={b.email}>
+                          <TableCell className="font-medium">{b.first_name} {b.last_name}</TableCell>
+                          <TableCell>{b.email}</TableCell>
+                          <TableCell>{b.phone}</TableCell>
+                          <TableCell className="text-sm">{b.street}, {b.zip} {b.city}</TableCell>
+                          <TableCell>
+                            <span className={`px-2 py-1 rounded-full text-xs font-medium ${
+                              hasWelcomeCode ? "bg-green-100 text-green-800" : "bg-muted text-muted-foreground"
+                            }`}>
+                              {hasWelcomeCode ? "Bestätigt" : "Ausstehend"}
+                            </span>
+                          </TableCell>
+                          <TableCell>{bookings.filter(x => x.email === b.email).length}</TableCell>
+                        </TableRow>
+                      );
+                    })}
                 </TableBody>
               </Table>
             </div>
