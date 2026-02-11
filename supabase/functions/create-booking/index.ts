@@ -65,6 +65,7 @@ serve(async (req) => {
     const participants = body.participants || {};
     const couponId = body.coupon_id || null;
     const userId = body.user_id || null;
+    const welcomeDiscount = !!body.welcome_discount;
 
     // Validate required fields
     if (!firstName || !email || !service || !duration) {
@@ -127,6 +128,11 @@ serve(async (req) => {
     const isBabybauch = service === "Babybauch Fotoshooting";
     if (isBabybauch && babybaumKombi) {
       totalPrice += BABYBAUCH_KOMBI_PRICE;
+    }
+
+    // Apply welcome 10% discount on photo package for new registrations during booking
+    if (welcomeDiscount && photoPackage !== "none" && photoPackage !== "" && !couponId) {
+      totalPrice -= packagePrice * 0.1;
     }
 
     // Validate date format if provided

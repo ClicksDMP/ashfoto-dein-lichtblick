@@ -141,55 +141,73 @@ const AdminDashboard = () => {
               </div>
               <p className="text-sm text-muted-foreground">{filteredBookings.length} bookings</p>
             </div>
-            <div className="bg-card rounded-xl shadow-card overflow-hidden">
+            <div className="bg-card rounded-xl shadow-card overflow-x-auto">
               <Table>
                 <TableHeader>
                   <TableRow>
-                    <TableHead>Date</TableHead>
-                    <TableHead>Name</TableHead>
-                    <TableHead>Session</TableHead>
-                    <TableHead>Appointment</TableHead>
-                    <TableHead>Price</TableHead>
+                    <TableHead>Erstellt</TableHead>
+                    <TableHead>Vorname</TableHead>
+                    <TableHead>Nachname</TableHead>
+                    <TableHead>E-Mail</TableHead>
+                    <TableHead>Telefon</TableHead>
+                    <TableHead>Adresse</TableHead>
+                    <TableHead>Shooting</TableHead>
+                    <TableHead>Teilnehmer</TableHead>
+                    <TableHead>Dauer</TableHead>
+                    <TableHead>Bildpaket</TableHead>
+                    <TableHead>Termin</TableHead>
+                    <TableHead>Hinweise</TableHead>
+                    <TableHead>Preis</TableHead>
                     <TableHead>Status</TableHead>
                     <TableHead>Actions</TableHead>
                   </TableRow>
                 </TableHeader>
                 <TableBody>
-                  {filteredBookings.map(b => (
-                    <TableRow key={b.id}>
-                      <TableCell className="text-sm">{format(new Date(b.created_at), "MM/dd/yyyy")}</TableCell>
-                      <TableCell>
-                        <div>
-                          <p className="font-medium">{b.first_name} {b.last_name}</p>
-                          <p className="text-xs text-muted-foreground">{b.email}</p>
-                        </div>
-                      </TableCell>
-                      <TableCell className="text-sm">{b.service}</TableCell>
-                      <TableCell className="text-sm">
-                        {b.booking_date ? format(new Date(b.booking_date), "MM/dd/yyyy") : "-"}{" "}
-                        {b.booking_time || ""}
-                      </TableCell>
-                      <TableCell className="font-medium">{formatPrice(b.total_price)}</TableCell>
-                      <TableCell>
-                      <span className={`px-2 py-1 rounded-full text-xs font-medium ${
-                          b.status === "confirmed" ? "bg-green-100 text-green-800" :
-                          b.status === "cancelled" ? "bg-red-100 text-red-700" :
-                          "bg-amber-100 text-amber-800"
-                        }`}>{b.status}</span>
-                      </TableCell>
-                      <TableCell>
-                        <div className="flex gap-1">
-                          <Button size="sm" variant="ghost" onClick={() => updateBookingStatus(b.id, "confirmed")}>✓</Button>
-                          <Button size="sm" variant="ghost" onClick={() => updateBookingStatus(b.id, "cancelled")}>✗</Button>
-                          <Button size="sm" variant="ghost" className="text-destructive" onClick={() => {
-                            if (confirm("Permanently delete this booking?")) deleteBooking(b.id);
-                          }}>🗑</Button>
-                        </div>
-                      </TableCell>
-                    </TableRow>
-                  ))}
+                  {filteredBookings.map(b => {
+                    const p = b.participants as { adults?: number; children?: number; babies?: number; animals?: number } || {};
+                    return (
+                      <TableRow key={b.id}>
+                        <TableCell className="text-sm whitespace-nowrap">{format(new Date(b.created_at), "dd.MM.yyyy")}</TableCell>
+                        <TableCell className="font-medium">{b.first_name}</TableCell>
+                        <TableCell className="font-medium">{b.last_name}</TableCell>
+                        <TableCell className="text-sm">{b.email}</TableCell>
+                        <TableCell className="text-sm">{b.phone || "–"}</TableCell>
+                        <TableCell className="text-sm whitespace-nowrap">
+                          {b.street ? `${b.street}, ${b.zip} ${b.city}` : "–"}
+                        </TableCell>
+                        <TableCell className="text-sm">{b.service}</TableCell>
+                        <TableCell className="text-xs whitespace-nowrap">
+                          {p.adults || 0} Erw., {p.children || 0} Ki., {p.babies || 0} Ba., {p.animals || 0} Ti.
+                        </TableCell>
+                        <TableCell className="text-sm">{b.duration}</TableCell>
+                        <TableCell className="text-sm">{b.photo_package === "none" ? "Ohne" : b.photo_package === "all" ? "Alle Fotos" : `${b.photo_package} Bilder`}</TableCell>
+                        <TableCell className="text-sm whitespace-nowrap">
+                          {b.booking_date ? format(new Date(b.booking_date), "dd.MM.yyyy") : "–"}{" "}
+                          {b.booking_time || ""}
+                        </TableCell>
+                        <TableCell className="text-sm max-w-[200px] truncate" title={b.notes || ""}>{b.notes || "–"}</TableCell>
+                        <TableCell className="font-medium whitespace-nowrap">{formatPrice(b.total_price)}</TableCell>
+                        <TableCell>
+                          <span className={`px-2 py-1 rounded-full text-xs font-medium ${
+                            b.status === "confirmed" ? "bg-green-100 text-green-800" :
+                            b.status === "cancelled" ? "bg-red-100 text-red-700" :
+                            "bg-amber-100 text-amber-800"
+                          }`}>{b.status}</span>
+                        </TableCell>
+                        <TableCell>
+                          <div className="flex gap-1">
+                            <Button size="sm" variant="ghost" onClick={() => updateBookingStatus(b.id, "confirmed")}>✓</Button>
+                            <Button size="sm" variant="ghost" onClick={() => updateBookingStatus(b.id, "cancelled")}>✗</Button>
+                            <Button size="sm" variant="ghost" className="text-destructive" onClick={() => {
+                              if (confirm("Permanently delete this booking?")) deleteBooking(b.id);
+                            }}>🗑</Button>
+                          </div>
+                        </TableCell>
+                      </TableRow>
+                    );
+                  })}
                   {filteredBookings.length === 0 && (
-                    <TableRow><TableCell colSpan={7} className="text-center py-8 text-muted-foreground">No bookings found</TableCell></TableRow>
+                    <TableRow><TableCell colSpan={15} className="text-center py-8 text-muted-foreground">No bookings found</TableCell></TableRow>
                   )}
                 </TableBody>
               </Table>

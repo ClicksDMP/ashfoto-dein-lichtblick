@@ -252,7 +252,7 @@ const BookingFlow = ({ preselectedService }: BookingFlowProps = {}) => {
     setCouponError("");
     const { data, error } = await supabase
       .from("offers")
-      .select("id, title, discount_percent, discount_amount, valid_until, is_active, single_use, photo_package_only, used_at")
+      .select("id, title, discount_percent, discount_amount, valid_until, is_active, single_use, photo_package_only, used_at, target_user_id")
       .eq("code", code)
       .eq("is_active", true)
       .maybeSingle();
@@ -268,6 +268,14 @@ const BookingFlow = ({ preselectedService }: BookingFlowProps = {}) => {
     if (data.single_use && data.used_at) {
       setCouponError("Dieser Code wurde bereits verwendet.");
       return;
+    }
+    // Check if coupon is tied to a specific user
+    if (data.target_user_id) {
+      const { data: { user: currentUser } } = await supabase.auth.getUser();
+      if (!currentUser || currentUser.id !== data.target_user_id) {
+        setCouponError("Dieser Code ist nur für einen bestimmten Kunden gültig.");
+        return;
+      }
     }
     setCouponApplied({ id: data.id, title: data.title, discount_percent: data.discount_percent, discount_amount: data.discount_amount, single_use: data.single_use, photo_package_only: data.photo_package_only });
   };
@@ -298,12 +306,14 @@ const BookingFlow = ({ preselectedService }: BookingFlowProps = {}) => {
     if (isBabybauch && booking.babybaumKombi) {
       total += 49.99;
     }
+    // Apply welcome 10% if creating account during booking (on photo package only)
+    if (booking.createAccount && booking.photoPackage !== "none" && booking.photoPackage !== "" && !couponApplied) {
+      total -= booking.packagePrice * 0.1;
+    }
     if (couponApplied) {
-      // photo_package_only: only apply discount to the package price portion
       if (couponApplied.photo_package_only && booking.photoPackage === "none") {
         // No discount if no photo package selected
       } else if (couponApplied.photo_package_only) {
-        // Apply discount only to the package price
         let discountBase = booking.packagePrice;
         if (couponApplied.discount_percent) {
           total -= discountBase * (couponApplied.discount_percent / 100);
@@ -1034,7 +1044,50 @@ const BookingFlow = ({ preselectedService }: BookingFlowProps = {}) => {
               <SummaryRow label="E Mail" value={booking.email} />
               <SummaryRow label="Telefon" value={booking.phone} />
 
+              {/* Coupon / Discount Details */}
+              {couponApplied && (
+                <div className="bg-primary/5 rounded-lg p-4 border border-primary/20">
+                  <p className="text-sm font-semibold text-primary mb-1">🎟️ Gutschein angewendet</p>
+                  <p className="text-sm text-foreground font-medium">{couponApplied.title}</p>
+                  {couponApplied.discount_percent && (
+                    <p className="text-sm text-muted-foreground">{couponApplied.discount_percent}% Rabatt{couponApplied.photo_package_only ? " auf das Bildpaket" : " auf den Gesamtpreis"}</p>
+                  )}
+                  {couponApplied.discount_amount && (
+                    <p className="text-sm text-muted-foreground">{formatPrice(couponApplied.discount_amount)} Rabatt</p>
+                  )}
+                  {couponApplied.photo_package_only && booking.photoPackage === "none" && (
+                    <p className="text-sm text-destructive mt-1">⚠️ Rabatt gilt nur mit einem Bildpaket</p>
+                  )}
+                  {couponApplied.discount_percent && booking.photoPackage !== "none" && (
+                    <p className="text-sm text-primary font-medium mt-1">
+                      Du sparst: {formatPrice(
+                        couponApplied.photo_package_only
+                          ? booking.packagePrice * (couponApplied.discount_percent / 100)
+                          : (booking.durationPrice + booking.packagePrice + (isBabybauch && booking.babybaumKombi ? 49.99 : 0)) * (couponApplied.discount_percent / 100)
+                      )}
+                    </p>
+                  )}
+                </div>
+              )}
+
+              {booking.createAccount && (
+                <div className="bg-accent/10 rounded-lg p-4 border border-accent/30">
+                  <p className="text-sm font-semibold text-foreground">🎁 Willkommensrabatt</p>
+                  <p className="text-sm text-muted-foreground">
+                    Mit deiner Registrierung erhältst du automatisch <strong>10% Rabatt</strong> auf dein Bildpaket – bereits im Preis enthalten!
+                  </p>
+                </div>
+              )}
+
               <div className="border-t border-border pt-4 mt-4">
+                {(booking.durationPrice + booking.packagePrice + (isBabybauch && booking.babybaumKombi ? 49.99 : 0)) !== totalPrice() && (
+                  <div className="flex justify-between items-center mb-2">
+                    <span className="text-sm text-muted-foreground">Zwischensumme</span>
+                    <span className="text-sm text-muted-foreground line-through">
+                      {formatPrice(booking.durationPrice + booking.packagePrice + (isBabybauch && booking.babybaumKombi ? 49.99 : 0))}
+                    </span>
+                  </div>
+                )}
                 <div className="flex justify-between items-center">
                   <span className="font-display text-xl font-bold text-foreground">Gesamtsumme</span>
                   <span className="font-display text-2xl font-bold text-primary">
@@ -1104,6 +1157,7 @@ const BookingFlow = ({ preselectedService }: BookingFlowProps = {}) => {
                           city: booking.city,
                           notes: booking.notes,
                           coupon_id: couponApplied?.id || null,
+                          welcome_discount: booking.createAccount && !couponApplied,
                         },
                       });
                       if (bookingFnError || !bookingResult?.success) {
