@@ -1,4 +1,4 @@
-import { useState, useRef, useEffect, useCallback } from "react";
+import { useState, useRef, useEffect, useCallback, useMemo } from "react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -133,9 +133,13 @@ const TIME_SLOTS = [
 
 const TOTAL_STEPS = 3;
 
+const DURATION_HOURS: Record<string, number> = {
+  "30min": 0.5, "45min": 0.75, "1h": 1, "2h": 2, "4h": 4, "8h": 8,
+};
+
 // ── Component ──────────────────────────────────────────────────
 const BookingFlow = () => {
-  const [currentStep, setCurrentStep] = useState(1); // start at step 1
+  const [currentStep, setCurrentStep] = useState(1);
   const [booking, setBooking] = useState<BookingData>(INITIAL_BOOKING);
   const [showFoodMessage, setShowFoodMessage] = useState(false);
   const [confirmed, setConfirmed] = useState(false);
@@ -146,8 +150,45 @@ const BookingFlow = () => {
   const [couponError, setCouponError] = useState("");
   const [couponChecking, setCouponChecking] = useState(false);
   const couponRefs = useRef<(HTMLInputElement | null)[]>([]);
+  const [bookedSlots, setBookedSlots] = useState<{ date: string; time: string; duration: string }[]>([]);
 
   const stepRefs = useRef<(HTMLDivElement | null)[]>([]);
+
+  // Fetch booked slots for availability checking
+  useEffect(() => {
+    const fetchSlots = async () => {
+      try {
+        const res = await supabase.functions.invoke("get-booked-slots");
+        if (res.data && Array.isArray(res.data)) {
+          setBookedSlots(res.data);
+        }
+      } catch (e) {
+        console.error("Failed to fetch booked slots:", e);
+      }
+    };
+    fetchSlots();
+  }, []);
+
+  // Calculate which time slots are occupied for the selected date
+  const occupiedTimeSlots = useMemo(() => {
+    if (!booking.date) return new Set<string>();
+    const dateStr = format(booking.date, "yyyy-MM-dd");
+    const occupied = new Set<string>();
+    bookedSlots
+      .filter(s => s.date === dateStr && s.time)
+      .forEach(s => {
+        const hours = DURATION_HOURS[s.duration] || 1;
+        const [h, m] = s.time.split(":").map(Number);
+        const startMin = h * 60 + m;
+        const endMin = startMin + hours * 60;
+        TIME_SLOTS.forEach(slot => {
+          const [sh, sm] = slot.split(":").map(Number);
+          const slotMin = sh * 60 + sm;
+          if (slotMin >= startMin && slotMin < endMin) occupied.add(slot);
+        });
+      });
+    return occupied;
+  }, [booking.date, bookedSlots]);
 
   const scrollToStep = useCallback((step: number) => {
     setTimeout(() => {
@@ -684,20 +725,26 @@ const BookingFlow = () => {
               <div>
                 <Label className="text-foreground font-medium mb-2 block">Uhrzeit</Label>
                 <div className="grid grid-cols-4 sm:grid-cols-6 gap-2">
-                  {TIME_SLOTS.map(slot => (
-                    <button
-                      key={slot}
-                      onClick={() => setBooking(prev => ({ ...prev, time: slot }))}
-                      className={cn(
-                        "py-2 rounded-md text-sm font-medium transition-all border",
-                        booking.time === slot
-                          ? "bg-primary text-primary-foreground border-primary"
-                          : "bg-card border-border text-foreground hover:border-primary/40"
-                      )}
-                    >
-                      {slot}
-                    </button>
-                  ))}
+                  {TIME_SLOTS.map(slot => {
+                    const isOccupied = occupiedTimeSlots.has(slot);
+                    return (
+                      <button
+                        key={slot}
+                        onClick={() => !isOccupied && setBooking(prev => ({ ...prev, time: slot }))}
+                        disabled={isOccupied}
+                        className={cn(
+                          "py-2 rounded-md text-sm font-medium transition-all border",
+                          isOccupied
+                            ? "bg-muted border-border text-muted-foreground line-through cursor-not-allowed opacity-50"
+                            : booking.time === slot
+                              ? "bg-primary text-primary-foreground border-primary"
+                              : "bg-card border-border text-foreground hover:border-primary/40"
+                        )}
+                      >
+                        {slot}
+                      </button>
+                    );
+                  })}
                 </div>
               </div>
 

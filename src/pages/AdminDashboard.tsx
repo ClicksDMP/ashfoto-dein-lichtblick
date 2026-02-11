@@ -10,8 +10,10 @@ import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { format } from "date-fns";
 import { de } from "date-fns/locale";
-import { LogOut, Users, Calendar, Tag, Search, RefreshCw } from "lucide-react";
+import { LogOut, Users, Calendar, Tag, Search, RefreshCw, CalendarDays } from "lucide-react";
 import type { Tables } from "@/integrations/supabase/types";
+import AdminCalendar from "@/components/admin/AdminCalendar";
+import AdminClients from "@/components/admin/AdminClients";
 
 type Booking = Tables<"bookings">;
 type Offer = Tables<"offers"> & { used_at?: string | null; used_by_booking_id?: string | null; single_use?: boolean; photo_package_only?: boolean; source?: string | null };
@@ -22,8 +24,6 @@ const AdminDashboard = () => {
   const [bookings, setBookings] = useState<Booking[]>([]);
   const [searchTerm, setSearchTerm] = useState("");
   const [offers, setOffers] = useState<Offer[]>([]);
-  const [clientFilter, setClientFilter] = useState<"all" | "confirmed" | "unconfirmed">("all");
-  const [clientSearch, setClientSearch] = useState("");
   const [newOffer, setNewOffer] = useState({ title: "", description: "", discount_percent: "", discount_amount: "", code: "", valid_until: "" });
 
   const generateCode = () => {
@@ -65,6 +65,11 @@ const AdminDashboard = () => {
     fetchBookings();
   };
 
+  const updateBooking = async (id: string, updates: Partial<Booking>) => {
+    await supabase.from("bookings").update(updates).eq("id", id);
+    fetchBookings();
+  };
+
   const createOffer = async () => {
     if (!newOffer.title) return;
     await supabase.from("offers").insert({
@@ -103,13 +108,24 @@ const AdminDashboard = () => {
       </header>
 
       <div className="container mx-auto px-6 py-8 max-w-7xl">
-        <Tabs defaultValue="bookings">
+        <Tabs defaultValue="calendar">
           <TabsList className="mb-6">
+            <TabsTrigger value="calendar" className="gap-2"><CalendarDays className="w-4 h-4" />Kalender</TabsTrigger>
             <TabsTrigger value="bookings" className="gap-2"><Calendar className="w-4 h-4" />Buchungen</TabsTrigger>
             <TabsTrigger value="clients" className="gap-2"><Users className="w-4 h-4" />Kunden</TabsTrigger>
             <TabsTrigger value="offers" className="gap-2"><Tag className="w-4 h-4" />Angebote</TabsTrigger>
           </TabsList>
 
+          {/* CALENDAR TAB */}
+          <TabsContent value="calendar">
+            <AdminCalendar
+              bookings={bookings}
+              onUpdateBooking={updateBooking}
+              onCancelBooking={(id) => updateBookingStatus(id, "cancelled")}
+            />
+          </TabsContent>
+
+          {/* BOOKINGS TAB */}
           <TabsContent value="bookings">
             <div className="flex items-center gap-4 mb-4">
               <div className="relative flex-1 max-w-sm">
@@ -170,62 +186,12 @@ const AdminDashboard = () => {
             </div>
           </TabsContent>
 
+          {/* CLIENTS TAB */}
           <TabsContent value="clients">
-            <div className="flex items-center gap-4 mb-4">
-              <div className="relative flex-1 max-w-sm">
-                <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
-                <Input placeholder="Name oder E-Mail suchen..." value={clientSearch} onChange={e => setClientSearch(e.target.value)} className="pl-10" />
-              </div>
-              <div className="flex items-center gap-2">
-                <Button size="sm" variant={clientFilter === "all" ? "default" : "outline"} onClick={() => setClientFilter("all")}>Alle</Button>
-                <Button size="sm" variant={clientFilter === "confirmed" ? "default" : "outline"} onClick={() => setClientFilter("confirmed")}>Bestätigt</Button>
-                <Button size="sm" variant={clientFilter === "unconfirmed" ? "default" : "outline"} onClick={() => setClientFilter("unconfirmed")}>Ausstehend</Button>
-              </div>
-            </div>
-            <div className="bg-card rounded-xl shadow-card overflow-hidden">
-              <Table>
-                <TableHeader>
-                  <TableRow>
-                    <TableHead>Name</TableHead>
-                    <TableHead>E-Mail</TableHead>
-                    <TableHead>Telefon</TableHead>
-                    <TableHead>Adresse</TableHead>
-                    <TableHead>E-Mail bestätigt</TableHead>
-                    <TableHead>Buchungen</TableHead>
-                  </TableRow>
-                </TableHeader>
-                <TableBody>
-                  {Array.from(new Map(bookings.map(b => [b.email, b])).values())
-                    .filter(b => {
-                      if (clientSearch && !`${b.first_name} ${b.last_name} ${b.email}`.toLowerCase().includes(clientSearch.toLowerCase())) return false;
-                      if (clientFilter === "all") return true;
-                      const confirmed = offers.some(o => o.source === "welcome_discount" && o.target_user_id === b.user_id);
-                      return clientFilter === "confirmed" ? confirmed : !confirmed;
-                    })
-                    .map(b => {
-                      const hasWelcomeCode = offers.some(o => o.source === "welcome_discount" && o.target_user_id === b.user_id);
-                      return (
-                        <TableRow key={b.email}>
-                          <TableCell className="font-medium">{b.first_name} {b.last_name}</TableCell>
-                          <TableCell>{b.email}</TableCell>
-                          <TableCell>{b.phone}</TableCell>
-                          <TableCell className="text-sm">{b.street}, {b.zip} {b.city}</TableCell>
-                          <TableCell>
-                            <span className={`px-2 py-1 rounded-full text-xs font-medium ${
-                              hasWelcomeCode ? "bg-green-100 text-green-800" : "bg-muted text-muted-foreground"
-                            }`}>
-                              {hasWelcomeCode ? "Bestätigt" : "Ausstehend"}
-                            </span>
-                          </TableCell>
-                          <TableCell>{bookings.filter(x => x.email === b.email).length}</TableCell>
-                        </TableRow>
-                      );
-                    })}
-                </TableBody>
-              </Table>
-            </div>
+            <AdminClients bookings={bookings} />
           </TabsContent>
 
+          {/* OFFERS TAB */}
           <TabsContent value="offers">
             <div className="grid md:grid-cols-2 gap-8">
               <div className="bg-card rounded-xl p-6 shadow-card space-y-4">
@@ -302,7 +268,6 @@ const AdminDashboard = () => {
                     {offers.filter(o => o.source === "welcome_discount").map(o => {
                       const isExpired = o.valid_until && new Date(o.valid_until) < new Date();
                       const isUsed = !!o.used_at;
-                      // Find customer name from bookings
                       const customer = bookings.find(b => b.user_id === o.target_user_id);
                       return (
                         <TableRow key={o.id}>
