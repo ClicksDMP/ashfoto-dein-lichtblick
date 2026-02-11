@@ -321,6 +321,10 @@ export type Database = {
         }
         Returns: boolean
       }
+      mark_coupon_used: {
+        Args: { _booking_id: string; _offer_id: string }
+        Returns: boolean
+      }
     }
     Enums: {
       app_role: "admin" | "moderator" | "user"

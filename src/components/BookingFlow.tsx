@@ -1084,53 +1084,48 @@ const BookingFlow = ({ preselectedService }: BookingFlowProps = {}) => {
                         }).catch(console.error);
                       }
 
-                      // Save booking
-                      const { data: bookingData, error: bookingError } = await supabase.from("bookings").insert({
-                        user_id: userId,
-                        service: booking.service,
-                        participants: booking.participants as any,
-                        duration: booking.duration,
-                        duration_price: booking.durationPrice,
-                        photo_package: booking.photoPackage,
-                        package_price: booking.packagePrice,
-                        babybauch_kombi: booking.babybaumKombi,
-                        booking_date: booking.date ? format(booking.date, "yyyy-MM-dd") : null,
-                        booking_time: booking.time,
-                        first_name: booking.firstName,
-                        last_name: booking.lastName,
-                        email: booking.email,
-                        phone: booking.phone,
-                        street: booking.street,
-                        zip: booking.zip,
-                        city: booking.city,
-                        notes: booking.notes,
-                        total_price: totalPrice(),
-                      }).select("id").single();
-                      if (bookingError) throw new Error(bookingError.message);
-
-                      // Mark coupon as used if single_use
-                      if (couponApplied?.single_use && bookingData) {
-                        await supabase.from("offers").update({
-                          used_at: new Date().toISOString(),
-                          used_by_booking_id: bookingData.id,
-                          is_active: false,
-                        }).eq("id", couponApplied.id);
+                      // Save booking via edge function (server-side validation)
+                      const { data: bookingResult, error: bookingFnError } = await supabase.functions.invoke("create-booking", {
+                        body: {
+                          user_id: userId,
+                          service: booking.service,
+                          participants: booking.participants,
+                          duration: booking.duration,
+                          photo_package: booking.photoPackage || "none",
+                          babybauch_kombi: booking.babybaumKombi,
+                          booking_date: booking.date ? format(booking.date, "yyyy-MM-dd") : null,
+                          booking_time: booking.time || null,
+                          first_name: booking.firstName,
+                          last_name: booking.lastName,
+                          email: booking.email,
+                          phone: booking.phone,
+                          street: booking.street,
+                          zip: booking.zip,
+                          city: booking.city,
+                          notes: booking.notes,
+                          coupon_id: couponApplied?.id || null,
+                        },
+                      });
+                      if (bookingFnError || !bookingResult?.success) {
+                        throw new Error(bookingResult?.error || bookingFnError?.message || "Buchung fehlgeschlagen.");
                       }
 
-                      // Send booking confirmation email
-                      supabase.functions.invoke("send-email", {
-                        body: {
-                          type: "booking_confirmation",
-                          to: booking.email,
-                          data: {
-                            firstName: booking.firstName,
-                            service: booking.service,
-                            date: booking.date ? format(booking.date, "PPP", { locale: de }) : "Noch offen",
-                            time: booking.time || "Noch offen",
-                            totalPrice: formatPrice(totalPrice()),
+                      // Send booking confirmation email (only for logged-in users)
+                      if (userId) {
+                        supabase.functions.invoke("send-email", {
+                          body: {
+                            type: "booking_confirmation",
+                            to: booking.email,
+                            data: {
+                              firstName: booking.firstName,
+                              service: booking.service,
+                              date: booking.date ? format(booking.date, "PPP", { locale: de }) : "Noch offen",
+                              time: booking.time || "Noch offen",
+                              totalPrice: formatPrice(totalPrice()),
+                            },
                           },
-                        },
-                      }).catch(console.error);
+                        }).catch(console.error);
+                      }
 
                       setConfirmed(true);
                     } catch (err: any) {
