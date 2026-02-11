@@ -1,5 +1,7 @@
+import { useState } from "react";
 import heroBg from "@/assets/hero-bg.jpg";
 import { Button } from "@/components/ui/button";
+import SignUpDialog from "@/components/SignUpDialog";
 
 interface HeroSectionProps {
   onBookClick: () => void;
@@ -7,6 +9,8 @@ interface HeroSectionProps {
 }
 
 const HeroSection = ({ onBookClick, onConsultClick }: HeroSectionProps) => {
+  const [signUpOpen, setSignUpOpen] = useState(false);
+
   return (
     <section className="relative min-h-screen flex items-center">
       {/* Background image */}
@@ -49,9 +53,14 @@ const HeroSection = ({ onBookClick, onConsultClick }: HeroSectionProps) => {
             <Button variant="heroOutline" size="xl" onClick={onConsultClick}>
               Kostenlose Beratung anfragen
             </Button>
+            <Button variant="heroOutline" size="xl" onClick={() => setSignUpOpen(true)}>
+              Konto erstellen
+            </Button>
           </div>
         </div>
       </div>
+
+      <SignUpDialog open={signUpOpen} onOpenChange={setSignUpOpen} />
     </section>
   );
 };
