@@ -10,6 +10,7 @@ import { cn } from "@/lib/utils";
 import { format } from "date-fns";
 import { de } from "date-fns/locale";
 import { CalendarIcon, Check, Minus, Plus, Mail, Phone } from "lucide-react";
+import { supabase } from "@/integrations/supabase/client";
 
 import imgFamily from "@/assets/shooting-family.jpg";
 import imgBaby from "@/assets/shooting-baby.jpg";
@@ -49,6 +50,9 @@ interface BookingData {
   city: string;
   notes: string;
   agreedToTerms: boolean;
+  createAccount: boolean;
+  password: string;
+  passwordRepeat: string;
 }
 
 const INITIAL_BOOKING: BookingData = {
@@ -70,6 +74,9 @@ const INITIAL_BOOKING: BookingData = {
   city: "",
   notes: "",
   agreedToTerms: false,
+  createAccount: false,
+  password: "",
+  passwordRepeat: "",
 };
 
 // ── Services ───────────────────────────────────────────────────
@@ -132,6 +139,8 @@ const BookingFlow = () => {
   const [booking, setBooking] = useState<BookingData>(INITIAL_BOOKING);
   const [showFoodMessage, setShowFoodMessage] = useState(false);
   const [confirmed, setConfirmed] = useState(false);
+  const [submitting, setSubmitting] = useState(false);
+  const [submitError, setSubmitError] = useState("");
 
   const stepRefs = useRef<(HTMLDivElement | null)[]>([]);
 
@@ -624,6 +633,54 @@ const BookingFlow = () => {
                   className="mt-1 h-12"
                 />
               </div>
+
+              {/* Account creation option */}
+              <div className="bg-accent/10 rounded-lg p-4 border border-accent/30">
+                <div className="flex items-start gap-3">
+                  <Checkbox
+                    id="createAccount"
+                    checked={booking.createAccount}
+                    onCheckedChange={(checked) =>
+                      setBooking(prev => ({ ...prev, createAccount: checked === true, password: "", passwordRepeat: "" }))
+                    }
+                  />
+                  <label htmlFor="createAccount" className="cursor-pointer">
+                    <p className="font-medium text-foreground text-sm">Kundenkonto erstellen</p>
+                    <p className="text-xs text-muted-foreground mt-0.5">
+                      Erhalte Zugang zu deinen Fotos, exklusiven Angeboten und Rabatten.
+                    </p>
+                  </label>
+                </div>
+                {booking.createAccount && (
+                  <div className="mt-4 space-y-3 pl-7">
+                    <div>
+                      <Label htmlFor="password" className="text-foreground">Passwort</Label>
+                      <Input
+                        id="password"
+                        type="password"
+                        value={booking.password}
+                        onChange={e => setBooking(prev => ({ ...prev, password: e.target.value }))}
+                        className="mt-1 h-12"
+                        minLength={6}
+                        placeholder="Mindestens 6 Zeichen"
+                      />
+                    </div>
+                    <div>
+                      <Label htmlFor="passwordRepeat" className="text-foreground">Passwort wiederholen</Label>
+                      <Input
+                        id="passwordRepeat"
+                        type="password"
+                        value={booking.passwordRepeat}
+                        onChange={e => setBooking(prev => ({ ...prev, passwordRepeat: e.target.value }))}
+                        className="mt-1 h-12"
+                      />
+                      {booking.password && booking.passwordRepeat && booking.password !== booking.passwordRepeat && (
+                        <p className="text-destructive text-xs mt-1">Passwörter stimmen nicht überein</p>
+                      )}
+                    </div>
+                  </div>
+                )}
+              </div>
               <div>
                 <Label htmlFor="phone" className="text-foreground">Telefonnummer</Label>
                 <Input
@@ -694,7 +751,8 @@ const BookingFlow = () => {
                   disabled={
                     !booking.firstName || !booking.lastName || !booking.email ||
                     !booking.phone || !booking.street || !booking.zip ||
-                    !booking.city || !booking.agreedToTerms
+                    !booking.city || !booking.agreedToTerms ||
+                    (booking.createAccount && (booking.password.length < 6 || booking.password !== booking.passwordRepeat))
                   }
                   onClick={() => { setCurrentStep(4); scrollToStep(7); }}
                 >
@@ -759,14 +817,75 @@ const BookingFlow = () => {
                 </div>
               </div>
 
+              {submitError && <p className="text-destructive text-sm text-center">{submitError}</p>}
               <div className="text-center pt-6">
                 <Button
                   variant="booking"
                   size="xl"
                   className="w-full"
-                  onClick={() => setConfirmed(true)}
+                  disabled={submitting}
+                  onClick={async () => {
+                    setSubmitting(true);
+                    setSubmitError("");
+                    try {
+                      let userId: string | null = null;
+
+                      // Create account if requested
+                      if (booking.createAccount) {
+                        const { data: authData, error: authError } = await supabase.auth.signUp({
+                          email: booking.email,
+                          password: booking.password,
+                          options: { emailRedirectTo: window.location.origin },
+                        });
+                        if (authError) throw new Error(authError.message);
+                        userId = authData.user?.id || null;
+
+                        // Update profile with form data
+                        if (userId) {
+                          await supabase.from("profiles").update({
+                            first_name: booking.firstName,
+                            last_name: booking.lastName,
+                            phone: booking.phone,
+                            street: booking.street,
+                            zip: booking.zip,
+                            city: booking.city,
+                          }).eq("user_id", userId);
+                        }
+                      }
+
+                      // Save booking
+                      const { error: bookingError } = await supabase.from("bookings").insert({
+                        user_id: userId,
+                        service: booking.service,
+                        participants: booking.participants as any,
+                        duration: booking.duration,
+                        duration_price: booking.durationPrice,
+                        photo_package: booking.photoPackage,
+                        package_price: booking.packagePrice,
+                        babybauch_kombi: booking.babybaumKombi,
+                        booking_date: booking.date ? format(booking.date, "yyyy-MM-dd") : null,
+                        booking_time: booking.time,
+                        first_name: booking.firstName,
+                        last_name: booking.lastName,
+                        email: booking.email,
+                        phone: booking.phone,
+                        street: booking.street,
+                        zip: booking.zip,
+                        city: booking.city,
+                        notes: booking.notes,
+                        total_price: totalPrice(),
+                      });
+                      if (bookingError) throw new Error(bookingError.message);
+
+                      setConfirmed(true);
+                    } catch (err: any) {
+                      setSubmitError(err.message || "Ein Fehler ist aufgetreten.");
+                    } finally {
+                      setSubmitting(false);
+                    }
+                  }}
                 >
-                  Buchung verbindlich bestätigen
+                  {submitting ? "Wird gesendet..." : "Buchung verbindlich bestätigen"}
                 </Button>
               </div>
             </div>
