@@ -30,6 +30,12 @@ const stagger = {
 
 const whyIcons = [Camera, Star, Heart, Sparkles, Shield, CheckCircle2];
 
+const LOCATION_FAQ = {
+  question: "In welchen Städten bist du verfügbar?",
+  answer:
+    "Ich bin mit Sitz in Mannheim in der gesamten Metropolregion Rhein-Neckar unterwegs. Dazu gehören unter anderem Heidelberg, Ludwigshafen am Rhein, Frankenthal, Speyer, Worms, Weinheim, Viernheim, Lampertheim, Hockenheim, Leimen, Wiesloch, Bensheim und Neustadt an der Weinstraße. Deine Stadt ist nicht dabei? Schreib mir – oft ist mehr möglich, als du denkst.",
+};
+
 const ServiceLandingPage = ({ service }: ServiceLandingPageProps) => {
   const bookingRef = useRef<HTMLDivElement>(null);
   const heroImage = useServiceHeroImage(service.slug, service.heroImage);
@@ -76,8 +82,11 @@ const ServiceLandingPage = ({ service }: ServiceLandingPageProps) => {
           telephone: "+4917670027200",
           email: "booking@ashfoto.de",
           priceRange: "€€",
-          areaServed: { "@type": "Country", name: "Germany" },
-          image: heroImage,
+          areaServed: [
+            "Mannheim", "Heidelberg", "Ludwigshafen am Rhein", "Frankenthal", "Speyer",
+            "Worms", "Weinheim", "Viernheim", "Lampertheim", "Hockenheim",
+            "Leimen", "Wiesloch", "Bensheim", "Neustadt an der Weinstraße",
+          ].map((city) => ({ "@type": "City", name: city })),
         },
         {
           "@type": "Service",
@@ -463,7 +472,7 @@ const ServiceLandingPage = ({ service }: ServiceLandingPageProps) => {
             </motion.p>
             <motion.div variants={fadeUp}>
               <Accordion type="single" collapsible className="space-y-3">
-                {service.faqs.map((faq, i) => (
+                {[...service.faqs, LOCATION_FAQ].map((faq, i) => (
                   <AccordionItem
                     key={i}
                     value={`faq-${i}`}
