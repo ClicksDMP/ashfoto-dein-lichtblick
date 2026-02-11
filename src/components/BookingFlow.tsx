@@ -106,7 +106,7 @@ const TIME_SLOTS = [
   "17:00", "17:30", "18:00", "18:30", "19:00", "19:30",
 ];
 
-const TOTAL_STEPS = 7;
+const TOTAL_STEPS = 3;
 
 // ── Component ──────────────────────────────────────────────────
 const BookingFlow = () => {
@@ -172,7 +172,7 @@ const BookingFlow = () => {
       ...INITIAL_BOOKING,
       service,
     });
-    goToStep(2);
+    scrollToStep(2); // scroll to participants (still within step 1)
   };
 
   // ── Counter ──────────────────────────────────────────────────
@@ -190,7 +190,6 @@ const BookingFlow = () => {
   const handleDurationSelect = (value: string, price: number) => {
     setBooking(prev => ({ ...prev, duration: value, durationPrice: price }));
 
-    // Auto-select Alle Fotos for restricted services
     if (requiresAllFotos) {
       setBooking(prev => ({
         ...prev,
@@ -199,16 +198,17 @@ const BookingFlow = () => {
         photoPackage: "all",
         packagePrice: 449.99,
       }));
-      goToStep(5);
+      setCurrentStep(3);
+      scrollToStep(5); // scroll to calendar
     } else {
-      goToStep(4);
+      scrollToStep(4); // scroll to package selection (still within step 2)
     }
   };
 
-  // ── Package ──────────────────────────────────────────────────
   const handlePackageSelect = (value: string, price: number) => {
     setBooking(prev => ({ ...prev, photoPackage: value, packagePrice: price }));
-    goToStep(5);
+    setCurrentStep(3);
+    scrollToStep(5); // scroll to calendar
   };
 
   // ── Babybauch Kombi ──────────────────────────────────────────
@@ -310,13 +310,9 @@ const BookingFlow = () => {
           )}
         </div>
 
-        {/* STEP 2: Participants */}
-        {/* STEP 2: Participants */}
+        {/* Participants (part of Step 1) */}
         <div ref={el => (stepRefs.current[2] = el)} className="mt-20 scroll-mt-24">
             <div className="text-center mb-10">
-              <p className="text-primary font-body font-semibold tracking-[0.25em] uppercase text-sm mb-4">
-                Schritt 2
-              </p>
               <h2 className="font-display text-3xl md:text-4xl font-bold text-foreground">
                 Wie viele Personen nehmen teil?
               </h2>
@@ -353,18 +349,17 @@ const BookingFlow = () => {
             </div>
 
             <div className="text-center">
-              <Button variant="booking" size="lg" onClick={() => goToStep(3)}>
+              <Button variant="booking" size="lg" onClick={() => { setCurrentStep(2); scrollToStep(3); }}>
                 Weiter
               </Button>
             </div>
           </div>
 
-        {/* STEP 3: Duration */}
-        {/* STEP 3: Duration */}
+        {/* STEP 2: Duration */}
         <div ref={el => (stepRefs.current[3] = el)} className="mt-20 scroll-mt-24">
             <div className="text-center mb-10">
               <p className="text-primary font-body font-semibold tracking-[0.25em] uppercase text-sm mb-4">
-                Schritt 3
+                Schritt 2
               </p>
               <h2 className="font-display text-3xl md:text-4xl font-bold text-foreground">
                 Wähle die Dauer deines Shootings
@@ -390,13 +385,9 @@ const BookingFlow = () => {
             </div>
           </div>
 
-        {/* STEP 4: Photo Package */}
-        {/* STEP 4: Photo Package */}
+        {/* Photo Package (part of Step 2) */}
         <div ref={el => (stepRefs.current[4] = el)} className="mt-20 scroll-mt-24">
             <div className="text-center mb-6">
-              <p className="text-primary font-body font-semibold tracking-[0.25em] uppercase text-sm mb-4">
-                Schritt 4
-              </p>
               <h2 className="font-display text-3xl md:text-4xl font-bold text-foreground">
                 Wähle dein Bildpaket
               </h2>
@@ -486,12 +477,11 @@ const BookingFlow = () => {
             </div>
           </div>
 
-        {/* STEP 5: Calendar */}
-        {/* STEP 5: Calendar */}
+        {/* STEP 3: Calendar */}
         <div ref={el => (stepRefs.current[5] = el)} className="mt-20 scroll-mt-24">
             <div className="text-center mb-10">
               <p className="text-primary font-body font-semibold tracking-[0.25em] uppercase text-sm mb-4">
-                Schritt 5
+                Schritt 3
               </p>
               <h2 className="font-display text-3xl md:text-4xl font-bold text-foreground">
                 Wähle Datum und Uhrzeit
@@ -554,7 +544,7 @@ const BookingFlow = () => {
                   variant="booking"
                   size="lg"
                   disabled={!booking.date || !booking.time}
-                  onClick={() => goToStep(6)}
+                  onClick={() => scrollToStep(6)}
                 >
                   Weiter
                 </Button>
@@ -562,13 +552,9 @@ const BookingFlow = () => {
             </div>
           </div>
 
-        {/* STEP 6: Customer Data */}
-        {/* STEP 6: Customer Data */}
+        {/* Customer Data (part of Step 3) */}
         <div ref={el => (stepRefs.current[6] = el)} className="mt-20 scroll-mt-24">
             <div className="text-center mb-10">
-              <p className="text-primary font-body font-semibold tracking-[0.25em] uppercase text-sm mb-4">
-                Schritt 6
-              </p>
               <h2 className="font-display text-3xl md:text-4xl font-bold text-foreground">
                 Deine Angaben
               </h2>
@@ -677,7 +663,7 @@ const BookingFlow = () => {
                     !booking.phone || !booking.street || !booking.zip ||
                     !booking.city || !booking.agreedToTerms
                   }
-                  onClick={() => goToStep(7)}
+                  onClick={() => { setCurrentStep(4); scrollToStep(7); }}
                 >
                   Weiter zur Zusammenfassung
                 </Button>
@@ -685,13 +671,10 @@ const BookingFlow = () => {
             </div>
           </div>
 
-        {/* STEP 7: Summary */}
-        {currentStep >= 7 && (
+        {/* Summary */}
+        {currentStep >= 4 && (
           <div ref={el => (stepRefs.current[7] = el)} className="mt-20 scroll-mt-24 animate-fade-in-up">
             <div className="text-center mb-10">
-              <p className="text-primary font-body font-semibold tracking-[0.25em] uppercase text-sm mb-4">
-                Schritt 7
-              </p>
               <h2 className="font-display text-3xl md:text-4xl font-bold text-foreground">
                 Zusammenfassung
               </h2>
