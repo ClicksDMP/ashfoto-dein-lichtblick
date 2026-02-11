@@ -151,7 +151,7 @@ const AdminCalendar = ({ bookings, onUpdateBooking, onDeleteBooking, onCancelBoo
   return (
     <div className="grid md:grid-cols-[auto_1fr] gap-8">
       {/* Calendar */}
-      <div className="bg-card rounded-xl p-4 shadow-card self-start">
+      <div className="bg-card rounded-xl p-4 shadow-card self-start [&_.rdp-day]:text-foreground [&_.rdp-head_cell]:text-muted-foreground [&_.rdp-caption_label]:text-foreground [&_.rdp-nav_button]:text-foreground">
         <Calendar
           mode="single"
           selected={selectedDate}
@@ -162,8 +162,8 @@ const AdminCalendar = ({ bookings, onUpdateBooking, onDeleteBooking, onCancelBoo
             blocked: (date) => blockedDates.has(format(date, "yyyy-MM-dd")),
           }}
           modifiersClassNames={{
-            booked: "bg-primary/20 font-bold text-primary",
-            blocked: "bg-destructive/20 font-bold text-destructive line-through",
+            booked: "!bg-white/15 !font-bold !text-white",
+            blocked: "!bg-red-500/20 !font-bold !text-red-400 line-through",
           }}
         />
         <div className="mt-3 space-y-1 text-xs text-muted-foreground px-2">
