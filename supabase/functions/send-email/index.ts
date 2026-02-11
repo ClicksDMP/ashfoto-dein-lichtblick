@@ -1,4 +1,5 @@
 import { serve } from "https://deno.land/std@0.168.0/http/server.ts";
+import { createClient } from "https://esm.sh/@supabase/supabase-js@2";
 import nodemailer from "npm:nodemailer@6.9.16";
 
 const corsHeaders = {
@@ -100,6 +101,28 @@ serve(async (req) => {
   }
 
   try {
+    // Authenticate the caller
+    const authHeader = req.headers.get("Authorization");
+    if (!authHeader) {
+      return new Response(JSON.stringify({ error: "Unauthorized" }), {
+        status: 401,
+        headers: { ...corsHeaders, "Content-Type": "application/json" },
+      });
+    }
+
+    const supabaseUrl = Deno.env.get("SUPABASE_URL")!;
+    const anonKey = Deno.env.get("SUPABASE_ANON_KEY")!;
+    const anonClient = createClient(supabaseUrl, anonKey);
+    const token = authHeader.replace("Bearer ", "");
+    const { data: { user }, error: userError } = await anonClient.auth.getUser(token);
+
+    if (userError || !user) {
+      return new Response(JSON.stringify({ error: "Invalid token" }), {
+        status: 401,
+        headers: { ...corsHeaders, "Content-Type": "application/json" },
+      });
+    }
+
     const { type, to, data } = await req.json();
 
     if (!to || !type) {
@@ -109,12 +132,20 @@ serve(async (req) => {
       });
     }
 
+    // Users can only send emails to their own email address
+    if (to !== user.email) {
+      return new Response(JSON.stringify({ error: "Can only send emails to your own address" }), {
+        status: 403,
+        headers: { ...corsHeaders, "Content-Type": "application/json" },
+      });
+    }
+
     const host = Deno.env.get("SMTP_HOST");
     const port = parseInt(Deno.env.get("SMTP_PORT") || "465");
-    const user = Deno.env.get("SMTP_USER");
+    const smtpUser = Deno.env.get("SMTP_USER");
     const pass = Deno.env.get("SMTP_PASS");
 
-    if (!host || !user || !pass) {
+    if (!host || !smtpUser || !pass) {
       throw new Error("SMTP credentials not configured");
     }
 
@@ -122,7 +153,7 @@ serve(async (req) => {
       host,
       port,
       secure: port === 465,
-      auth: { user, pass },
+      auth: { user: smtpUser, pass },
     });
 
     let subject: string;
@@ -145,7 +176,7 @@ serve(async (req) => {
     }
 
     await transporter.sendMail({
-      from: `"AshFoto" <${user}>`,
+      from: `"AshFoto" <${smtpUser}>`,
       to,
       subject,
       html,
@@ -159,7 +190,7 @@ serve(async (req) => {
   } catch (error) {
     console.error("Email send error:", error);
     return new Response(
-      JSON.stringify({ error: error instanceof Error ? error.message : "Unknown error" }),
+      JSON.stringify({ error: "Ein Fehler ist aufgetreten." }),
       { status: 500, headers: { ...corsHeaders, "Content-Type": "application/json" } }
     );
   }
