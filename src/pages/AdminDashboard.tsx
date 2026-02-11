@@ -177,20 +177,31 @@ const AdminDashboard = () => {
                     <TableHead>E-Mail</TableHead>
                     <TableHead>Telefon</TableHead>
                     <TableHead>Adresse</TableHead>
+                    <TableHead>E-Mail bestätigt</TableHead>
                     <TableHead>Buchungen</TableHead>
                   </TableRow>
                 </TableHeader>
                 <TableBody>
                   {/* Deduplicate by email */}
-                  {Array.from(new Map(bookings.map(b => [b.email, b])).values()).map(b => (
-                    <TableRow key={b.email}>
-                      <TableCell className="font-medium">{b.first_name} {b.last_name}</TableCell>
-                      <TableCell>{b.email}</TableCell>
-                      <TableCell>{b.phone}</TableCell>
-                      <TableCell className="text-sm">{b.street}, {b.zip} {b.city}</TableCell>
-                      <TableCell>{bookings.filter(x => x.email === b.email).length}</TableCell>
-                    </TableRow>
-                  ))}
+                  {Array.from(new Map(bookings.map(b => [b.email, b])).values()).map(b => {
+                    const hasWelcomeCode = offers.some(o => o.source === "welcome_discount" && o.target_user_id === b.user_id);
+                    return (
+                      <TableRow key={b.email}>
+                        <TableCell className="font-medium">{b.first_name} {b.last_name}</TableCell>
+                        <TableCell>{b.email}</TableCell>
+                        <TableCell>{b.phone}</TableCell>
+                        <TableCell className="text-sm">{b.street}, {b.zip} {b.city}</TableCell>
+                        <TableCell>
+                          <span className={`px-2 py-1 rounded-full text-xs font-medium ${
+                            hasWelcomeCode ? "bg-green-100 text-green-800" : "bg-muted text-muted-foreground"
+                          }`}>
+                            {hasWelcomeCode ? "Bestätigt" : "Ausstehend"}
+                          </span>
+                        </TableCell>
+                        <TableCell>{bookings.filter(x => x.email === b.email).length}</TableCell>
+                      </TableRow>
+                    );
+                  })}
                 </TableBody>
               </Table>
             </div>
