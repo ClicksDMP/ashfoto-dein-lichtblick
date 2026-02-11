@@ -311,8 +311,8 @@ const BookingFlow = () => {
         </div>
 
         {/* STEP 2: Participants */}
-        {currentStep >= 2 && (
-          <div ref={el => (stepRefs.current[2] = el)} className="mt-20 scroll-mt-24 animate-fade-in-up">
+        {/* STEP 2: Participants */}
+        <div ref={el => (stepRefs.current[2] = el)} className="mt-20 scroll-mt-24">
             <div className="text-center mb-10">
               <p className="text-primary font-body font-semibold tracking-[0.25em] uppercase text-sm mb-4">
                 Schritt 2
@@ -358,11 +358,10 @@ const BookingFlow = () => {
               </Button>
             </div>
           </div>
-        )}
 
         {/* STEP 3: Duration */}
-        {currentStep >= 3 && (
-          <div ref={el => (stepRefs.current[3] = el)} className="mt-20 scroll-mt-24 animate-fade-in-up">
+        {/* STEP 3: Duration */}
+        <div ref={el => (stepRefs.current[3] = el)} className="mt-20 scroll-mt-24">
             <div className="text-center mb-10">
               <p className="text-primary font-body font-semibold tracking-[0.25em] uppercase text-sm mb-4">
                 Schritt 3
@@ -390,11 +389,10 @@ const BookingFlow = () => {
               ))}
             </div>
           </div>
-        )}
 
         {/* STEP 4: Photo Package */}
-        {currentStep >= 4 && (
-          <div ref={el => (stepRefs.current[4] = el)} className="mt-20 scroll-mt-24 animate-fade-in-up">
+        {/* STEP 4: Photo Package */}
+        <div ref={el => (stepRefs.current[4] = el)} className="mt-20 scroll-mt-24">
             <div className="text-center mb-6">
               <p className="text-primary font-body font-semibold tracking-[0.25em] uppercase text-sm mb-4">
                 Schritt 4
@@ -487,11 +485,10 @@ const BookingFlow = () => {
               )}
             </div>
           </div>
-        )}
 
         {/* STEP 5: Calendar */}
-        {currentStep >= 5 && (
-          <div ref={el => (stepRefs.current[5] = el)} className="mt-20 scroll-mt-24 animate-fade-in-up">
+        {/* STEP 5: Calendar */}
+        <div ref={el => (stepRefs.current[5] = el)} className="mt-20 scroll-mt-24">
             <div className="text-center mb-10">
               <p className="text-primary font-body font-semibold tracking-[0.25em] uppercase text-sm mb-4">
                 Schritt 5
@@ -564,11 +561,10 @@ const BookingFlow = () => {
               </div>
             </div>
           </div>
-        )}
 
         {/* STEP 6: Customer Data */}
-        {currentStep >= 6 && (
-          <div ref={el => (stepRefs.current[6] = el)} className="mt-20 scroll-mt-24 animate-fade-in-up">
+        {/* STEP 6: Customer Data */}
+        <div ref={el => (stepRefs.current[6] = el)} className="mt-20 scroll-mt-24">
             <div className="text-center mb-10">
               <p className="text-primary font-body font-semibold tracking-[0.25em] uppercase text-sm mb-4">
                 Schritt 6
@@ -688,7 +684,6 @@ const BookingFlow = () => {
               </div>
             </div>
           </div>
-        )}
 
         {/* STEP 7: Summary */}
         {currentStep >= 7 && (
