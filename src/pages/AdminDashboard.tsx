@@ -10,7 +10,7 @@ import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { format } from "date-fns";
 import { de } from "date-fns/locale";
-import { LogOut, Users, Calendar, Tag, Search } from "lucide-react";
+import { LogOut, Users, Calendar, Tag, Search, RefreshCw } from "lucide-react";
 import type { Tables } from "@/integrations/supabase/types";
 
 type Booking = Tables<"bookings">;
@@ -22,7 +22,18 @@ const AdminDashboard = () => {
   const [bookings, setBookings] = useState<Booking[]>([]);
   const [searchTerm, setSearchTerm] = useState("");
   const [offers, setOffers] = useState<Offer[]>([]);
-  const [newOffer, setNewOffer] = useState({ title: "", description: "", discount_percent: "", code: "", valid_until: "" });
+  const [newOffer, setNewOffer] = useState({ title: "", description: "", discount_percent: "", discount_amount: "", code: "", valid_until: "" });
+
+  const generateCode = () => {
+    const chars = "ABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789";
+    let code = "";
+    const array = new Uint8Array(16);
+    crypto.getRandomValues(array);
+    for (let i = 0; i < 16; i++) {
+      code += chars[array[i] % chars.length];
+    }
+    setNewOffer(p => ({ ...p, code }));
+  };
 
   useEffect(() => {
     if (!loading && (!user || !isAdmin)) {
@@ -58,10 +69,11 @@ const AdminDashboard = () => {
       title: newOffer.title,
       description: newOffer.description,
       discount_percent: newOffer.discount_percent ? parseFloat(newOffer.discount_percent) : null,
+      discount_amount: newOffer.discount_amount ? parseFloat(newOffer.discount_amount) : null,
       code: newOffer.code || null,
       valid_until: newOffer.valid_until || null,
     });
-    setNewOffer({ title: "", description: "", discount_percent: "", code: "", valid_until: "" });
+    setNewOffer({ title: "", description: "", discount_percent: "", discount_amount: "", code: "", valid_until: "" });
     fetchOffers();
   };
 
@@ -202,8 +214,17 @@ const AdminDashboard = () => {
                     <Input type="number" value={newOffer.discount_percent} onChange={e => setNewOffer(p => ({ ...p, discount_percent: e.target.value }))} className="mt-1" />
                   </div>
                   <div>
-                    <Label>Code</Label>
-                    <Input value={newOffer.code} onChange={e => setNewOffer(p => ({ ...p, code: e.target.value }))} className="mt-1" />
+                    <Label>Rabatt € (Betrag)</Label>
+                    <Input type="number" value={newOffer.discount_amount} onChange={e => setNewOffer(p => ({ ...p, discount_amount: e.target.value }))} className="mt-1" />
+                  </div>
+                </div>
+                <div>
+                  <Label>Code</Label>
+                  <div className="flex gap-2 mt-1">
+                    <Input value={newOffer.code} onChange={e => setNewOffer(p => ({ ...p, code: e.target.value.toUpperCase() }))} placeholder="16-stelliger Code" className="font-mono tracking-wider" />
+                    <Button type="button" variant="outline" size="icon" onClick={generateCode} title="Code generieren">
+                      <RefreshCw className="w-4 h-4" />
+                    </Button>
                   </div>
                 </div>
                 <div>

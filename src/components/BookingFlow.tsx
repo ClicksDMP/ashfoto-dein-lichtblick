@@ -141,6 +141,11 @@ const BookingFlow = () => {
   const [confirmed, setConfirmed] = useState(false);
   const [submitting, setSubmitting] = useState(false);
   const [submitError, setSubmitError] = useState("");
+  const [couponParts, setCouponParts] = useState(["", "", "", ""]);
+  const [couponApplied, setCouponApplied] = useState<{ title: string; discount_percent: number | null; discount_amount: number | null } | null>(null);
+  const [couponError, setCouponError] = useState("");
+  const [couponChecking, setCouponChecking] = useState(false);
+  const couponRefs = useRef<(HTMLInputElement | null)[]>([]);
 
   const stepRefs = useRef<(HTMLDivElement | null)[]>([]);
 
@@ -154,6 +159,45 @@ const BookingFlow = () => {
     setCurrentStep(step);
     scrollToStep(step);
   }, [scrollToStep]);
+
+  // ── Coupon ───────────────────────────────────────────────────
+  const handleCouponPartChange = (index: number, value: string) => {
+    const clean = value.replace(/[^A-Za-z0-9]/g, "").toUpperCase().slice(0, 4);
+    const updated = [...couponParts];
+    updated[index] = clean;
+    setCouponParts(updated);
+    setCouponError("");
+    setCouponApplied(null);
+    if (clean.length === 4 && index < 3) {
+      couponRefs.current[index + 1]?.focus();
+    }
+  };
+
+  const handleCouponCheck = async () => {
+    const code = couponParts.join("");
+    if (code.length !== 16) {
+      setCouponError("Bitte gib den vollständigen 16-stelligen Code ein.");
+      return;
+    }
+    setCouponChecking(true);
+    setCouponError("");
+    const { data, error } = await supabase
+      .from("offers")
+      .select("title, discount_percent, discount_amount, valid_until, is_active")
+      .eq("code", code)
+      .eq("is_active", true)
+      .maybeSingle();
+    setCouponChecking(false);
+    if (error || !data) {
+      setCouponError("Ungültiger oder abgelaufener Code.");
+      return;
+    }
+    if (data.valid_until && new Date(data.valid_until) < new Date()) {
+      setCouponError("Dieser Code ist leider abgelaufen.");
+      return;
+    }
+    setCouponApplied({ title: data.title, discount_percent: data.discount_percent, discount_amount: data.discount_amount });
+  };
 
   // ── Helpers ──────────────────────────────────────────────────
   const isMini = booking.service === "Mini Shooting";
@@ -179,7 +223,15 @@ const BookingFlow = () => {
   const totalPrice = () => {
     let total = booking.durationPrice + booking.packagePrice;
     if (isBabybauch && booking.babybaumKombi) {
-      total += 49.99; // baby shooting add-on
+      total += 49.99;
+    }
+    if (couponApplied) {
+      if (couponApplied.discount_percent) {
+        total = total * (1 - couponApplied.discount_percent / 100);
+      }
+      if (couponApplied.discount_amount) {
+        total = Math.max(0, total - couponApplied.discount_amount);
+      }
     }
     return total;
   };
@@ -291,6 +343,53 @@ const BookingFlow = () => {
     <section className="py-24 bg-warm-white" id="booking">
       <div className="container mx-auto px-6 md:px-12 max-w-4xl">
         {renderProgress()}
+
+        {/* COUPON CODE */}
+        <div className="mb-16">
+          <div className="text-center mb-6">
+            <h3 className="font-display text-xl font-bold text-foreground">
+              Hast du einen Gutscheincode?
+            </h3>
+            <p className="text-sm text-muted-foreground mt-1">Gib deinen 16-stelligen Code ein</p>
+          </div>
+          <div className="flex items-center justify-center gap-3 mb-4">
+            {couponParts.map((part, i) => (
+              <Input
+                key={i}
+                ref={el => (couponRefs.current[i] = el)}
+                value={part}
+                onChange={e => handleCouponPartChange(i, e.target.value)}
+                maxLength={4}
+                placeholder="XXXX"
+                className="w-20 text-center font-mono text-lg tracking-widest uppercase"
+              />
+            ))}
+          </div>
+          <div className="text-center">
+            <Button
+              variant="outline"
+              size="sm"
+              onClick={handleCouponCheck}
+              disabled={couponChecking || couponParts.join("").length !== 16}
+            >
+              {couponChecking ? "Prüfe..." : "Code einlösen"}
+            </Button>
+          </div>
+          {couponError && (
+            <p className="text-center text-sm text-destructive mt-2">{couponError}</p>
+          )}
+          {couponApplied && (
+            <div className="text-center mt-3 bg-primary/10 rounded-lg p-3 max-w-sm mx-auto">
+              <p className="text-sm font-semibold text-primary">✓ {couponApplied.title}</p>
+              {couponApplied.discount_percent && (
+                <p className="text-xs text-muted-foreground">{couponApplied.discount_percent}% Rabatt wird angewendet</p>
+              )}
+              {couponApplied.discount_amount && (
+                <p className="text-xs text-muted-foreground">{couponApplied.discount_amount.toFixed(2).replace(".", ",")} € Rabatt wird angewendet</p>
+              )}
+            </div>
+          )}
+        </div>
 
         {/* STEP 1: Services */}
         <div ref={el => (stepRefs.current[1] = el)} className="scroll-mt-24">
