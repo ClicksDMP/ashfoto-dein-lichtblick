@@ -12,6 +12,7 @@ import {
 import ServiceGallery from "@/components/ServiceGallery";
 import BookingFlow from "@/components/BookingFlow";
 import Footer from "@/components/Footer";
+import { useServiceHeroImage } from "@/hooks/useServiceHeroImage";
 import type { ServiceData } from "@/data/serviceData";
 
 interface ServiceLandingPageProps {
@@ -31,6 +32,7 @@ const whyIcons = [Camera, Star, Heart, Sparkles, Shield, CheckCircle2];
 
 const ServiceLandingPage = ({ service }: ServiceLandingPageProps) => {
   const bookingRef = useRef<HTMLDivElement>(null);
+  const heroImage = useServiceHeroImage(service.slug, service.heroImage);
 
   const scrollToBooking = useCallback(() => {
     bookingRef.current?.scrollIntoView({ behavior: "smooth", block: "start" });
@@ -75,7 +77,7 @@ const ServiceLandingPage = ({ service }: ServiceLandingPageProps) => {
           email: "booking@ashfoto.de",
           priceRange: "€€",
           areaServed: { "@type": "Country", name: "Germany" },
-          image: service.heroImage,
+          image: heroImage,
         },
         {
           "@type": "Service",
@@ -84,7 +86,7 @@ const ServiceLandingPage = ({ service }: ServiceLandingPageProps) => {
           description: service.description,
           provider: { "@id": "https://ashfoto.de/#business" },
           url: `https://ashfoto.de/shooting/${service.slug}`,
-          image: service.heroImage,
+          image: heroImage,
           areaServed: { "@type": "Country", name: "Germany" },
         },
         {
@@ -112,7 +114,7 @@ const ServiceLandingPage = ({ service }: ServiceLandingPageProps) => {
       <section className="relative min-h-[80vh] flex items-end">
         <div className="absolute inset-0">
           <img
-            src={service.heroImage}
+            src={heroImage}
             alt={service.title}
             className="w-full h-full object-cover"
             loading="eager"
@@ -229,7 +231,7 @@ const ServiceLandingPage = ({ service }: ServiceLandingPageProps) => {
       {/* ── FULL-WIDTH IMAGE DIVIDER ─────────────────────────── */}
       <div className="h-72 md:h-96 overflow-hidden">
         <img
-          src={service.heroImage}
+          src={heroImage}
           alt={service.title}
           className="w-full h-full object-cover object-center"
           loading="lazy"
@@ -322,7 +324,7 @@ const ServiceLandingPage = ({ service }: ServiceLandingPageProps) => {
             <motion.div variants={fadeUp}>
               <ServiceGallery
                 serviceSlug={service.slug}
-                fallbackImage={service.heroImage}
+                fallbackImage={heroImage}
               />
             </motion.div>
           </motion.div>
@@ -430,7 +432,7 @@ const ServiceLandingPage = ({ service }: ServiceLandingPageProps) => {
       {/* ── IMAGE DIVIDER ────────────────────────────────────── */}
       <div className="h-64 md:h-80 overflow-hidden">
         <img
-          src={service.heroImage}
+          src={heroImage}
           alt={service.title}
           className="w-full h-full object-cover"
           loading="lazy"
