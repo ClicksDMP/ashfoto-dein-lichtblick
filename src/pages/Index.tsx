@@ -1,13 +1,27 @@
-// Update this page (the content is just a fallback if you fail to update the page)
+import { useRef, useCallback } from "react";
+import HeroSection from "@/components/HeroSection";
+import AboutSection from "@/components/AboutSection";
+import ProcessSection from "@/components/ProcessSection";
+import BookingFlow from "@/components/BookingFlow";
+import Footer from "@/components/Footer";
 
 const Index = () => {
+  const bookingRef = useRef<HTMLDivElement>(null);
+
+  const scrollToBooking = useCallback(() => {
+    bookingRef.current?.scrollIntoView({ behavior: "smooth", block: "start" });
+  }, []);
+
   return (
-    <div className="flex min-h-screen items-center justify-center bg-background">
-      <div className="text-center">
-        <h1 className="mb-4 text-4xl font-bold">Welcome to Your Blank App</h1>
-        <p className="text-xl text-muted-foreground">Start building your amazing project here!</p>
+    <main className="min-h-screen">
+      <HeroSection onBookClick={scrollToBooking} onConsultClick={scrollToBooking} />
+      <AboutSection onCtaClick={scrollToBooking} />
+      <ProcessSection onCtaClick={scrollToBooking} />
+      <div ref={bookingRef} className="scroll-mt-8">
+        <BookingFlow />
       </div>
-    </div>
+      <Footer />
+    </main>
   );
 };
 
