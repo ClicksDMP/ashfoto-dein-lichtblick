@@ -38,7 +38,7 @@ const ServiceLandingPage = ({ service }: ServiceLandingPageProps) => {
     window.scrollTo(0, 0);
   }, [service.slug]);
 
-  // SEO: update document title and meta
+  // SEO: update document title, meta, and JSON-LD
   useEffect(() => {
     document.title = service.metaTitle;
     const metaDesc = document.querySelector('meta[name="description"]');
@@ -50,6 +50,59 @@ const ServiceLandingPage = ({ service }: ServiceLandingPageProps) => {
       meta.content = service.metaDescription;
       document.head.appendChild(meta);
     }
+
+    // JSON-LD structured data
+    const jsonLdId = "service-jsonld";
+    let script = document.getElementById(jsonLdId) as HTMLScriptElement | null;
+    if (!script) {
+      script = document.createElement("script");
+      script.id = jsonLdId;
+      script.type = "application/ld+json";
+      document.head.appendChild(script);
+    }
+
+    const structuredData = {
+      "@context": "https://schema.org",
+      "@graph": [
+        {
+          "@type": "LocalBusiness",
+          "@id": "https://ashfoto.de/#business",
+          name: "ashfoto",
+          description: "Mobiler Fotograf – Professionelle Fotoshootings direkt bei dir vor Ort.",
+          url: "https://ashfoto.de",
+          telephone: "+4917670027200",
+          email: "booking@ashfoto.de",
+          priceRange: "€€",
+          areaServed: { "@type": "Country", name: "Germany" },
+          image: service.heroImage,
+        },
+        {
+          "@type": "Service",
+          "@id": `https://ashfoto.de/shooting/${service.slug}#service`,
+          name: service.title,
+          description: service.description,
+          provider: { "@id": "https://ashfoto.de/#business" },
+          url: `https://ashfoto.de/shooting/${service.slug}`,
+          image: service.heroImage,
+          areaServed: { "@type": "Country", name: "Germany" },
+        },
+        {
+          "@type": "FAQPage",
+          mainEntity: service.faqs.map((faq) => ({
+            "@type": "Question",
+            name: faq.question,
+            acceptedAnswer: { "@type": "Answer", text: faq.answer },
+          })),
+        },
+      ],
+    };
+
+    script.textContent = JSON.stringify(structuredData);
+
+    return () => {
+      const el = document.getElementById(jsonLdId);
+      if (el) el.remove();
+    };
   }, [service]);
 
   return (
