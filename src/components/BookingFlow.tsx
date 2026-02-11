@@ -142,7 +142,7 @@ const BookingFlow = () => {
   const [submitting, setSubmitting] = useState(false);
   const [submitError, setSubmitError] = useState("");
   const [couponParts, setCouponParts] = useState(["", "", "", ""]);
-  const [couponApplied, setCouponApplied] = useState<{ title: string; discount_percent: number | null; discount_amount: number | null } | null>(null);
+  const [couponApplied, setCouponApplied] = useState<{ id: string; title: string; discount_percent: number | null; discount_amount: number | null; single_use: boolean; photo_package_only: boolean } | null>(null);
   const [couponError, setCouponError] = useState("");
   const [couponChecking, setCouponChecking] = useState(false);
   const couponRefs = useRef<(HTMLInputElement | null)[]>([]);
@@ -183,7 +183,7 @@ const BookingFlow = () => {
     setCouponError("");
     const { data, error } = await supabase
       .from("offers")
-      .select("title, discount_percent, discount_amount, valid_until, is_active")
+      .select("id, title, discount_percent, discount_amount, valid_until, is_active, single_use, photo_package_only, used_at")
       .eq("code", code)
       .eq("is_active", true)
       .maybeSingle();
@@ -196,7 +196,11 @@ const BookingFlow = () => {
       setCouponError("Dieser Code ist leider abgelaufen.");
       return;
     }
-    setCouponApplied({ title: data.title, discount_percent: data.discount_percent, discount_amount: data.discount_amount });
+    if (data.single_use && data.used_at) {
+      setCouponError("Dieser Code wurde bereits verwendet.");
+      return;
+    }
+    setCouponApplied({ id: data.id, title: data.title, discount_percent: data.discount_percent, discount_amount: data.discount_amount, single_use: data.single_use, photo_package_only: data.photo_package_only });
   };
 
   // ── Helpers ──────────────────────────────────────────────────
@@ -226,11 +230,25 @@ const BookingFlow = () => {
       total += 49.99;
     }
     if (couponApplied) {
-      if (couponApplied.discount_percent) {
-        total = total * (1 - couponApplied.discount_percent / 100);
-      }
-      if (couponApplied.discount_amount) {
-        total = Math.max(0, total - couponApplied.discount_amount);
+      // photo_package_only: only apply discount to the package price portion
+      if (couponApplied.photo_package_only && booking.photoPackage === "none") {
+        // No discount if no photo package selected
+      } else if (couponApplied.photo_package_only) {
+        // Apply discount only to the package price
+        let discountBase = booking.packagePrice;
+        if (couponApplied.discount_percent) {
+          total -= discountBase * (couponApplied.discount_percent / 100);
+        }
+        if (couponApplied.discount_amount) {
+          total = Math.max(0, total - couponApplied.discount_amount);
+        }
+      } else {
+        if (couponApplied.discount_percent) {
+          total = total * (1 - couponApplied.discount_percent / 100);
+        }
+        if (couponApplied.discount_amount) {
+          total = Math.max(0, total - couponApplied.discount_amount);
+        }
       }
     }
     return total;
@@ -386,6 +404,9 @@ const BookingFlow = () => {
               )}
               {couponApplied.discount_amount && (
                 <p className="text-xs text-muted-foreground">{couponApplied.discount_amount.toFixed(2).replace(".", ",")} € Rabatt wird angewendet</p>
+              )}
+              {couponApplied.photo_package_only && (
+                <p className="text-xs text-muted-foreground mt-1">* Nur gültig mit einem Fotopaket</p>
               )}
             </div>
           )}
@@ -958,7 +979,7 @@ const BookingFlow = () => {
                       }
 
                       // Save booking
-                      const { error: bookingError } = await supabase.from("bookings").insert({
+                      const { data: bookingData, error: bookingError } = await supabase.from("bookings").insert({
                         user_id: userId,
                         service: booking.service,
                         participants: booking.participants as any,
@@ -978,8 +999,17 @@ const BookingFlow = () => {
                         city: booking.city,
                         notes: booking.notes,
                         total_price: totalPrice(),
-                      });
+                      }).select("id").single();
                       if (bookingError) throw new Error(bookingError.message);
+
+                      // Mark coupon as used if single_use
+                      if (couponApplied?.single_use && bookingData) {
+                        await supabase.from("offers").update({
+                          used_at: new Date().toISOString(),
+                          used_by_booking_id: bookingData.id,
+                          is_active: false,
+                        }).eq("id", couponApplied.id);
+                      }
 
                       // Send booking confirmation email
                       supabase.functions.invoke("send-email", {

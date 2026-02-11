@@ -25,11 +25,15 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
   const [isAdmin, setIsAdmin] = useState(false);
 
   useEffect(() => {
-    const { data: { subscription } } = supabase.auth.onAuthStateChange((_event, session) => {
+    const { data: { subscription } } = supabase.auth.onAuthStateChange((event, session) => {
       setSession(session);
       setUser(session?.user ?? null);
       if (session?.user) {
         setTimeout(() => checkAdmin(session.user.id), 0);
+        // Check if email was just confirmed and generate welcome code
+        if (event === "SIGNED_IN" && session.user.email_confirmed_at) {
+          generateWelcomeCode().catch(console.error);
+        }
       } else {
         setIsAdmin(false);
       }
@@ -51,6 +55,14 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
   const checkAdmin = async (userId: string) => {
     const { data } = await supabase.rpc("has_role", { _user_id: userId, _role: "admin" });
     setIsAdmin(!!data);
+  };
+
+  const generateWelcomeCode = async () => {
+    try {
+      await supabase.functions.invoke("generate-welcome-code");
+    } catch (e) {
+      console.error("Welcome code generation failed:", e);
+    }
   };
 
   const signOut = async () => {

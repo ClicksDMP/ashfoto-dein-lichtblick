@@ -2,3 +2,6 @@ project_id = "etvnmubdwhbwqkoxvevt"
 
 [functions.send-email]
 verify_jwt = false
+
+[functions.generate-welcome-code]
+verify_jwt = false

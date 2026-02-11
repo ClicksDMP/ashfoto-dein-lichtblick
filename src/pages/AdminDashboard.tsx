@@ -14,7 +14,7 @@ import { LogOut, Users, Calendar, Tag, Search, RefreshCw } from "lucide-react";
 import type { Tables } from "@/integrations/supabase/types";
 
 type Booking = Tables<"bookings">;
-type Offer = Tables<"offers">;
+type Offer = Tables<"offers"> & { used_at?: string | null; used_by_booking_id?: string | null; single_use?: boolean; photo_package_only?: boolean; source?: string | null };
 
 const AdminDashboard = () => {
   const { user, isAdmin, loading, signOut } = useAuth();
@@ -236,7 +236,7 @@ const AdminDashboard = () => {
 
               <div className="space-y-4">
                 <h3 className="font-display text-xl font-bold text-foreground">Aktive Angebote</h3>
-                {offers.map(o => (
+                {offers.filter(o => o.source !== "welcome_discount").map(o => (
                   <div key={o.id} className="bg-card rounded-xl p-4 shadow-soft border border-border">
                     <div className="flex justify-between items-start">
                       <div>
@@ -249,7 +249,68 @@ const AdminDashboard = () => {
                     </div>
                   </div>
                 ))}
-                {offers.length === 0 && <p className="text-muted-foreground text-sm">Keine Angebote vorhanden</p>}
+                {offers.filter(o => o.source !== "welcome_discount").length === 0 && <p className="text-muted-foreground text-sm">Keine Angebote vorhanden</p>}
+              </div>
+            </div>
+
+            {/* Welcome Codes Tracking */}
+            <div className="mt-10">
+              <h3 className="font-display text-xl font-bold text-foreground mb-4">Willkommenscodes (10% Rabatt)</h3>
+              <div className="bg-card rounded-xl shadow-card overflow-hidden">
+                <Table>
+                  <TableHeader>
+                    <TableRow>
+                      <TableHead>Erstellt am</TableHead>
+                      <TableHead>Kunde</TableHead>
+                      <TableHead>Code</TableHead>
+                      <TableHead>Gültig bis</TableHead>
+                      <TableHead>Status</TableHead>
+                      <TableHead>Verwendet am</TableHead>
+                    </TableRow>
+                  </TableHeader>
+                  <TableBody>
+                    {offers.filter(o => o.source === "welcome_discount").map(o => {
+                      const isExpired = o.valid_until && new Date(o.valid_until) < new Date();
+                      const isUsed = !!o.used_at;
+                      // Find customer name from bookings
+                      const customer = bookings.find(b => b.user_id === o.target_user_id);
+                      return (
+                        <TableRow key={o.id}>
+                          <TableCell className="text-sm">{format(new Date(o.created_at), "dd.MM.yyyy", { locale: de })}</TableCell>
+                          <TableCell>
+                            {customer ? (
+                              <div>
+                                <p className="font-medium">{customer.first_name} {customer.last_name}</p>
+                                <p className="text-xs text-muted-foreground">{customer.email}</p>
+                              </div>
+                            ) : (
+                              <span className="text-muted-foreground text-sm">{o.target_user_id?.slice(0, 8)}...</span>
+                            )}
+                          </TableCell>
+                          <TableCell className="font-mono text-sm">{o.code}</TableCell>
+                          <TableCell className="text-sm">
+                            {o.valid_until ? format(new Date(o.valid_until), "dd.MM.yyyy", { locale: de }) : "-"}
+                          </TableCell>
+                          <TableCell>
+                            <span className={`px-2 py-1 rounded-full text-xs font-medium ${
+                              isUsed ? "bg-green-100 text-green-800" :
+                              isExpired ? "bg-red-100 text-red-800" :
+                              "bg-yellow-100 text-yellow-800"
+                            }`}>
+                              {isUsed ? "Verwendet" : isExpired ? "Abgelaufen" : "Aktiv"}
+                            </span>
+                          </TableCell>
+                          <TableCell className="text-sm">
+                            {o.used_at ? format(new Date(o.used_at), "dd.MM.yyyy", { locale: de }) : "-"}
+                          </TableCell>
+                        </TableRow>
+                      );
+                    })}
+                    {offers.filter(o => o.source === "welcome_discount").length === 0 && (
+                      <TableRow><TableCell colSpan={6} className="text-center py-8 text-muted-foreground">Keine Willkommenscodes vergeben</TableCell></TableRow>
+                    )}
+                  </TableBody>
+                </Table>
               </div>
             </div>
           </TabsContent>
