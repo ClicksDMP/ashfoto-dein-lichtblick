@@ -11,6 +11,24 @@ import { format } from "date-fns";
 import { de } from "date-fns/locale";
 import { CalendarIcon, Check, Minus, Plus, Mail, Phone } from "lucide-react";
 
+import imgFamily from "@/assets/shooting-family.jpg";
+import imgBaby from "@/assets/shooting-baby.jpg";
+import imgNewborn from "@/assets/shooting-newborn.jpg";
+import imgBabybauch from "@/assets/shooting-babybauch.jpg";
+import imgKinder from "@/assets/shooting-kinder.jpg";
+import imgFreunde from "@/assets/shooting-freunde.jpg";
+import imgPaar from "@/assets/shooting-paar.jpg";
+import imgAkt from "@/assets/shooting-akt.jpg";
+import imgMaenner from "@/assets/shooting-maenner.jpg";
+import imgBeauty from "@/assets/shooting-beauty.jpg";
+import imgMini from "@/assets/shooting-mini.jpg";
+import imgTier from "@/assets/shooting-tier.jpg";
+import imgHochzeit from "@/assets/shooting-hochzeit.jpg";
+import imgMitarbeiter from "@/assets/shooting-mitarbeiter.jpg";
+import imgEvent from "@/assets/shooting-event.jpg";
+import imgMesse from "@/assets/shooting-messe.jpg";
+import imgFood from "@/assets/shooting-food.jpg";
+
 // ── Types ──────────────────────────────────────────────────────
 interface BookingData {
   service: string;
@@ -56,23 +74,23 @@ const INITIAL_BOOKING: BookingData = {
 
 // ── Services ───────────────────────────────────────────────────
 const SERVICES = [
-  "Familien Fotoshooting",
-  "Baby Fotoshooting",
-  "Newborn Fotoshooting",
-  "Babybauch Fotoshooting",
-  "Kinder Fotoshooting",
-  "Freunde Fotoshooting",
-  "Paar Fotoshooting",
-  "Akt und Erotik Fotoshooting",
-  "Männer Fotoshooting",
-  "Beauty und Portrait Fotoshooting",
-  "Mini Shooting",
-  "Tier Fotoshooting",
-  "Hochzeitsfotografie",
-  "Mitarbeiterfotos",
-  "Live und Event Fotografie",
-  "Messe Fotografie",
-  "Food und Produkt Fotografie",
+  { name: "Familien Fotoshooting", img: imgFamily },
+  { name: "Baby Fotoshooting", img: imgBaby },
+  { name: "Newborn Fotoshooting", img: imgNewborn },
+  { name: "Babybauch Fotoshooting", img: imgBabybauch },
+  { name: "Kinder Fotoshooting", img: imgKinder },
+  { name: "Freunde Fotoshooting", img: imgFreunde },
+  { name: "Paar Fotoshooting", img: imgPaar },
+  { name: "Akt und Erotik Fotoshooting", img: imgAkt },
+  { name: "Männer Fotoshooting", img: imgMaenner },
+  { name: "Beauty und Portrait Fotoshooting", img: imgBeauty },
+  { name: "Mini Shooting", img: imgMini },
+  { name: "Tier Fotoshooting", img: imgTier },
+  { name: "Hochzeitsfotografie", img: imgHochzeit },
+  { name: "Mitarbeiterfotos", img: imgMitarbeiter },
+  { name: "Live und Event Fotografie", img: imgEvent },
+  { name: "Messe Fotografie", img: imgMesse },
+  { name: "Food und Produkt Fotografie", img: imgFood },
 ];
 
 const RESTRICTED_DURATION_SERVICES = ["Live und Event Fotografie", "Messe Fotografie", "Hochzeitsfotografie"];
@@ -276,19 +294,34 @@ const BookingFlow = () => {
             </h2>
           </div>
 
-          <div className="grid sm:grid-cols-2 md:grid-cols-3 gap-3 mb-6">
-            {SERVICES.map(service => (
+          <div className="grid sm:grid-cols-2 md:grid-cols-3 gap-4 mb-6">
+            {SERVICES.map(({ name, img }) => (
               <button
-                key={service}
-                onClick={() => handleServiceSelect(service)}
+                key={name}
+                onClick={() => handleServiceSelect(name)}
                 className={cn(
-                  "p-4 rounded-lg border-2 text-left font-body font-medium transition-all hover:shadow-card",
-                  booking.service === service
-                    ? "border-primary bg-primary/10 text-foreground"
-                    : "border-border bg-card text-foreground hover:border-primary/40"
+                  "group rounded-xl border-2 overflow-hidden text-left font-body font-medium transition-all hover:shadow-elevated",
+                  booking.service === name
+                    ? "border-primary ring-2 ring-primary/30"
+                    : "border-border hover:border-primary/40"
                 )}
               >
-                {service}
+                <div className="aspect-[4/3] overflow-hidden">
+                  <img
+                    src={img}
+                    alt={name}
+                    className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500"
+                    loading="lazy"
+                  />
+                </div>
+                <div className={cn(
+                  "p-3 text-sm font-semibold transition-colors",
+                  booking.service === name
+                    ? "bg-primary/10 text-foreground"
+                    : "bg-card text-foreground"
+                )}>
+                  {name}
+                </div>
               </button>
             ))}
           </div>
