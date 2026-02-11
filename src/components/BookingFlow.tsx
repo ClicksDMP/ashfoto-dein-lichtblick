@@ -1,4 +1,5 @@
 import { useState, useRef, useEffect, useCallback, useMemo } from "react";
+import { Link } from "react-router-dom";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -9,8 +10,9 @@ import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover
 import { cn } from "@/lib/utils";
 import { format } from "date-fns";
 import { de } from "date-fns/locale";
-import { CalendarIcon, Check, Minus, Plus, Mail, Phone } from "lucide-react";
+import { CalendarIcon, Check, Minus, Plus, Mail, Phone, ArrowRight } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
+import { SERVICES_DATA } from "@/data/serviceData";
 
 import imgFamily from "@/assets/shooting-family.jpg";
 import imgBaby from "@/assets/shooting-baby.jpg";
@@ -138,7 +140,11 @@ const DURATION_HOURS: Record<string, number> = {
 };
 
 // ── Component ──────────────────────────────────────────────────
-const BookingFlow = () => {
+interface BookingFlowProps {
+  preselectedService?: string;
+}
+
+const BookingFlow = ({ preselectedService }: BookingFlowProps = {}) => {
   const [currentStep, setCurrentStep] = useState(1);
   const [booking, setBooking] = useState<BookingData>(INITIAL_BOOKING);
   const [showFoodMessage, setShowFoodMessage] = useState(false);
@@ -154,6 +160,8 @@ const BookingFlow = () => {
   const [blockedSlots, setBlockedSlots] = useState<{ date: string; time: string | null }[]>([]);
 
   const stepRefs = useRef<(HTMLDivElement | null)[]>([]);
+  const preselectedApplied = useRef(false);
+
 
   // Fetch booked and blocked slots for availability checking
   useEffect(() => {
@@ -333,7 +341,15 @@ const BookingFlow = () => {
     scrollToStep(2); // scroll to participants (still within step 1)
   };
 
-  // ── Counter ──────────────────────────────────────────────────
+  // Auto-select preselected service
+  useEffect(() => {
+    if (preselectedService && !preselectedApplied.current) {
+      preselectedApplied.current = true;
+      handleServiceSelect(preselectedService);
+    }
+  }, [preselectedService]);
+
+
   const updateParticipant = (key: keyof BookingData["participants"], delta: number) => {
     setBooking(prev => ({
       ...prev,
@@ -485,35 +501,52 @@ const BookingFlow = () => {
           </div>
 
           <div className="grid sm:grid-cols-2 md:grid-cols-3 gap-4 mb-6">
-            {SERVICES.map(({ name, img }) => (
-              <button
-                key={name}
-                onClick={() => handleServiceSelect(name)}
-                className={cn(
-                  "group rounded-xl border-2 overflow-hidden text-left font-body font-medium transition-all hover:shadow-elevated",
-                  booking.service === name
-                    ? "border-primary ring-2 ring-primary/30"
-                    : "border-border hover:border-primary/40"
-                )}
-              >
-                <div className="aspect-[4/3] overflow-hidden">
-                  <img
-                    src={img}
-                    alt={name}
-                    className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500"
-                    loading="lazy"
-                  />
+            {SERVICES.map(({ name, img }) => {
+              const serviceData = SERVICES_DATA.find(s => s.serviceName === name);
+              return (
+                <div
+                  key={name}
+                  className={cn(
+                    "group rounded-xl border-2 overflow-hidden font-body font-medium transition-all hover:shadow-elevated",
+                    booking.service === name
+                      ? "border-primary ring-2 ring-primary/30"
+                      : "border-border hover:border-primary/40"
+                  )}
+                >
+                  <button
+                    onClick={() => handleServiceSelect(name)}
+                    className="w-full text-left"
+                  >
+                    <div className="aspect-[4/3] overflow-hidden">
+                      <img
+                        src={img}
+                        alt={name}
+                        className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500"
+                        loading="lazy"
+                      />
+                    </div>
+                    <div className={cn(
+                      "p-3 text-sm font-semibold transition-colors",
+                      booking.service === name
+                        ? "bg-primary/10 text-foreground"
+                        : "bg-card text-foreground"
+                    )}>
+                      {name}
+                    </div>
+                  </button>
+                  {serviceData && (
+                    <div className="px-3 pb-3 bg-card">
+                      <Link
+                        to={`/shooting/${serviceData.slug}`}
+                        className="inline-flex items-center gap-1.5 text-xs text-warm-brown hover:text-warm-dark transition-colors font-medium"
+                      >
+                        Mehr erfahren <ArrowRight className="w-3 h-3" />
+                      </Link>
+                    </div>
+                  )}
                 </div>
-                <div className={cn(
-                  "p-3 text-sm font-semibold transition-colors",
-                  booking.service === name
-                    ? "bg-primary/10 text-foreground"
-                    : "bg-card text-foreground"
-                )}>
-                  {name}
-                </div>
-              </button>
-            ))}
+              );
+            })}
           </div>
 
           {showFoodMessage && (
