@@ -136,8 +136,13 @@ export type Database = {
           discount_percent: number | null
           id: string
           is_active: boolean
+          photo_package_only: boolean
+          single_use: boolean
+          source: string | null
           target_user_id: string | null
           title: string
+          used_at: string | null
+          used_by_booking_id: string | null
           valid_from: string | null
           valid_until: string | null
         }
@@ -149,8 +154,13 @@ export type Database = {
           discount_percent?: number | null
           id?: string
           is_active?: boolean
+          photo_package_only?: boolean
+          single_use?: boolean
+          source?: string | null
           target_user_id?: string | null
           title: string
+          used_at?: string | null
+          used_by_booking_id?: string | null
           valid_from?: string | null
           valid_until?: string | null
         }
@@ -162,12 +172,25 @@ export type Database = {
           discount_percent?: number | null
           id?: string
           is_active?: boolean
+          photo_package_only?: boolean
+          single_use?: boolean
+          source?: string | null
           target_user_id?: string | null
           title?: string
+          used_at?: string | null
+          used_by_booking_id?: string | null
           valid_from?: string | null
           valid_until?: string | null
         }
-        Relationships: []
+        Relationships: [
+          {
+            foreignKeyName: "offers_used_by_booking_id_fkey"
+            columns: ["used_by_booking_id"]
+            isOneToOne: false
+            referencedRelation: "bookings"
+            referencedColumns: ["id"]
+          },
+        ]
       }
       profiles: {
         Row: {

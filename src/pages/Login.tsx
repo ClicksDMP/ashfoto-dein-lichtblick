@@ -33,7 +33,11 @@ const Login = () => {
     setLoading(true);
     const { error } = await supabase.auth.signInWithPassword({ email, password });
     if (error) {
-      setError("E-Mail oder Passwort ist falsch.");
+      if (error.message.includes("Email not confirmed")) {
+        setError("Bitte bestätige zuerst deine E-Mail-Adresse. Überprüfe dein Postfach.");
+      } else {
+        setError("E-Mail oder Passwort ist falsch.");
+      }
     }
     setLoading(false);
   };
