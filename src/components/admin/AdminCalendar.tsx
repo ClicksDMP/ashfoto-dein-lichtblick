@@ -143,15 +143,15 @@ const AdminCalendar = ({ bookings, onUpdateBooking, onDeleteBooking, onCancelBoo
   };
 
   const statusColor = (status: string) => {
-    if (status === "confirmed") return "bg-green-900/30 text-green-400";
-    if (status === "cancelled") return "bg-red-900/30 text-red-400";
-    return "bg-yellow-900/30 text-yellow-400";
+    if (status === "confirmed") return "bg-green-100 text-green-800";
+    if (status === "cancelled") return "bg-red-100 text-red-700";
+    return "bg-amber-100 text-amber-800";
   };
 
   return (
     <div className="grid md:grid-cols-[auto_1fr] gap-8">
       {/* Calendar */}
-      <div className="bg-card rounded-xl p-4 shadow-card self-start [&_.rdp-day]:text-foreground [&_.rdp-head_cell]:text-muted-foreground [&_.rdp-caption_label]:text-foreground [&_.rdp-nav_button]:text-foreground [&_.rdp-day_today]:bg-accent [&_.rdp-day_today]:text-accent-foreground [&_.rdp-button]:text-foreground [&_.rdp-button:hover]:bg-accent/50">
+      <div className="bg-card rounded-xl p-4 shadow-card self-start">
         <Calendar
           mode="single"
           selected={selectedDate}
@@ -162,8 +162,8 @@ const AdminCalendar = ({ bookings, onUpdateBooking, onDeleteBooking, onCancelBoo
             blocked: (date) => blockedDates.has(format(date, "yyyy-MM-dd")),
           }}
           modifiersClassNames={{
-            booked: "!bg-white/15 !font-bold !text-white",
-            blocked: "!bg-red-500/20 !font-bold !text-red-400 line-through",
+            booked: "!bg-primary/15 !font-bold !text-foreground",
+            blocked: "!bg-red-100 !font-bold !text-red-700 line-through",
           }}
         />
         <div className="mt-3 space-y-1 text-xs text-muted-foreground px-2">
@@ -263,8 +263,8 @@ const AdminCalendar = ({ bookings, onUpdateBooking, onDeleteBooking, onCancelBoo
                     isOccupied
                       ? "bg-primary/10 text-primary font-bold cursor-not-allowed"
                       : isBlocked
-                        ? "bg-destructive/10 text-destructive line-through cursor-pointer hover:bg-destructive/20"
-                        : "bg-green-900/20 text-green-400 cursor-pointer hover:bg-green-900/30"
+                        ? "bg-red-100 text-red-700 line-through cursor-pointer hover:bg-red-200"
+                        : "bg-green-100 text-green-800 cursor-pointer hover:bg-green-200"
                   }`}
                 >
                   {slot}
@@ -273,9 +273,9 @@ const AdminCalendar = ({ bookings, onUpdateBooking, onDeleteBooking, onCancelBoo
             })}
           </div>
           <div className="flex gap-4 mt-3 text-xs text-muted-foreground">
-            <div className="flex items-center gap-1"><span className="w-3 h-3 rounded bg-green-900/20 inline-block border border-green-800/30" /> Available</div>
+            <div className="flex items-center gap-1"><span className="w-3 h-3 rounded bg-green-100 inline-block border border-green-200" /> Available</div>
             <div className="flex items-center gap-1"><span className="w-3 h-3 rounded bg-primary/10 inline-block border border-primary/20" /> Booked</div>
-            <div className="flex items-center gap-1"><span className="w-3 h-3 rounded bg-destructive/10 inline-block border border-destructive/20" /> Blocked</div>
+            <div className="flex items-center gap-1"><span className="w-3 h-3 rounded bg-red-100 inline-block border border-red-200" /> Blocked</div>
           </div>
         </div>
       </div>

@@ -100,11 +100,11 @@ const AdminDashboard = () => {
 
   const formatPrice = (p: number) => p.toFixed(2).replace(".", ",") + " €";
 
-  if (loading) return <div className="dark min-h-screen flex items-center justify-center bg-background"><p className="text-foreground">Loading...</p></div>;
+  if (loading) return <div className="min-h-screen flex items-center justify-center bg-background"><p className="text-foreground">Loading...</p></div>;
 
   return (
-    <div className="dark min-h-screen bg-background">
-      <header className="bg-card border-b border-border px-6 py-4 flex items-center justify-between">
+    <div className="min-h-screen bg-background">
+      <header className="bg-card border-b border-border px-6 py-4 flex items-center justify-between shadow-soft">
         <h1 className="font-display text-2xl font-bold text-foreground">Admin Dashboard</h1>
         <div className="flex items-center gap-4">
           <Button variant="ghost" onClick={() => navigate("/")}>Go to Website</Button>
@@ -171,10 +171,10 @@ const AdminDashboard = () => {
                       </TableCell>
                       <TableCell className="font-medium">{formatPrice(b.total_price)}</TableCell>
                       <TableCell>
-                        <span className={`px-2 py-1 rounded-full text-xs font-medium ${
-                          b.status === "confirmed" ? "bg-green-900/30 text-green-400" :
-                          b.status === "cancelled" ? "bg-red-900/30 text-red-400" :
-                          "bg-yellow-900/30 text-yellow-400"
+                      <span className={`px-2 py-1 rounded-full text-xs font-medium ${
+                          b.status === "confirmed" ? "bg-green-100 text-green-800" :
+                          b.status === "cancelled" ? "bg-red-100 text-red-700" :
+                          "bg-amber-100 text-amber-800"
                         }`}>{b.status}</span>
                       </TableCell>
                       <TableCell>
@@ -298,9 +298,9 @@ const AdminDashboard = () => {
                           </TableCell>
                           <TableCell>
                             <span className={`px-2 py-1 rounded-full text-xs font-medium ${
-                              isUsed ? "bg-green-900/30 text-green-400" :
-                              isExpired ? "bg-red-900/30 text-red-400" :
-                              "bg-yellow-900/30 text-yellow-400"
+                              isUsed ? "bg-green-100 text-green-800" :
+                              isExpired ? "bg-red-100 text-red-700" :
+                              "bg-amber-100 text-amber-800"
                             }`}>
                               {isUsed ? "Used" : isExpired ? "Expired" : "Active"}
                             </span>
