@@ -1,11 +1,13 @@
 import { useState, useEffect } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { Input } from "@/components/ui/input";
+import { Label } from "@/components/ui/label";
 import { Button } from "@/components/ui/button";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
+import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { format } from "date-fns";
 import { de } from "date-fns/locale";
-import { Search } from "lucide-react";
+import { Search, Pencil, Trash2 } from "lucide-react";
 import type { Tables } from "@/integrations/supabase/types";
 
 type Profile = Tables<"profiles">;
@@ -19,6 +21,8 @@ const AdminClients = ({ bookings }: AdminClientsProps) => {
   const [profiles, setProfiles] = useState<Profile[]>([]);
   const [clientFilter, setClientFilter] = useState<"all" | "with_bookings" | "no_bookings">("all");
   const [clientSearch, setClientSearch] = useState("");
+  const [editingProfile, setEditingProfile] = useState<Profile | null>(null);
+  const [editForm, setEditForm] = useState({ first_name: "", last_name: "", email: "", phone: "", street: "", zip: "", city: "" });
 
   useEffect(() => {
     fetchProfiles();
@@ -27,6 +31,32 @@ const AdminClients = ({ bookings }: AdminClientsProps) => {
   const fetchProfiles = async () => {
     const { data } = await supabase.from("profiles").select("*").order("created_at", { ascending: false });
     if (data) setProfiles(data);
+  };
+
+  const handleEdit = (p: Profile) => {
+    setEditingProfile(p);
+    setEditForm({
+      first_name: p.first_name || "",
+      last_name: p.last_name || "",
+      email: p.email || "",
+      phone: p.phone || "",
+      street: p.street || "",
+      zip: p.zip || "",
+      city: p.city || "",
+    });
+  };
+
+  const handleSave = async () => {
+    if (!editingProfile) return;
+    await supabase.from("profiles").update(editForm).eq("id", editingProfile.id);
+    setEditingProfile(null);
+    fetchProfiles();
+  };
+
+  const handleDelete = async (id: string) => {
+    if (!confirm("Kundenprofil endgültig löschen?")) return;
+    await supabase.from("profiles").delete().eq("id", id);
+    fetchProfiles();
   };
 
   const filteredProfiles = profiles.filter(p => {
@@ -38,7 +68,7 @@ const AdminClients = ({ bookings }: AdminClientsProps) => {
 
   return (
     <>
-      <div className="flex items-center gap-4 mb-4">
+      <div className="flex items-center gap-4 mb-4 flex-wrap">
         <div className="relative flex-1 max-w-sm">
           <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
           <Input placeholder="Name oder E-Mail suchen..." value={clientSearch} onChange={e => setClientSearch(e.target.value)} className="pl-10" />
@@ -60,6 +90,7 @@ const AdminClients = ({ bookings }: AdminClientsProps) => {
               <TableHead>Adresse</TableHead>
               <TableHead>Registriert am</TableHead>
               <TableHead>Buchungen</TableHead>
+              <TableHead>Aktionen</TableHead>
             </TableRow>
           </TableHeader>
           <TableBody>
@@ -77,14 +108,71 @@ const AdminClients = ({ bookings }: AdminClientsProps) => {
                   {format(new Date(p.created_at), "dd.MM.yyyy", { locale: de })}
                 </TableCell>
                 <TableCell>{bookings.filter(b => b.user_id === p.user_id).length}</TableCell>
+                <TableCell>
+                  <div className="flex gap-1">
+                    <Button size="sm" variant="ghost" onClick={() => handleEdit(p)}>
+                      <Pencil className="w-4 h-4" />
+                    </Button>
+                    <Button size="sm" variant="ghost" className="text-destructive" onClick={() => handleDelete(p.id)}>
+                      <Trash2 className="w-4 h-4" />
+                    </Button>
+                  </div>
+                </TableCell>
               </TableRow>
             ))}
             {filteredProfiles.length === 0 && (
-              <TableRow><TableCell colSpan={6} className="text-center py-8 text-muted-foreground">Keine Kunden gefunden</TableCell></TableRow>
+              <TableRow><TableCell colSpan={7} className="text-center py-8 text-muted-foreground">Keine Kunden gefunden</TableCell></TableRow>
             )}
           </TableBody>
         </Table>
       </div>
+
+      {/* Edit Profile Dialog */}
+      <Dialog open={!!editingProfile} onOpenChange={(open) => !open && setEditingProfile(null)}>
+        <DialogContent>
+          <DialogHeader>
+            <DialogTitle>Kunde bearbeiten</DialogTitle>
+          </DialogHeader>
+          <div className="space-y-4">
+            <div className="grid grid-cols-2 gap-4">
+              <div>
+                <Label>Vorname</Label>
+                <Input value={editForm.first_name} onChange={e => setEditForm(p => ({ ...p, first_name: e.target.value }))} className="mt-1" />
+              </div>
+              <div>
+                <Label>Nachname</Label>
+                <Input value={editForm.last_name} onChange={e => setEditForm(p => ({ ...p, last_name: e.target.value }))} className="mt-1" />
+              </div>
+            </div>
+            <div>
+              <Label>E-Mail</Label>
+              <Input value={editForm.email} onChange={e => setEditForm(p => ({ ...p, email: e.target.value }))} className="mt-1" />
+            </div>
+            <div>
+              <Label>Telefon</Label>
+              <Input value={editForm.phone} onChange={e => setEditForm(p => ({ ...p, phone: e.target.value }))} className="mt-1" />
+            </div>
+            <div>
+              <Label>Straße</Label>
+              <Input value={editForm.street} onChange={e => setEditForm(p => ({ ...p, street: e.target.value }))} className="mt-1" />
+            </div>
+            <div className="grid grid-cols-3 gap-4">
+              <div>
+                <Label>PLZ</Label>
+                <Input value={editForm.zip} onChange={e => setEditForm(p => ({ ...p, zip: e.target.value }))} className="mt-1" />
+              </div>
+              <div className="col-span-2">
+                <Label>Ort</Label>
+                <Input value={editForm.city} onChange={e => setEditForm(p => ({ ...p, city: e.target.value }))} className="mt-1" />
+              </div>
+            </div>
+            <div className="flex gap-2 justify-end">
+              <Button variant="outline" onClick={() => setEditingProfile(null)}>Abbrechen</Button>
+              <Button variant="booking" onClick={handleSave}>Speichern</Button>
+            </div>
+          </div>
+        </DialogContent>
+      </Dialog>
     </>
   );
 };

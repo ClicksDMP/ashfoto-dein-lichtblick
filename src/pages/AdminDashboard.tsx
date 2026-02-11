@@ -70,6 +70,11 @@ const AdminDashboard = () => {
     fetchBookings();
   };
 
+  const deleteBooking = async (id: string) => {
+    await supabase.from("bookings").delete().eq("id", id);
+    fetchBookings();
+  };
+
   const createOffer = async () => {
     if (!newOffer.title) return;
     await supabase.from("offers").insert({
@@ -121,6 +126,7 @@ const AdminDashboard = () => {
             <AdminCalendar
               bookings={bookings}
               onUpdateBooking={updateBooking}
+              onDeleteBooking={deleteBooking}
               onCancelBooking={(id) => updateBookingStatus(id, "cancelled")}
             />
           </TabsContent>
@@ -174,6 +180,9 @@ const AdminDashboard = () => {
                         <div className="flex gap-1">
                           <Button size="sm" variant="ghost" onClick={() => updateBookingStatus(b.id, "confirmed")}>✓</Button>
                           <Button size="sm" variant="ghost" onClick={() => updateBookingStatus(b.id, "cancelled")}>✗</Button>
+                          <Button size="sm" variant="ghost" className="text-destructive" onClick={() => {
+                            if (confirm("Buchung endgültig löschen?")) deleteBooking(b.id);
+                          }}>🗑</Button>
                         </div>
                       </TableCell>
                     </TableRow>

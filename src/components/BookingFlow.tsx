@@ -151,16 +151,18 @@ const BookingFlow = () => {
   const [couponChecking, setCouponChecking] = useState(false);
   const couponRefs = useRef<(HTMLInputElement | null)[]>([]);
   const [bookedSlots, setBookedSlots] = useState<{ date: string; time: string; duration: string }[]>([]);
+  const [blockedSlots, setBlockedSlots] = useState<{ date: string; time: string | null }[]>([]);
 
   const stepRefs = useRef<(HTMLDivElement | null)[]>([]);
 
-  // Fetch booked slots for availability checking
+  // Fetch booked and blocked slots for availability checking
   useEffect(() => {
     const fetchSlots = async () => {
       try {
         const res = await supabase.functions.invoke("get-booked-slots");
-        if (res.data && Array.isArray(res.data)) {
-          setBookedSlots(res.data);
+        if (res.data) {
+          if (res.data.slots) setBookedSlots(res.data.slots);
+          if (res.data.blocked) setBlockedSlots(res.data.blocked);
         }
       } catch (e) {
         console.error("Failed to fetch booked slots:", e);
@@ -169,11 +171,29 @@ const BookingFlow = () => {
     fetchSlots();
   }, []);
 
+  // Dates that are fully blocked
+  const blockedDateSet = useMemo(() => {
+    return new Set(blockedSlots.filter(s => !s.time).map(s => s.date));
+  }, [blockedSlots]);
+
   // Calculate which time slots are occupied for the selected date
   const occupiedTimeSlots = useMemo(() => {
     if (!booking.date) return new Set<string>();
     const dateStr = format(booking.date, "yyyy-MM-dd");
     const occupied = new Set<string>();
+
+    // If whole day is blocked, block all slots
+    if (blockedDateSet.has(dateStr)) {
+      TIME_SLOTS.forEach(s => occupied.add(s));
+      return occupied;
+    }
+
+    // Add blocked individual time slots
+    blockedSlots
+      .filter(s => s.date === dateStr && s.time)
+      .forEach(s => occupied.add(s.time!));
+
+    // Add booked time slots
     bookedSlots
       .filter(s => s.date === dateStr && s.time)
       .forEach(s => {
@@ -188,7 +208,7 @@ const BookingFlow = () => {
         });
       });
     return occupied;
-  }, [booking.date, bookedSlots]);
+  }, [booking.date, bookedSlots, blockedSlots, blockedDateSet]);
 
   const scrollToStep = useCallback((step: number) => {
     setTimeout(() => {
@@ -712,10 +732,16 @@ const BookingFlow = () => {
                     <Calendar
                       mode="single"
                       selected={booking.date || undefined}
-                      onSelect={(date) => setBooking(prev => ({ ...prev, date: date || null }))}
-                      disabled={(date) => date < new Date()}
+                      onSelect={(date) => setBooking(prev => ({ ...prev, date: date || null, time: "" }))}
+                      disabled={(date) => date < new Date() || blockedDateSet.has(format(date, "yyyy-MM-dd"))}
                       initialFocus
                       className="p-3 pointer-events-auto"
+                      modifiers={{
+                        blocked: (date) => blockedDateSet.has(format(date, "yyyy-MM-dd")),
+                      }}
+                      modifiersClassNames={{
+                        blocked: "line-through text-muted-foreground",
+                      }}
                     />
                   </PopoverContent>
                 </Popover>

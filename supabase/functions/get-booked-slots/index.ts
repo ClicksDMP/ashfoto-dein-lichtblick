@@ -20,30 +20,48 @@ serve(async (req) => {
     const url = new URL(req.url);
     const dateParam = url.searchParams.get("date");
 
-    let query = supabase
+    // Fetch booked slots
+    let bookingQuery = supabase
       .from("bookings")
       .select("booking_date, booking_time, duration")
       .neq("status", "cancelled");
 
     if (dateParam) {
-      query = query.eq("booking_date", dateParam);
+      bookingQuery = bookingQuery.eq("booking_date", dateParam);
     } else {
-      // Return slots for the next 90 days by default
       const today = new Date().toISOString().split("T")[0];
-      query = query.gte("booking_date", today);
+      bookingQuery = bookingQuery.gte("booking_date", today);
     }
 
-    const { data, error } = await query;
-    if (error) throw error;
+    const { data: bookingsData, error: bookingsError } = await bookingQuery;
+    if (bookingsError) throw bookingsError;
 
-    // Only return date/time/duration - no PII
-    const slots = (data || []).map((b: any) => ({
+    // Fetch blocked slots
+    let blockedQuery = supabase.from("blocked_slots").select("blocked_date, blocked_time");
+    if (dateParam) {
+      blockedQuery = blockedQuery.eq("blocked_date", dateParam);
+    } else {
+      const today = new Date().toISOString().split("T")[0];
+      blockedQuery = blockedQuery.gte("blocked_date", today);
+    }
+
+    const { data: blockedData, error: blockedError } = await blockedQuery;
+    if (blockedError) throw blockedError;
+
+    const slots = (bookingsData || []).map((b: any) => ({
       date: b.booking_date,
       time: b.booking_time,
       duration: b.duration,
+      type: "booking",
     }));
 
-    return new Response(JSON.stringify(slots), {
+    const blocked = (blockedData || []).map((b: any) => ({
+      date: b.blocked_date,
+      time: b.blocked_time, // null = whole day blocked
+      type: "blocked",
+    }));
+
+    return new Response(JSON.stringify({ slots, blocked }), {
       headers: { ...corsHeaders, "Content-Type": "application/json" },
     });
   } catch (err) {
