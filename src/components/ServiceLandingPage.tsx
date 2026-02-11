@@ -1,7 +1,7 @@
 import { useRef, useCallback, useEffect } from "react";
 import { Link } from "react-router-dom";
 import { motion } from "framer-motion";
-import { ArrowLeft, CheckCircle2, ChevronDown } from "lucide-react";
+import { ArrowLeft, CheckCircle2, ChevronDown, Star, Camera, Heart, Sparkles, Shield } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import {
   Accordion,
@@ -27,6 +27,8 @@ const stagger = {
   visible: { transition: { staggerChildren: 0.1 } },
 };
 
+const whyIcons = [Camera, Star, Heart, Sparkles, Shield, CheckCircle2];
+
 const ServiceLandingPage = ({ service }: ServiceLandingPageProps) => {
   const bookingRef = useRef<HTMLDivElement>(null);
 
@@ -51,7 +53,6 @@ const ServiceLandingPage = ({ service }: ServiceLandingPageProps) => {
       document.head.appendChild(meta);
     }
 
-    // JSON-LD structured data
     const jsonLdId = "service-jsonld";
     let script = document.getElementById(jsonLdId) as HTMLScriptElement | null;
     if (!script) {
@@ -107,8 +108,8 @@ const ServiceLandingPage = ({ service }: ServiceLandingPageProps) => {
 
   return (
     <main className="min-h-screen bg-background">
-      {/* Hero Section */}
-      <section className="relative min-h-[70vh] flex items-end">
+      {/* ── HERO ──────────────────────────────────────────────── */}
+      <section className="relative min-h-[80vh] flex items-end">
         <div className="absolute inset-0">
           <img
             src={service.heroImage}
@@ -116,10 +117,9 @@ const ServiceLandingPage = ({ service }: ServiceLandingPageProps) => {
             className="w-full h-full object-cover"
             loading="eager"
           />
-          <div className="absolute inset-0 bg-gradient-to-t from-warm-dark/80 via-warm-dark/40 to-transparent" />
+          <div className="absolute inset-0 bg-gradient-to-t from-warm-dark/85 via-warm-dark/40 to-warm-dark/10" />
         </div>
 
-        {/* Back button */}
         <Link
           to="/"
           className="absolute top-6 left-6 z-20 flex items-center gap-2 text-warm-white/80 hover:text-warm-white transition-colors font-body text-sm"
@@ -128,7 +128,7 @@ const ServiceLandingPage = ({ service }: ServiceLandingPageProps) => {
           Zurück zur Startseite
         </Link>
 
-        <div className="relative z-10 container mx-auto px-6 md:px-12 pb-16 pt-32">
+        <div className="relative z-10 container mx-auto px-6 md:px-12 pb-20 pt-32">
           <motion.div initial="hidden" animate="visible" variants={stagger}>
             <motion.p
               variants={fadeUp}
@@ -144,13 +144,19 @@ const ServiceLandingPage = ({ service }: ServiceLandingPageProps) => {
             </motion.h1>
             <motion.p
               variants={fadeUp}
-              className="text-warm-white/80 text-xl md:text-2xl font-body max-w-2xl mb-8"
+              className="text-warm-white/90 text-xl md:text-2xl font-body max-w-2xl mb-3"
             >
               {service.subtitle}
             </motion.p>
+            <motion.p
+              variants={fadeUp}
+              className="text-warm-white/60 text-base md:text-lg font-body italic max-w-xl mb-10"
+            >
+              {service.heroTagline}
+            </motion.p>
             <motion.div variants={fadeUp} className="flex flex-col sm:flex-row gap-4">
               <Button variant="hero" size="xl" onClick={scrollToBooking}>
-                Jetzt Termin buchen
+                Jetzt Termin sichern
               </Button>
               <Button
                 variant="heroOutline"
@@ -158,20 +164,19 @@ const ServiceLandingPage = ({ service }: ServiceLandingPageProps) => {
                 onClick={scrollToBooking}
                 className="border-warm-white/50 text-warm-white hover:bg-warm-white hover:text-warm-dark"
               >
-                Mehr erfahren
+                Verfügbarkeit prüfen
               </Button>
             </motion.div>
           </motion.div>
         </div>
 
-        {/* Scroll indicator */}
         <div className="absolute bottom-4 left-1/2 -translate-x-1/2 z-10 animate-bounce">
           <ChevronDown className="w-6 h-6 text-warm-white/60" />
         </div>
       </section>
 
-      {/* Description Section */}
-      <section className="py-20 bg-warm-white">
+      {/* ── EMOTIONAL INTRO ──────────────────────────────────── */}
+      <section className="py-20 md:py-28 bg-warm-white">
         <div className="container mx-auto px-6 md:px-12 max-w-4xl">
           <motion.div
             initial="hidden"
@@ -187,10 +192,19 @@ const ServiceLandingPage = ({ service }: ServiceLandingPageProps) => {
             </motion.h2>
             <motion.p
               variants={fadeUp}
-              className="text-muted-foreground text-lg leading-relaxed text-center max-w-3xl mx-auto mb-12"
+              className="text-muted-foreground text-lg leading-relaxed text-center max-w-3xl mx-auto mb-8"
             >
               {service.description}
             </motion.p>
+            {/* Emotional paragraph */}
+            <motion.div
+              variants={fadeUp}
+              className="bg-warm-ivory/60 border-l-4 border-warm-brown/40 rounded-r-lg p-6 md:p-8 max-w-3xl mx-auto mb-12"
+            >
+              <p className="text-foreground/80 text-base md:text-lg leading-relaxed font-body italic">
+                {service.emotionalIntro}
+              </p>
+            </motion.div>
 
             {/* Highlights */}
             <motion.div
@@ -212,7 +226,7 @@ const ServiceLandingPage = ({ service }: ServiceLandingPageProps) => {
         </div>
       </section>
 
-      {/* Full-width image divider */}
+      {/* ── FULL-WIDTH IMAGE DIVIDER ─────────────────────────── */}
       <div className="h-72 md:h-96 overflow-hidden">
         <img
           src={service.heroImage}
@@ -223,7 +237,68 @@ const ServiceLandingPage = ({ service }: ServiceLandingPageProps) => {
         />
       </div>
 
-      {/* Photo Gallery Section */}
+      {/* ── EXPERIENCE SECTION ───────────────────────────────── */}
+      <section className="py-20 md:py-28 bg-background">
+        <div className="container mx-auto px-6 md:px-12 max-w-5xl">
+          <motion.div
+            initial="hidden"
+            whileInView="visible"
+            viewport={{ once: true, margin: "-100px" }}
+            variants={stagger}
+          >
+            <motion.p
+              variants={fadeUp}
+              className="text-primary font-body font-semibold tracking-[0.25em] uppercase text-sm mb-4 text-center"
+            >
+              Dein Erlebnis
+            </motion.p>
+            <motion.h2
+              variants={fadeUp}
+              className="font-display text-3xl md:text-4xl font-bold text-foreground mb-4 text-center"
+            >
+              So läuft dein {service.title} ab
+            </motion.h2>
+            <motion.p
+              variants={fadeUp}
+              className="text-muted-foreground text-center mb-14 max-w-2xl mx-auto"
+            >
+              Du brauchst keine Erfahrung vor der Kamera. Ich leite dich Schritt für Schritt – von der ersten Idee bis zum fertigen Bild.
+            </motion.p>
+
+            <motion.div variants={stagger} className="space-y-6">
+              {service.experienceSteps.map((step, i) => (
+                <motion.div
+                  key={i}
+                  variants={fadeUp}
+                  className="flex gap-5 md:gap-8 items-start"
+                >
+                  <div className="shrink-0 w-12 h-12 rounded-full bg-warm-brown/15 flex items-center justify-center">
+                    <span className="text-warm-brown font-display font-bold text-lg">
+                      {String(i + 1).padStart(2, "0")}
+                    </span>
+                  </div>
+                  <div>
+                    <h3 className="font-display text-lg font-bold text-foreground mb-1">
+                      {step.title}
+                    </h3>
+                    <p className="text-muted-foreground font-body leading-relaxed">
+                      {step.text}
+                    </p>
+                  </div>
+                </motion.div>
+              ))}
+            </motion.div>
+
+            <motion.div variants={fadeUp} className="text-center mt-14">
+              <Button variant="cta" size="xl" onClick={scrollToBooking}>
+                Jetzt Termin sichern
+              </Button>
+            </motion.div>
+          </motion.div>
+        </div>
+      </section>
+
+      {/* ── PHOTO GALLERY ────────────────────────────────────── */}
       <section className="py-20 bg-warm-ivory">
         <div className="container mx-auto px-6 md:px-12 max-w-6xl">
           <motion.div
@@ -254,8 +329,60 @@ const ServiceLandingPage = ({ service }: ServiceLandingPageProps) => {
         </div>
       </section>
 
-      {/* Tips Section */}
-      <section className="py-20 bg-warm-white">
+      {/* ── WHY CHOOSE US ────────────────────────────────────── */}
+      <section className="py-20 md:py-28 bg-warm-white">
+        <div className="container mx-auto px-6 md:px-12 max-w-5xl">
+          <motion.div
+            initial="hidden"
+            whileInView="visible"
+            viewport={{ once: true, margin: "-100px" }}
+            variants={stagger}
+          >
+            <motion.p
+              variants={fadeUp}
+              className="text-primary font-body font-semibold tracking-[0.25em] uppercase text-sm mb-4 text-center"
+            >
+              Warum ashfoto
+            </motion.p>
+            <motion.h2
+              variants={fadeUp}
+              className="font-display text-3xl md:text-4xl font-bold text-foreground mb-4 text-center"
+            >
+              Was mein {service.title} besonders macht
+            </motion.h2>
+            <motion.p
+              variants={fadeUp}
+              className="text-muted-foreground text-center mb-14 max-w-2xl mx-auto"
+            >
+              Kein Massenprodukt. Keine Fließbandarbeit. Jedes Shooting ist so einzigartig wie die Menschen davor – und dahinter.
+            </motion.p>
+
+            <motion.div
+              variants={stagger}
+              className="grid sm:grid-cols-2 lg:grid-cols-3 gap-6"
+            >
+              {service.whyChooseUs.map((reason, i) => {
+                const Icon = whyIcons[i % whyIcons.length];
+                return (
+                  <motion.div
+                    key={i}
+                    variants={fadeUp}
+                    className="bg-card rounded-xl p-6 shadow-soft flex items-start gap-4"
+                  >
+                    <div className="w-10 h-10 rounded-full bg-warm-brown/10 flex items-center justify-center shrink-0">
+                      <Icon className="w-5 h-5 text-warm-brown" />
+                    </div>
+                    <p className="text-foreground font-body text-sm leading-relaxed">{reason}</p>
+                  </motion.div>
+                );
+              })}
+            </motion.div>
+          </motion.div>
+        </div>
+      </section>
+
+      {/* ── TIPS SECTION ─────────────────────────────────────── */}
+      <section className="py-20 bg-warm-ivory">
         <div className="container mx-auto px-6 md:px-12 max-w-4xl">
           <motion.div
             initial="hidden"
@@ -300,7 +427,7 @@ const ServiceLandingPage = ({ service }: ServiceLandingPageProps) => {
         </div>
       </section>
 
-      {/* Another image divider */}
+      {/* ── IMAGE DIVIDER ────────────────────────────────────── */}
       <div className="h-64 md:h-80 overflow-hidden">
         <img
           src={service.heroImage}
@@ -311,8 +438,8 @@ const ServiceLandingPage = ({ service }: ServiceLandingPageProps) => {
         />
       </div>
 
-      {/* FAQ Section */}
-      <section className="py-20 bg-warm-ivory">
+      {/* ── FAQ SECTION ──────────────────────────────────────── */}
+      <section className="py-20 bg-background">
         <div className="container mx-auto px-6 md:px-12 max-w-3xl">
           <motion.div
             initial="hidden"
@@ -354,22 +481,42 @@ const ServiceLandingPage = ({ service }: ServiceLandingPageProps) => {
         </div>
       </section>
 
-      {/* CTA Banner */}
-      <section className="py-16 bg-warm-dark">
-        <div className="container mx-auto px-6 md:px-12 text-center">
-          <h2 className="font-display text-3xl md:text-4xl font-bold text-warm-white mb-4">
-            Bereit für dein {service.title}?
-          </h2>
-          <p className="text-warm-white/70 text-lg mb-8 max-w-xl mx-auto font-body">
-            Sichere dir jetzt deinen Wunschtermin und lass uns gemeinsam unvergessliche Erinnerungen schaffen.
-          </p>
-          <Button variant="hero" size="xl" onClick={scrollToBooking} className="bg-warm-white text-warm-dark hover:bg-warm-white/90">
-            Jetzt Termin buchen
-          </Button>
+      {/* ── CINEMATIC CLOSING CTA ────────────────────────────── */}
+      <section className="py-20 md:py-28 bg-warm-dark">
+        <div className="container mx-auto px-6 md:px-12 text-center max-w-3xl">
+          <motion.div
+            initial="hidden"
+            whileInView="visible"
+            viewport={{ once: true, margin: "-100px" }}
+            variants={stagger}
+          >
+            <motion.h2
+              variants={fadeUp}
+              className="font-display text-3xl md:text-4xl lg:text-5xl font-bold text-warm-white mb-6"
+            >
+              {service.closingHeadline}
+            </motion.h2>
+            <motion.p
+              variants={fadeUp}
+              className="text-warm-white/70 text-lg md:text-xl mb-10 font-body leading-relaxed"
+            >
+              {service.closingText}
+            </motion.p>
+            <motion.div variants={fadeUp}>
+              <Button
+                variant="hero"
+                size="xl"
+                onClick={scrollToBooking}
+                className="bg-warm-white text-warm-dark hover:bg-warm-white/90"
+              >
+                Jetzt Termin sichern
+              </Button>
+            </motion.div>
+          </motion.div>
         </div>
       </section>
 
-      {/* Embedded Booking Flow */}
+      {/* ── EMBEDDED BOOKING FLOW ────────────────────────────── */}
       <div ref={bookingRef} className="scroll-mt-8">
         <BookingFlow preselectedService={service.serviceName} />
       </div>
