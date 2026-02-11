@@ -9,10 +9,11 @@ import { Textarea } from "@/components/ui/textarea";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { format } from "date-fns";
-import { LogOut, Users, Calendar, Tag, Search, RefreshCw, CalendarDays } from "lucide-react";
+import { LogOut, Users, Calendar, Tag, Search, RefreshCw, CalendarDays, ImageIcon } from "lucide-react";
 import type { Tables } from "@/integrations/supabase/types";
 import AdminCalendar from "@/components/admin/AdminCalendar";
 import AdminClients from "@/components/admin/AdminClients";
+import AdminGallery from "@/components/admin/AdminGallery";
 
 type Booking = Tables<"bookings">;
 type Offer = Tables<"offers"> & { used_at?: string | null; used_by_booking_id?: string | null; single_use?: boolean; photo_package_only?: boolean; source?: string | null };
@@ -118,6 +119,7 @@ const AdminDashboard = () => {
             <TabsTrigger value="bookings" className="gap-2"><Calendar className="w-4 h-4" />Bookings</TabsTrigger>
             <TabsTrigger value="clients" className="gap-2"><Users className="w-4 h-4" />Clients</TabsTrigger>
             <TabsTrigger value="offers" className="gap-2"><Tag className="w-4 h-4" />Offers</TabsTrigger>
+            <TabsTrigger value="gallery" className="gap-2"><ImageIcon className="w-4 h-4" />Gallery</TabsTrigger>
           </TabsList>
 
           {/* CALENDAR TAB */}
@@ -316,6 +318,11 @@ const AdminDashboard = () => {
                 </Table>
               </div>
             </div>
+          </TabsContent>
+
+          {/* GALLERY TAB */}
+          <TabsContent value="gallery">
+            <AdminGallery />
           </TabsContent>
         </Tabs>
       </div>

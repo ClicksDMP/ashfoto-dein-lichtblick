@@ -261,6 +261,36 @@ export type Database = {
         }
         Relationships: []
       }
+      service_gallery_photos: {
+        Row: {
+          created_at: string
+          file_name: string
+          file_url: string
+          id: string
+          service_slug: string
+          sort_order: number
+          uploaded_by: string | null
+        }
+        Insert: {
+          created_at?: string
+          file_name?: string
+          file_url: string
+          id?: string
+          service_slug: string
+          sort_order?: number
+          uploaded_by?: string | null
+        }
+        Update: {
+          created_at?: string
+          file_name?: string
+          file_url?: string
+          id?: string
+          service_slug?: string
+          sort_order?: number
+          uploaded_by?: string | null
+        }
+        Relationships: []
+      }
       user_roles: {
         Row: {
           id: string
