@@ -6,7 +6,6 @@ import { Button } from "@/components/ui/button";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { format } from "date-fns";
-import { de } from "date-fns/locale";
 import { Search, Pencil, Trash2 } from "lucide-react";
 import type { Tables } from "@/integrations/supabase/types";
 
@@ -54,7 +53,7 @@ const AdminClients = ({ bookings }: AdminClientsProps) => {
   };
 
   const handleDelete = async (id: string) => {
-    if (!confirm("Kundenprofil endgültig löschen?")) return;
+    if (!confirm("Permanently delete this client profile?")) return;
     await supabase.from("profiles").delete().eq("id", id);
     fetchProfiles();
   };
@@ -71,33 +70,33 @@ const AdminClients = ({ bookings }: AdminClientsProps) => {
       <div className="flex items-center gap-4 mb-4 flex-wrap">
         <div className="relative flex-1 max-w-sm">
           <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
-          <Input placeholder="Name oder E-Mail suchen..." value={clientSearch} onChange={e => setClientSearch(e.target.value)} className="pl-10" />
+          <Input placeholder="Search name or email..." value={clientSearch} onChange={e => setClientSearch(e.target.value)} className="pl-10" />
         </div>
         <div className="flex items-center gap-2">
-          <Button size="sm" variant={clientFilter === "all" ? "default" : "outline"} onClick={() => setClientFilter("all")}>Alle</Button>
-          <Button size="sm" variant={clientFilter === "with_bookings" ? "default" : "outline"} onClick={() => setClientFilter("with_bookings")}>Mit Buchungen</Button>
-          <Button size="sm" variant={clientFilter === "no_bookings" ? "default" : "outline"} onClick={() => setClientFilter("no_bookings")}>Ohne Buchungen</Button>
+          <Button size="sm" variant={clientFilter === "all" ? "default" : "outline"} onClick={() => setClientFilter("all")}>All</Button>
+          <Button size="sm" variant={clientFilter === "with_bookings" ? "default" : "outline"} onClick={() => setClientFilter("with_bookings")}>With Bookings</Button>
+          <Button size="sm" variant={clientFilter === "no_bookings" ? "default" : "outline"} onClick={() => setClientFilter("no_bookings")}>No Bookings</Button>
         </div>
-        <p className="text-sm text-muted-foreground">{filteredProfiles.length} Kunden</p>
+        <p className="text-sm text-muted-foreground">{filteredProfiles.length} clients</p>
       </div>
       <div className="bg-card rounded-xl shadow-card overflow-hidden">
         <Table>
           <TableHeader>
             <TableRow>
               <TableHead>Name</TableHead>
-              <TableHead>E-Mail</TableHead>
-              <TableHead>Telefon</TableHead>
-              <TableHead>Adresse</TableHead>
-              <TableHead>Registriert am</TableHead>
-              <TableHead>Buchungen</TableHead>
-              <TableHead>Aktionen</TableHead>
+              <TableHead>Email</TableHead>
+              <TableHead>Phone</TableHead>
+              <TableHead>Address</TableHead>
+              <TableHead>Registered</TableHead>
+              <TableHead>Bookings</TableHead>
+              <TableHead>Actions</TableHead>
             </TableRow>
           </TableHeader>
           <TableBody>
             {filteredProfiles.map(p => (
               <TableRow key={p.id}>
                 <TableCell className="font-medium">
-                  {p.first_name || p.last_name ? `${p.first_name} ${p.last_name}` : <span className="text-muted-foreground italic">Nicht ausgefüllt</span>}
+                  {p.first_name || p.last_name ? `${p.first_name} ${p.last_name}` : <span className="text-muted-foreground italic">Not filled in</span>}
                 </TableCell>
                 <TableCell>{p.email}</TableCell>
                 <TableCell>{p.phone || "–"}</TableCell>
@@ -105,7 +104,7 @@ const AdminClients = ({ bookings }: AdminClientsProps) => {
                   {p.street ? `${p.street}, ${p.zip} ${p.city}` : "–"}
                 </TableCell>
                 <TableCell className="text-sm">
-                  {format(new Date(p.created_at), "dd.MM.yyyy", { locale: de })}
+                  {format(new Date(p.created_at), "MM/dd/yyyy")}
                 </TableCell>
                 <TableCell>{bookings.filter(b => b.user_id === p.user_id).length}</TableCell>
                 <TableCell>
@@ -121,7 +120,7 @@ const AdminClients = ({ bookings }: AdminClientsProps) => {
               </TableRow>
             ))}
             {filteredProfiles.length === 0 && (
-              <TableRow><TableCell colSpan={7} className="text-center py-8 text-muted-foreground">Keine Kunden gefunden</TableCell></TableRow>
+              <TableRow><TableCell colSpan={7} className="text-center py-8 text-muted-foreground">No clients found</TableCell></TableRow>
             )}
           </TableBody>
         </Table>
@@ -131,44 +130,44 @@ const AdminClients = ({ bookings }: AdminClientsProps) => {
       <Dialog open={!!editingProfile} onOpenChange={(open) => !open && setEditingProfile(null)}>
         <DialogContent>
           <DialogHeader>
-            <DialogTitle>Kunde bearbeiten</DialogTitle>
+            <DialogTitle>Edit Client</DialogTitle>
           </DialogHeader>
           <div className="space-y-4">
             <div className="grid grid-cols-2 gap-4">
               <div>
-                <Label>Vorname</Label>
+                <Label>First Name</Label>
                 <Input value={editForm.first_name} onChange={e => setEditForm(p => ({ ...p, first_name: e.target.value }))} className="mt-1" />
               </div>
               <div>
-                <Label>Nachname</Label>
+                <Label>Last Name</Label>
                 <Input value={editForm.last_name} onChange={e => setEditForm(p => ({ ...p, last_name: e.target.value }))} className="mt-1" />
               </div>
             </div>
             <div>
-              <Label>E-Mail</Label>
+              <Label>Email</Label>
               <Input value={editForm.email} onChange={e => setEditForm(p => ({ ...p, email: e.target.value }))} className="mt-1" />
             </div>
             <div>
-              <Label>Telefon</Label>
+              <Label>Phone</Label>
               <Input value={editForm.phone} onChange={e => setEditForm(p => ({ ...p, phone: e.target.value }))} className="mt-1" />
             </div>
             <div>
-              <Label>Straße</Label>
+              <Label>Street</Label>
               <Input value={editForm.street} onChange={e => setEditForm(p => ({ ...p, street: e.target.value }))} className="mt-1" />
             </div>
             <div className="grid grid-cols-3 gap-4">
               <div>
-                <Label>PLZ</Label>
+                <Label>ZIP</Label>
                 <Input value={editForm.zip} onChange={e => setEditForm(p => ({ ...p, zip: e.target.value }))} className="mt-1" />
               </div>
               <div className="col-span-2">
-                <Label>Ort</Label>
+                <Label>City</Label>
                 <Input value={editForm.city} onChange={e => setEditForm(p => ({ ...p, city: e.target.value }))} className="mt-1" />
               </div>
             </div>
             <div className="flex gap-2 justify-end">
-              <Button variant="outline" onClick={() => setEditingProfile(null)}>Abbrechen</Button>
-              <Button variant="booking" onClick={handleSave}>Speichern</Button>
+              <Button variant="outline" onClick={() => setEditingProfile(null)}>Cancel</Button>
+              <Button variant="booking" onClick={handleSave}>Save</Button>
             </div>
           </div>
         </DialogContent>
