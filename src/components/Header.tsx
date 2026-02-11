@@ -43,15 +43,13 @@ const Header = ({ onBookClick }: HeaderProps) => {
 
   return (
     <>
-      <AnimatePresence>
-        {show && (
-          <motion.header
-            initial={{ y: -80 }}
-            animate={{ y: 0 }}
-            exit={{ y: -80 }}
-            transition={{ type: "spring", damping: 25, stiffness: 260 }}
-            className="fixed top-0 left-0 right-0 z-50 bg-background/85 backdrop-blur-md border-b border-border shadow-soft"
-          >
+      <header
+        className={`fixed top-0 left-0 right-0 z-50 transition-all duration-300 ${
+          scrolled
+            ? "bg-background/85 backdrop-blur-md border-b border-border shadow-soft"
+            : "bg-transparent"
+        }`}
+      >
             <div className="container mx-auto px-6 md:px-12 flex items-center justify-between h-16">
               {/* Logo */}
               <Link to="/" className="font-display text-xl font-bold text-foreground">
@@ -124,9 +122,7 @@ const Header = ({ onBookClick }: HeaderProps) => {
                 </motion.div>
               )}
             </AnimatePresence>
-          </motion.header>
-        )}
-      </AnimatePresence>
+      </header>
 
       <SignUpDialog open={signUpOpen} onOpenChange={setSignUpOpen} />
     </>
