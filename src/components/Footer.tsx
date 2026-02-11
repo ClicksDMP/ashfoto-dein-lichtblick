@@ -1,4 +1,5 @@
 import { Mail, Phone, Video } from "lucide-react";
+import { Link } from "react-router-dom";
 
 const Footer = () => {
   return (
@@ -28,7 +29,15 @@ const Footer = () => {
             </p>
           </div>
 
-          <div className="border-t border-warm-brown/30 pt-8">
+          <div className="border-t border-warm-brown/30 pt-8 space-y-4">
+            <div className="flex items-center justify-center gap-6 text-sm">
+              <Link to="/impressum" className="text-warm-sand/80 hover:text-warm-gold transition-colors">
+                Impressum
+              </Link>
+              <Link to="/datenschutz" className="text-warm-sand/80 hover:text-warm-gold transition-colors">
+                Datenschutzerklärung
+              </Link>
+            </div>
             <p className="text-warm-sand/60 text-sm">
               © {new Date().getFullYear()} ashfoto. Alle Rechte vorbehalten.
             </p>
