@@ -2,95 +2,82 @@
 @tailwind components;
 @tailwind utilities;
 
-/* Definition of the design system. All colors, gradients, fonts, etc should be defined here. 
-All colors MUST be HSL.
-*/
-
 @layer base {
   :root {
-    --background: 0 0% 100%;
-    --foreground: 222.2 84% 4.9%;
+    --background: 38 33% 93%;
+    --foreground: 17 18% 19%;
 
-    --card: 0 0% 100%;
-    --card-foreground: 222.2 84% 4.9%;
+    --card: 30 29% 95%;
+    --card-foreground: 17 18% 19%;
 
     --popover: 0 0% 100%;
-    --popover-foreground: 222.2 84% 4.9%;
+    --popover-foreground: 17 18% 19%;
 
-    --primary: 222.2 47.4% 11.2%;
-    --primary-foreground: 210 40% 98%;
+    --primary: 19 22% 55%;
+    --primary-foreground: 38 33% 96%;
 
-    --secondary: 210 40% 96.1%;
-    --secondary-foreground: 222.2 47.4% 11.2%;
+    --secondary: 30 29% 89%;
+    --secondary-foreground: 17 18% 19%;
 
-    --muted: 210 40% 96.1%;
-    --muted-foreground: 215.4 16.3% 46.9%;
+    --muted: 30 16% 78%;
+    --muted-foreground: 17 12% 40%;
 
-    --accent: 210 40% 96.1%;
-    --accent-foreground: 222.2 47.4% 11.2%;
+    --accent: 31 36% 67%;
+    --accent-foreground: 17 18% 19%;
 
     --destructive: 0 84.2% 60.2%;
     --destructive-foreground: 210 40% 98%;
 
-    --border: 214.3 31.8% 91.4%;
-    --input: 214.3 31.8% 91.4%;
-    --ring: 222.2 84% 4.9%;
+    --border: 30 20% 82%;
+    --input: 30 20% 82%;
+    --ring: 19 22% 55%;
 
     --radius: 0.5rem;
 
-    --sidebar-background: 0 0% 98%;
+    --sidebar-background: 30 29% 89%;
+    --sidebar-foreground: 17 18% 19%;
+    --sidebar-primary: 19 22% 55%;
+    --sidebar-primary-foreground: 38 33% 96%;
+    --sidebar-accent: 31 36% 67%;
+    --sidebar-accent-foreground: 17 18% 19%;
+    --sidebar-border: 30 20% 82%;
+    --sidebar-ring: 19 22% 55%;
 
-    --sidebar-foreground: 240 5.3% 26.1%;
+    /* Custom tokens */
+    --warm-dark: 17 18% 19%;
+    --warm-brown: 19 22% 55%;
+    --warm-gold: 31 36% 67%;
+    --warm-sand: 30 16% 78%;
+    --warm-cream: 30 29% 89%;
+    --warm-ivory: 38 33% 93%;
+    --warm-white: 38 33% 96%;
 
-    --sidebar-primary: 240 5.9% 10%;
+    --font-display: 'Playfair Display', serif;
+    --font-body: 'DM Sans', sans-serif;
 
-    --sidebar-primary-foreground: 0 0% 98%;
-
-    --sidebar-accent: 240 4.8% 95.9%;
-
-    --sidebar-accent-foreground: 240 5.9% 10%;
-
-    --sidebar-border: 220 13% 91%;
-
-    --sidebar-ring: 217.2 91.2% 59.8%;
+    --shadow-soft: 0 4px 20px -4px hsl(17 18% 19% / 0.08);
+    --shadow-card: 0 8px 30px -8px hsl(17 18% 19% / 0.1);
+    --shadow-elevated: 0 16px 48px -12px hsl(17 18% 19% / 0.12);
   }
 
   .dark {
-    --background: 222.2 84% 4.9%;
-    --foreground: 210 40% 98%;
-
-    --card: 222.2 84% 4.9%;
-    --card-foreground: 210 40% 98%;
-
-    --popover: 222.2 84% 4.9%;
-    --popover-foreground: 210 40% 98%;
-
-    --primary: 210 40% 98%;
-    --primary-foreground: 222.2 47.4% 11.2%;
-
-    --secondary: 217.2 32.6% 17.5%;
-    --secondary-foreground: 210 40% 98%;
-
-    --muted: 217.2 32.6% 17.5%;
-    --muted-foreground: 215 20.2% 65.1%;
-
-    --accent: 217.2 32.6% 17.5%;
-    --accent-foreground: 210 40% 98%;
-
-    --destructive: 0 62.8% 30.6%;
-    --destructive-foreground: 210 40% 98%;
-
-    --border: 217.2 32.6% 17.5%;
-    --input: 217.2 32.6% 17.5%;
-    --ring: 212.7 26.8% 83.9%;
-    --sidebar-background: 240 5.9% 10%;
-    --sidebar-foreground: 240 4.8% 95.9%;
-    --sidebar-primary: 224.3 76.3% 48%;
-    --sidebar-primary-foreground: 0 0% 100%;
-    --sidebar-accent: 240 3.7% 15.9%;
-    --sidebar-accent-foreground: 240 4.8% 95.9%;
-    --sidebar-border: 240 3.7% 15.9%;
-    --sidebar-ring: 217.2 91.2% 59.8%;
+    --background: 17 18% 12%;
+    --foreground: 38 33% 93%;
+    --card: 17 18% 16%;
+    --card-foreground: 38 33% 93%;
+    --popover: 17 18% 14%;
+    --popover-foreground: 38 33% 93%;
+    --primary: 31 36% 67%;
+    --primary-foreground: 17 18% 12%;
+    --secondary: 17 15% 22%;
+    --secondary-foreground: 38 33% 93%;
+    --muted: 17 12% 25%;
+    --muted-foreground: 30 16% 65%;
+    --accent: 19 22% 45%;
+    --accent-foreground: 38 33% 93%;
+    --border: 17 12% 25%;
+    --input: 17 12% 25%;
+    --ring: 31 36% 67%;
   }
 }
 
@@ -101,5 +88,28 @@ All colors MUST be HSL.
 
   body {
     @apply bg-background text-foreground;
+    font-family: var(--font-body);
+  }
+
+  h1, h2, h3, h4, h5, h6 {
+    font-family: var(--font-display);
+  }
+}
+
+@layer utilities {
+  .font-display {
+    font-family: var(--font-display);
+  }
+  .font-body {
+    font-family: var(--font-body);
+  }
+  .shadow-soft {
+    box-shadow: var(--shadow-soft);
+  }
+  .shadow-card {
+    box-shadow: var(--shadow-card);
+  }
+  .shadow-elevated {
+    box-shadow: var(--shadow-elevated);
   }
 }
