@@ -2,6 +2,8 @@ import { useState } from "react";
 import heroBg from "@/assets/hero-bg.jpg";
 import { Button } from "@/components/ui/button";
 import SignUpDialog from "@/components/SignUpDialog";
+import { useHomepageHeroImage } from "@/hooks/useHomepageImages";
+import { Camera } from "lucide-react";
 
 interface HeroSectionProps {
   onBookClick: () => void;
@@ -10,17 +12,24 @@ interface HeroSectionProps {
 
 const HeroSection = ({ onBookClick, onConsultClick }: HeroSectionProps) => {
   const [signUpOpen, setSignUpOpen] = useState(false);
+  const heroImage = useHomepageHeroImage("");
 
   return (
     <section className="relative min-h-screen flex items-center">
-      {/* Background image */}
+      {/* Background image or placeholder */}
       <div className="absolute inset-0">
-        <img
-          src={heroBg}
-          alt="Professionelles Fotoshooting im goldenen Licht"
-          className="w-full h-full object-cover"
-          loading="eager"
-        />
+        {heroImage ? (
+          <img
+            src={heroImage}
+            alt="Professionelles Fotoshooting im goldenen Licht"
+            className="w-full h-full object-cover"
+            loading="eager"
+          />
+        ) : (
+          <div className="w-full h-full bg-gradient-to-br from-secondary via-warm-cream to-warm-ivory flex items-center justify-center">
+            <Camera className="w-32 h-32 text-primary/15" strokeWidth={1} />
+          </div>
+        )}
         <div className="absolute inset-0 bg-gradient-to-r from-warm-white/90 via-warm-ivory/75 to-transparent" />
       </div>
 
