@@ -691,16 +691,16 @@ const BookingFlow = ({ preselectedService, preselectedDealId, onClearDeal }: Boo
             </h2>
           </div>
 
-          <div className="grid sm:grid-cols-2 md:grid-cols-3 gap-4 mb-6">
+          <div className="grid sm:grid-cols-2 md:grid-cols-3 gap-6 mb-6">
             {SERVICES.map(({ name, img }) => {
               const serviceData = SERVICES_DATA.find(s => s.serviceName === name);
               return (
                 <div
                   key={name}
                   className={cn(
-                    "group rounded-xl border-2 overflow-hidden font-body font-medium transition-all hover:shadow-elevated",
+                    "bg-card rounded-2xl overflow-hidden border-2 transition-all hover:shadow-elevated group",
                     booking.service === name
-                      ? "border-primary ring-2 ring-primary/30"
+                      ? "border-primary ring-2 ring-primary/30 shadow-elevated"
                       : "border-border hover:border-primary/40"
                   )}
                 >
@@ -708,33 +708,38 @@ const BookingFlow = ({ preselectedService, preselectedDealId, onClearDeal }: Boo
                     onClick={() => handleServiceSelect(name)}
                     className="w-full text-left"
                   >
-                    <div className="aspect-[4/3] overflow-hidden">
+                    <div className="aspect-[16/9] overflow-hidden relative">
                       <img
                         src={img}
                         alt={name}
                         className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500"
                         loading="lazy"
                       />
-                    </div>
-                    <div className={cn(
-                      "p-3 text-sm font-semibold transition-colors",
-                      booking.service === name
-                        ? "bg-primary/10 text-foreground"
-                        : "bg-card text-foreground"
-                    )}>
-                      {name}
+                      {booking.service === name && (
+                        <div className="absolute top-3 left-3">
+                          <span className="bg-primary text-primary-foreground text-xs font-bold px-3 py-1 rounded-full shadow-lg">
+                            Ausgewählt
+                          </span>
+                        </div>
+                      )}
                     </div>
                   </button>
-                  {serviceData && (
-                    <div className="px-3 pb-3 bg-card">
+                  <div className="p-5">
+                    <h3 className={cn(
+                      "font-display text-lg font-bold mb-1 transition-colors",
+                      booking.service === name ? "text-primary" : "text-foreground"
+                    )}>
+                      {name}
+                    </h3>
+                    {serviceData && (
                       <Link
                         to={`/shooting/${serviceData.slug}`}
-                        className="inline-flex items-center gap-1.5 text-xs text-warm-brown hover:text-warm-dark transition-colors font-medium"
+                        className="inline-flex items-center gap-1.5 text-xs text-warm-brown hover:text-warm-dark transition-colors font-medium mt-1"
                       >
                         Mehr erfahren <ArrowRight className="w-3 h-3" />
                       </Link>
-                    </div>
-                  )}
+                    )}
+                  </div>
                 </div>
               );
             })}
