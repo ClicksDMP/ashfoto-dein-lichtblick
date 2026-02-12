@@ -1043,7 +1043,7 @@ const BookingFlow = ({ preselectedService, preselectedDealId, onClearDeal }: Boo
             <div className="max-w-xl mx-auto space-y-4">
               <div className="grid grid-cols-2 gap-4">
                 <div>
-                  <Label htmlFor="firstName" className="text-foreground">Vorname</Label>
+                  <Label htmlFor="firstName" className="text-foreground">Vorname <span className="text-destructive">*</span></Label>
                   <Input
                     id="firstName"
                     value={booking.firstName}
@@ -1052,7 +1052,7 @@ const BookingFlow = ({ preselectedService, preselectedDealId, onClearDeal }: Boo
                   />
                 </div>
                 <div>
-                  <Label htmlFor="lastName" className="text-foreground">Nachname</Label>
+                  <Label htmlFor="lastName" className="text-foreground">Nachname <span className="text-destructive">*</span></Label>
                   <Input
                     id="lastName"
                     value={booking.lastName}
@@ -1062,7 +1062,7 @@ const BookingFlow = ({ preselectedService, preselectedDealId, onClearDeal }: Boo
                 </div>
               </div>
               <div>
-                <Label htmlFor="email" className="text-foreground">E Mail</Label>
+                <Label htmlFor="email" className="text-foreground">E-Mail <span className="text-destructive">*</span></Label>
                 <Input
                   id="email"
                   type="email"
@@ -1120,7 +1120,7 @@ const BookingFlow = ({ preselectedService, preselectedDealId, onClearDeal }: Boo
                 )}
               </div>
               <div>
-                <Label htmlFor="phone" className="text-foreground">Telefonnummer</Label>
+                <Label htmlFor="phone" className="text-foreground">Telefonnummer <span className="text-destructive">*</span></Label>
                 <Input
                   id="phone"
                   type="tel"
@@ -1130,7 +1130,7 @@ const BookingFlow = ({ preselectedService, preselectedDealId, onClearDeal }: Boo
                 />
               </div>
               <div>
-                <Label htmlFor="street" className="text-foreground">Straße und Hausnummer</Label>
+                <Label htmlFor="street" className="text-foreground">Straße und Hausnummer <span className="text-destructive">*</span></Label>
                 <Input
                   id="street"
                   value={booking.street}
@@ -1140,7 +1140,7 @@ const BookingFlow = ({ preselectedService, preselectedDealId, onClearDeal }: Boo
               </div>
               <div className="grid grid-cols-3 gap-4">
                 <div>
-                  <Label htmlFor="zip" className="text-foreground">PLZ</Label>
+                  <Label htmlFor="zip" className="text-foreground">PLZ <span className="text-destructive">*</span></Label>
                   <Input
                     id="zip"
                     value={booking.zip}
@@ -1149,7 +1149,7 @@ const BookingFlow = ({ preselectedService, preselectedDealId, onClearDeal }: Boo
                   />
                 </div>
                 <div className="col-span-2">
-                  <Label htmlFor="city" className="text-foreground">Ort</Label>
+                  <Label htmlFor="city" className="text-foreground">Ort <span className="text-destructive">*</span></Label>
                   <Input
                     id="city"
                     value={booking.city}
@@ -1159,7 +1159,7 @@ const BookingFlow = ({ preselectedService, preselectedDealId, onClearDeal }: Boo
                 </div>
               </div>
               <div>
-                <Label htmlFor="notes" className="text-foreground">Zusätzliche Hinweise</Label>
+                <Label htmlFor="notes" className="text-foreground">Zusätzliche Hinweise <span className="text-xs text-muted-foreground font-normal">(optional)</span></Label>
                 <Textarea
                   id="notes"
                   value={booking.notes}
