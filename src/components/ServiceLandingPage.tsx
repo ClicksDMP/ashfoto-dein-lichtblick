@@ -373,9 +373,9 @@ const ServiceLandingPage = ({ service }: ServiceLandingPageProps) => {
         </div>
       </section>
 
-      {/* ── PHOTO GALLERY ────────────────────────────────────── */}
-      <section className="py-20 bg-warm-ivory">
-        <div className="container mx-auto px-6 md:px-12 max-w-6xl">
+      {/* ── IMMERSIVE PHOTO GALLERY ────────────────────────── */}
+      <section className="bg-warm-dark">
+        <div className="container mx-auto px-6 md:px-12 max-w-6xl py-20">
           <motion.div
             initial="hidden"
             whileInView="visible"
@@ -384,24 +384,22 @@ const ServiceLandingPage = ({ service }: ServiceLandingPageProps) => {
           >
             <motion.h2
               variants={fadeUp}
-              className="font-display text-3xl md:text-4xl font-bold text-foreground mb-4 text-center"
+              className="font-display text-3xl md:text-4xl font-bold text-warm-white mb-4 text-center"
             >
               Galerie
             </motion.h2>
             <motion.p
               variants={fadeUp}
-              className="text-muted-foreground text-center mb-10"
+              className="text-warm-white/60 text-center mb-4"
             >
               Eindrücke aus vergangenen Shootings
             </motion.p>
-            <motion.div variants={fadeUp}>
-              <ServiceGallery
-                serviceSlug={service.slug}
-                fallbackImage={heroImage}
-              />
-            </motion.div>
           </motion.div>
         </div>
+        <ServiceGallery
+          serviceSlug={service.slug}
+          fallbackImage={heroImage}
+        />
       </section>
 
       <SectionDivider />
