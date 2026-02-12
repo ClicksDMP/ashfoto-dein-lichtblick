@@ -41,6 +41,68 @@ export type Database = {
         }
         Relationships: []
       }
+      booking_upgrades: {
+        Row: {
+          booking_id: string
+          confirmed_at: string | null
+          created_at: string
+          extra_single_photos: number
+          extra_single_photos_price: number
+          id: string
+          new_package: string
+          new_package_price: number
+          notes: string | null
+          previous_package: string
+          previous_package_price: number
+          status: string
+          total_upgrade_price: number
+          upgrade_price: number
+          user_id: string
+        }
+        Insert: {
+          booking_id: string
+          confirmed_at?: string | null
+          created_at?: string
+          extra_single_photos?: number
+          extra_single_photos_price?: number
+          id?: string
+          new_package: string
+          new_package_price?: number
+          notes?: string | null
+          previous_package: string
+          previous_package_price?: number
+          status?: string
+          total_upgrade_price?: number
+          upgrade_price?: number
+          user_id: string
+        }
+        Update: {
+          booking_id?: string
+          confirmed_at?: string | null
+          created_at?: string
+          extra_single_photos?: number
+          extra_single_photos_price?: number
+          id?: string
+          new_package?: string
+          new_package_price?: number
+          notes?: string | null
+          previous_package?: string
+          previous_package_price?: number
+          status?: string
+          total_upgrade_price?: number
+          upgrade_price?: number
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "booking_upgrades_booking_id_fkey"
+            columns: ["booking_id"]
+            isOneToOne: false
+            referencedRelation: "bookings"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       bookings: {
         Row: {
           babybauch_kombi: boolean

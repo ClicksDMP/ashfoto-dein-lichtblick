@@ -7,7 +7,7 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Textarea } from "@/components/ui/textarea";
 import { format } from "date-fns";
 import { de } from "date-fns/locale";
-import { LogOut, Camera, Tag, Download, Calendar, Star, MessageSquare, Info, CheckCircle } from "lucide-react";
+import { LogOut, Camera, Tag, Download, Calendar, Star, MessageSquare, Info, CheckCircle, ArrowUpCircle, Plus, Minus } from "lucide-react";
 import { toast } from "sonner";
 import { getTipsForService, getStatusInfo } from "@/lib/shootingTips";
 import type { Tables } from "@/integrations/supabase/types";
@@ -15,6 +15,25 @@ import type { Tables } from "@/integrations/supabase/types";
 type Booking = Tables<"bookings">;
 type Photo = Tables<"customer_photos">;
 type Offer = Tables<"offers">;
+
+const PHOTO_PACKAGES = [
+  { label: "10 Bilder", value: "10", price: 169.99 },
+  { label: "15 Bilder", value: "15", price: 209.99 },
+  { label: "20 Bilder", value: "20", price: 249.99 },
+  { label: "30 Bilder", value: "30", price: 369.99 },
+  { label: "40 Bilder", value: "40", price: 399.99 },
+  { label: "Alle Fotos", value: "all", price: 449.99 },
+];
+const PACKAGE_ORDER = ["none", "10", "15", "20", "30", "40", "all"];
+const SINGLE_PHOTO_PRICE = 29.99;
+
+function getPackageLabel(value: string): string {
+  if (value === "none") return "Ohne Paket";
+  return PHOTO_PACKAGES.find(p => p.value === value)?.label || value;
+}
+function getPackagePrice(value: string): number {
+  return PHOTO_PACKAGES.find(p => p.value === value)?.price || 0;
+}
 
 const CustomerPortal = () => {
   const { user, loading, signOut } = useAuth();
@@ -28,6 +47,13 @@ const CustomerPortal = () => {
   const [feedbackText, setFeedbackText] = useState("");
   const [submittingFeedback, setSubmittingFeedback] = useState(false);
   const [existingFeedbacks, setExistingFeedbacks] = useState<Set<string>>(new Set());
+
+  // Upgrade state
+  const [upgradeBookingId, setUpgradeBookingId] = useState<string | null>(null);
+  const [upgradePackage, setUpgradePackage] = useState<string | null>(null);
+  const [extraPhotos, setExtraPhotos] = useState(0);
+  const [submittingUpgrade, setSubmittingUpgrade] = useState(false);
+  const [bookingUpgrades, setBookingUpgrades] = useState<Record<string, any[]>>({});
 
   useEffect(() => {
     if (!loading && !user) navigate("/login");
@@ -48,6 +74,21 @@ const CustomerPortal = () => {
     if (pRes.data) setPhotos(pRes.data);
     if (oRes.data) setOffers(oRes.data);
     if (fRes.data) setExistingFeedbacks(new Set(fRes.data.map(f => f.booking_id).filter(Boolean) as string[]));
+
+    // Fetch upgrades for user's bookings
+    const { data: upgrades } = await supabase
+      .from("booking_upgrades")
+      .select("*")
+      .eq("user_id", user!.id)
+      .order("created_at", { ascending: false });
+    if (upgrades) {
+      const map: Record<string, any[]> = {};
+      upgrades.forEach(u => {
+        if (!map[u.booking_id]) map[u.booking_id] = [];
+        map[u.booking_id].push(u);
+      });
+      setBookingUpgrades(map);
+    }
   };
 
   const downloadPhoto = async (photo: Photo) => {
@@ -103,6 +144,50 @@ const CustomerPortal = () => {
     return data?.publicUrl || "";
   };
 
+  // Upgrade logic
+  const getUpgradeOptions = (booking: Booking) => {
+    const currentPkg = booking.photo_package || "none";
+    const currentIdx = PACKAGE_ORDER.indexOf(currentPkg);
+    return PHOTO_PACKAGES.filter(p => PACKAGE_ORDER.indexOf(p.value) > currentIdx);
+  };
+
+  const calculateUpgradePrice = (booking: Booking) => {
+    let pkgUpgrade = 0;
+    if (upgradePackage) {
+      const currentPrice = getPackagePrice(booking.photo_package || "none");
+      const newPrice = getPackagePrice(upgradePackage);
+      pkgUpgrade = Math.max(0, newPrice - currentPrice);
+    }
+    const extraPrice = extraPhotos * SINGLE_PHOTO_PRICE;
+    return Math.round((pkgUpgrade + extraPrice) * 100) / 100;
+  };
+
+  const submitUpgrade = async (booking: Booking) => {
+    if (!user) return;
+    setSubmittingUpgrade(true);
+    try {
+      const { data, error } = await supabase.functions.invoke("create-upgrade", {
+        body: {
+          booking_id: booking.id,
+          new_package: upgradePackage || null,
+          extra_single_photos: extraPhotos,
+        },
+      });
+      if (error || !data?.success) {
+        throw new Error(data?.error || error?.message || "Upgrade fehlgeschlagen.");
+      }
+      toast.success("Upgrade-Anfrage erfolgreich gesendet! 🎉");
+      setUpgradeBookingId(null);
+      setUpgradePackage(null);
+      setExtraPhotos(0);
+      fetchData();
+    } catch (err: any) {
+      toast.error(err.message || "Ein Fehler ist aufgetreten.");
+    } finally {
+      setSubmittingUpgrade(false);
+    }
+  };
+
   if (loading) return <div className="min-h-screen flex items-center justify-center bg-background"><p>Laden...</p></div>;
 
   return (
@@ -139,6 +224,10 @@ const CustomerPortal = () => {
                 const isExpanded = expandedBooking === b.id;
                 const bookingPhotos = photos.filter(p => p.booking_id === b.id);
                 const hasFeedback = existingFeedbacks.has(b.id);
+                const upgrades = bookingUpgrades[b.id] || [];
+                const isUpgrading = upgradeBookingId === b.id;
+                const upgradeOptions = getUpgradeOptions(b);
+                const canUpgrade = b.status !== "cancelled" && (upgradeOptions.length > 0 || true); // always allow single photos
 
                 return (
                   <div key={b.id} className="bg-card rounded-xl shadow-card border border-border overflow-hidden">
@@ -182,6 +271,182 @@ const CustomerPortal = () => {
                             {b.notes && <div className="col-span-2"><span className="text-muted-foreground">Hinweise:</span> <span className="text-foreground ml-1">{b.notes}</span></div>}
                           </div>
                         </div>
+
+                        {/* Existing Upgrades */}
+                        {upgrades.length > 0 && (
+                          <div className="p-6 border-t border-border">
+                            <h4 className="font-semibold text-foreground mb-3 flex items-center gap-2">
+                              <ArrowUpCircle className="w-4 h-4 text-primary" /> Upgrades
+                            </h4>
+                            <div className="space-y-3">
+                              {upgrades.map((u: any) => (
+                                <div key={u.id} className="bg-secondary/10 rounded-lg p-4 border border-border/50">
+                                  <div className="flex justify-between items-start">
+                                    <div className="text-sm space-y-1">
+                                      {u.previous_package !== u.new_package && (
+                                        <p className="text-foreground">
+                                          Paket: <span className="text-muted-foreground">{getPackageLabel(u.previous_package)}</span> → <span className="font-medium text-primary">{getPackageLabel(u.new_package)}</span>
+                                          <span className="text-muted-foreground ml-2">({formatPrice(u.upgrade_price)})</span>
+                                        </p>
+                                      )}
+                                      {u.extra_single_photos > 0 && (
+                                        <p className="text-foreground">
+                                          +{u.extra_single_photos} Einzelbilder <span className="text-muted-foreground">({formatPrice(u.extra_single_photos_price)})</span>
+                                        </p>
+                                      )}
+                                    </div>
+                                    <div className="text-right">
+                                      <p className="font-display font-bold text-primary">{formatPrice(u.total_upgrade_price)}</p>
+                                      <span className={`inline-block px-2 py-0.5 rounded-full text-xs font-medium mt-1 ${
+                                        u.status === "confirmed" ? "bg-green-100 text-green-800" :
+                                        u.status === "cancelled" ? "bg-red-100 text-red-700" :
+                                        "bg-amber-100 text-amber-800"
+                                      }`}>
+                                        {u.status === "confirmed" ? "Bestätigt" : u.status === "cancelled" ? "Storniert" : "Ausstehend"}
+                                      </span>
+                                    </div>
+                                  </div>
+                                  <p className="text-xs text-muted-foreground mt-2">
+                                    Angefragt am {format(new Date(u.created_at), "dd.MM.yyyy", { locale: de })}
+                                  </p>
+                                </div>
+                              ))}
+                            </div>
+                          </div>
+                        )}
+
+                        {/* Upgrade Section */}
+                        {canUpgrade && b.status !== "cancelled" && (
+                          <div className="p-6 border-t border-border">
+                            {!isUpgrading ? (
+                              <Button
+                                variant="outline"
+                                className="w-full"
+                                onClick={() => {
+                                  setUpgradeBookingId(b.id);
+                                  setUpgradePackage(null);
+                                  setExtraPhotos(0);
+                                }}
+                              >
+                                <ArrowUpCircle className="w-4 h-4 mr-2" /> Bildpaket upgraden oder Einzelbilder hinzufügen
+                              </Button>
+                            ) : (
+                              <div className="space-y-5">
+                                <h4 className="font-semibold text-foreground flex items-center gap-2">
+                                  <ArrowUpCircle className="w-4 h-4 text-primary" /> Upgrade anfragen
+                                </h4>
+
+                                {/* Package Upgrade */}
+                                {upgradeOptions.length > 0 && (
+                                  <div>
+                                    <p className="text-sm font-medium text-foreground mb-2">Bildpaket upgraden</p>
+                                    <p className="text-xs text-muted-foreground mb-3">
+                                      Aktuelles Paket: <strong>{getPackageLabel(b.photo_package || "none")}</strong>
+                                      {b.photo_package !== "none" && ` (${formatPrice(getPackagePrice(b.photo_package))})`}
+                                      {" · "}Du zahlst nur die Differenz zum neuen Paket.
+                                    </p>
+                                    <div className="grid grid-cols-2 sm:grid-cols-3 gap-2">
+                                      {upgradeOptions.map(pkg => {
+                                        const diff = Math.max(0, pkg.price - getPackagePrice(b.photo_package || "none"));
+                                        const isSelected = upgradePackage === pkg.value;
+                                        return (
+                                          <button
+                                            key={pkg.value}
+                                            onClick={() => setUpgradePackage(isSelected ? null : pkg.value)}
+                                            className={`p-3 rounded-lg border-2 text-center transition-all text-sm ${
+                                              isSelected
+                                                ? "border-primary bg-primary/10"
+                                                : "border-border bg-card hover:border-primary/40"
+                                            }`}
+                                          >
+                                            <p className="font-bold text-foreground">{pkg.label}</p>
+                                            <p className="text-xs text-muted-foreground line-through">{formatPrice(pkg.price)}</p>
+                                            <p className="text-primary font-semibold">+{formatPrice(diff)}</p>
+                                          </button>
+                                        );
+                                      })}
+                                    </div>
+                                  </div>
+                                )}
+
+                                {/* Extra Single Photos */}
+                                <div>
+                                  <p className="text-sm font-medium text-foreground mb-2">Einzelbilder hinzufügen</p>
+                                  <p className="text-xs text-muted-foreground mb-3">
+                                    Jedes zusätzliche Bild kostet {formatPrice(SINGLE_PHOTO_PRICE)}.
+                                  </p>
+                                  <div className="flex items-center gap-4 bg-secondary/10 rounded-lg p-3">
+                                    <button
+                                      onClick={() => setExtraPhotos(Math.max(0, extraPhotos - 1))}
+                                      className="w-9 h-9 rounded-full bg-secondary flex items-center justify-center hover:bg-muted transition-colors"
+                                    >
+                                      <Minus className="w-4 h-4 text-foreground" />
+                                    </button>
+                                    <span className="w-8 text-center font-semibold text-foreground text-lg">{extraPhotos}</span>
+                                    <button
+                                      onClick={() => setExtraPhotos(extraPhotos + 1)}
+                                      className="w-9 h-9 rounded-full bg-secondary flex items-center justify-center hover:bg-muted transition-colors"
+                                    >
+                                      <Plus className="w-4 h-4 text-foreground" />
+                                    </button>
+                                    {extraPhotos > 0 && (
+                                      <span className="text-sm text-muted-foreground ml-2">
+                                        = {formatPrice(extraPhotos * SINGLE_PHOTO_PRICE)}
+                                      </span>
+                                    )}
+                                  </div>
+                                </div>
+
+                                {/* Summary & Submit */}
+                                {(upgradePackage || extraPhotos > 0) && (
+                                  <div className="bg-primary/5 rounded-lg p-4 border border-primary/20">
+                                    <p className="text-sm font-semibold text-foreground mb-2">Upgrade-Zusammenfassung</p>
+                                    {upgradePackage && (
+                                      <div className="flex justify-between text-sm">
+                                        <span className="text-muted-foreground">
+                                          {getPackageLabel(b.photo_package || "none")} → {getPackageLabel(upgradePackage)}
+                                        </span>
+                                        <span className="text-foreground font-medium">
+                                          +{formatPrice(Math.max(0, getPackagePrice(upgradePackage) - getPackagePrice(b.photo_package || "none")))}
+                                        </span>
+                                      </div>
+                                    )}
+                                    {extraPhotos > 0 && (
+                                      <div className="flex justify-between text-sm">
+                                        <span className="text-muted-foreground">+{extraPhotos} Einzelbilder</span>
+                                        <span className="text-foreground font-medium">+{formatPrice(extraPhotos * SINGLE_PHOTO_PRICE)}</span>
+                                      </div>
+                                    )}
+                                    <div className="border-t border-border mt-2 pt-2 flex justify-between">
+                                      <span className="font-display font-bold text-foreground">Aufpreis gesamt</span>
+                                      <span className="font-display font-bold text-primary">{formatPrice(calculateUpgradePrice(b))}</span>
+                                    </div>
+                                    <p className="text-xs text-muted-foreground mt-2">Alle Preise inkl. 19% MwSt.</p>
+                                  </div>
+                                )}
+
+                                <div className="bg-accent/10 rounded-lg p-4 border border-accent/30">
+                                  <p className="text-xs text-muted-foreground leading-relaxed">
+                                    💡 Das Upgrade ist eine <strong>Anfrage</strong>. Du zahlst jetzt nichts. Wir melden uns bei dir und senden eine Rechnung. Das Upgrade wird nach Zahlungseingang bestätigt.
+                                  </p>
+                                </div>
+
+                                <div className="flex gap-2">
+                                  <Button
+                                    variant="booking"
+                                    disabled={submittingUpgrade || (!upgradePackage && extraPhotos <= 0)}
+                                    onClick={() => submitUpgrade(b)}
+                                  >
+                                    {submittingUpgrade ? "Wird gesendet..." : "Upgrade anfragen (kostenlos)"}
+                                  </Button>
+                                  <Button variant="outline" onClick={() => { setUpgradeBookingId(null); setUpgradePackage(null); setExtraPhotos(0); }}>
+                                    Abbrechen
+                                  </Button>
+                                </div>
+                              </div>
+                            )}
+                          </div>
+                        )}
 
                         {/* Photos for this booking */}
                         {bookingPhotos.length > 0 && (

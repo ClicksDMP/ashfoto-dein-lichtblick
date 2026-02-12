@@ -1,4 +1,4 @@
-import { useRef, useCallback, useEffect } from "react";
+import { useRef, useCallback, useEffect, useLayoutEffect } from "react";
 import { Link } from "react-router-dom";
 import { motion } from "framer-motion";
 import { ArrowLeft, CheckCircle2, ChevronDown, Star, Camera, Heart, Sparkles, Shield } from "lucide-react";
@@ -44,8 +44,8 @@ const ServiceLandingPage = ({ service }: ServiceLandingPageProps) => {
     bookingRef.current?.scrollIntoView({ behavior: "smooth", block: "start" });
   }, []);
 
-  useEffect(() => {
-    window.scrollTo(0, 0);
+  useLayoutEffect(() => {
+    window.scrollTo({ top: 0, left: 0, behavior: "instant" });
   }, [service.slug]);
 
   // SEO: update document title, meta, and JSON-LD
