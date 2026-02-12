@@ -15,6 +15,7 @@ import { supabase } from "@/integrations/supabase/client";
 import { SERVICES_DATA } from "@/data/serviceData";
 import { DEALS, getActivDeals, type Deal } from "@/data/dealsData";
 import { useServiceThumbnails } from "@/hooks/useServiceThumbnails";
+import { getServiceIcon } from "@/lib/serviceIcons";
 
 import imgFamily from "@/assets/shooting-family.jpg";
 import imgBaby from "@/assets/shooting-baby.jpg";
@@ -720,12 +721,21 @@ const BookingFlow = ({ preselectedService, preselectedDealId, onClearDeal }: Boo
                     className="w-full text-left"
                   >
                     <div className="aspect-[16/9] overflow-hidden relative">
-                      <img
-                        src={thumbnailUrl}
-                        alt={name}
-                        className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500"
-                        loading="lazy"
-                      />
+                      {serviceData && serviceThumbnails[serviceData.slug] ? (
+                        <img
+                          src={serviceThumbnails[serviceData.slug]}
+                          alt={name}
+                          className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500"
+                          loading="lazy"
+                        />
+                      ) : (() => {
+                        const IconComp = serviceData ? getServiceIcon(serviceData.slug) : Sparkles;
+                        return (
+                          <div className="w-full h-full bg-gradient-to-br from-secondary/60 to-secondary/30 flex items-center justify-center">
+                            <IconComp className="w-14 h-14 text-primary/50" />
+                          </div>
+                        );
+                      })()}
                       {booking.service === name && (
                         <div className="absolute top-3 left-3">
                           <span className="bg-primary text-primary-foreground text-xs font-bold px-3 py-1 rounded-full shadow-lg">

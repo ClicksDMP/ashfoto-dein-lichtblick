@@ -13,6 +13,7 @@ import ServiceGallery from "@/components/ServiceGallery";
 import BookingFlow from "@/components/BookingFlow";
 import Footer from "@/components/Footer";
 import { useServiceImages } from "@/hooks/useServiceImages";
+import { getServiceIcon } from "@/lib/serviceIcons";
 import type { ServiceData } from "@/data/serviceData";
 
 interface ServiceLandingPageProps {
@@ -38,7 +39,10 @@ const LOCATION_FAQ = {
 
 const ServiceLandingPage = ({ service }: ServiceLandingPageProps) => {
   const bookingRef = useRef<HTMLDivElement>(null);
-  const { resolvedHero: heroImage, resolvedBanner: bannerImage } = useServiceImages(service.slug, service.heroImage);
+  const { hero, banner, resolvedHero: heroImage, resolvedBanner: bannerImage } = useServiceImages(service.slug, service.heroImage);
+  const hasCustomHero = !!hero;
+  const hasCustomBanner = !!banner || !!hero;
+  const ServiceIcon = getServiceIcon(service.slug);
 
   const scrollToBooking = useCallback(() => {
     bookingRef.current?.scrollIntoView({ behavior: "smooth", block: "start" });
@@ -124,12 +128,18 @@ const ServiceLandingPage = ({ service }: ServiceLandingPageProps) => {
       {/* ── HERO ──────────────────────────────────────────────── */}
       <section className="relative min-h-[80vh] flex items-end">
         <div className="absolute inset-0">
-          <img
-            src={heroImage}
-            alt={service.title}
-            className="w-full h-full object-cover"
-            loading="eager"
-          />
+          {hasCustomHero ? (
+            <img
+              src={heroImage}
+              alt={service.title}
+              className="w-full h-full object-cover"
+              loading="eager"
+            />
+          ) : (
+            <div className="w-full h-full bg-gradient-to-br from-warm-dark via-warm-brown/80 to-warm-dark flex items-center justify-center">
+              <ServiceIcon className="w-32 h-32 md:w-48 md:h-48 text-warm-white/15" />
+            </div>
+          )}
           <div className="absolute inset-0 bg-gradient-to-t from-warm-dark/85 via-warm-dark/40 to-warm-dark/10" />
         </div>
 
@@ -241,13 +251,19 @@ const ServiceLandingPage = ({ service }: ServiceLandingPageProps) => {
 
       {/* ── FULL-WIDTH IMAGE DIVIDER ─────────────────────────── */}
       <div className="h-72 md:h-96 overflow-hidden">
-        <img
-          src={bannerImage}
-          alt={service.title}
-          className="w-full h-full object-cover object-center"
-          loading="lazy"
-          style={{ filter: "brightness(0.85)" }}
-        />
+        {hasCustomBanner ? (
+          <img
+            src={bannerImage}
+            alt={service.title}
+            className="w-full h-full object-cover object-center"
+            loading="lazy"
+            style={{ filter: "brightness(0.85)" }}
+          />
+        ) : (
+          <div className="w-full h-full bg-gradient-to-r from-secondary/60 via-secondary/30 to-secondary/60 flex items-center justify-center">
+            <ServiceIcon className="w-24 h-24 md:w-32 md:h-32 text-primary/20" />
+          </div>
+        )}
       </div>
 
       {/* ── EXPERIENCE SECTION ───────────────────────────────── */}
@@ -442,13 +458,19 @@ const ServiceLandingPage = ({ service }: ServiceLandingPageProps) => {
 
       {/* ── IMAGE DIVIDER ────────────────────────────────────── */}
       <div className="h-64 md:h-80 overflow-hidden">
-        <img
-          src={bannerImage}
-          alt={service.title}
-          className="w-full h-full object-cover"
-          loading="lazy"
-          style={{ filter: "brightness(0.8) saturate(1.1)", objectPosition: "center 30%" }}
-        />
+        {hasCustomBanner ? (
+          <img
+            src={bannerImage}
+            alt={service.title}
+            className="w-full h-full object-cover"
+            loading="lazy"
+            style={{ filter: "brightness(0.8) saturate(1.1)", objectPosition: "center 30%" }}
+          />
+        ) : (
+          <div className="w-full h-full bg-gradient-to-r from-warm-dark/90 via-warm-brown/60 to-warm-dark/90 flex items-center justify-center">
+            <ServiceIcon className="w-20 h-20 md:w-28 md:h-28 text-warm-white/15" />
+          </div>
+        )}
       </div>
 
       {/* ── FAQ SECTION ──────────────────────────────────────── */}
