@@ -119,13 +119,20 @@ interface RevealCardProps {
 
 const RevealCard = ({ photo, index, onClick }: RevealCardProps) => {
   const ref = useRef<HTMLDivElement>(null);
+  const [ready, setReady] = useState(false);
+
+  // Delay scroll tracking to prevent scroll-jump on mount
+  useEffect(() => {
+    const timer = setTimeout(() => setReady(true), 300);
+    return () => clearTimeout(timer);
+  }, []);
+
   const { scrollYProgress } = useScroll({
-    target: ref,
+    target: ready ? ref : undefined,
     offset: ["start end", "end start"],
   });
 
   const dir = slideDirections[index % slideDirections.length];
-  const overlay = overlayColors[index % overlayColors.length];
 
   // Image slides in from direction as user scrolls into view
   const x = useTransform(

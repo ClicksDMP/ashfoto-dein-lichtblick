@@ -1,4 +1,4 @@
-import { useRef, useCallback, useEffect, useLayoutEffect } from "react";
+import { useRef, useCallback, useEffect, useLayoutEffect, useState } from "react";
 import { Link } from "react-router-dom";
 import { motion, useScroll, useTransform } from "framer-motion";
 import { ArrowLeft, CheckCircle2, ChevronDown, Star, Camera, Heart, Sparkles, Shield } from "lucide-react";
@@ -60,8 +60,15 @@ const LOCATION_FAQ = {
 
 const ParallaxDivider = ({ src, alt }: { src: string; alt: string }) => {
   const ref = useRef<HTMLDivElement>(null);
+  const [ready, setReady] = useState(false);
+
+  useEffect(() => {
+    const timer = setTimeout(() => setReady(true), 400);
+    return () => clearTimeout(timer);
+  }, []);
+
   const { scrollYProgress } = useScroll({
-    target: ref,
+    target: ready ? ref : undefined,
     offset: ["start end", "end start"],
   });
   const y = useTransform(scrollYProgress, [0, 1], ["-15%", "15%"]);
@@ -71,7 +78,7 @@ const ParallaxDivider = ({ src, alt }: { src: string; alt: string }) => {
       <motion.img
         src={src}
         alt={alt}
-        style={{ y, filter: "brightness(0.85)" }}
+        style={{ y: ready ? y : 0, filter: "brightness(0.85)" }}
         className="absolute inset-0 w-full h-[130%] object-cover object-center -top-[15%]"
         loading="lazy"
       />
@@ -102,8 +109,26 @@ const ServiceLandingPage = ({ service }: ServiceLandingPageProps) => {
     bookingRef.current?.scrollIntoView({ behavior: "smooth", block: "start" });
   }, []);
 
+  // Force scroll to top: hide overflow to prevent any scroll jumps during mount
   useLayoutEffect(() => {
-    window.scrollTo({ top: 0, left: 0, behavior: "instant" });
+    document.documentElement.style.overflow = "hidden";
+    window.scrollTo(0, 0);
+    document.documentElement.scrollTop = 0;
+    document.body.scrollTop = 0;
+    
+    // Re-enable overflow after paint
+    const raf = requestAnimationFrame(() => {
+      window.scrollTo(0, 0);
+      requestAnimationFrame(() => {
+        window.scrollTo(0, 0);
+        document.documentElement.style.overflow = "";
+      });
+    });
+    
+    return () => {
+      cancelAnimationFrame(raf);
+      document.documentElement.style.overflow = "";
+    };
   }, [service.slug]);
 
   // SEO: update document title, meta, and JSON-LD
