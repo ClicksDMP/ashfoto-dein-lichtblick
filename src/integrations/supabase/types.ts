@@ -412,6 +412,39 @@ export type Database = {
         }
         Relationships: []
       }
+      service_images: {
+        Row: {
+          created_at: string
+          crop_data: Json | null
+          file_url: string
+          id: string
+          image_type: string
+          service_slug: string
+          updated_at: string
+          uploaded_by: string | null
+        }
+        Insert: {
+          created_at?: string
+          crop_data?: Json | null
+          file_url: string
+          id?: string
+          image_type: string
+          service_slug: string
+          updated_at?: string
+          uploaded_by?: string | null
+        }
+        Update: {
+          created_at?: string
+          crop_data?: Json | null
+          file_url?: string
+          id?: string
+          image_type?: string
+          service_slug?: string
+          updated_at?: string
+          uploaded_by?: string | null
+        }
+        Relationships: []
+      }
       user_roles: {
         Row: {
           id: string

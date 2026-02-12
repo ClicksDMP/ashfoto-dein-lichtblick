@@ -12,7 +12,7 @@ import {
 import ServiceGallery from "@/components/ServiceGallery";
 import BookingFlow from "@/components/BookingFlow";
 import Footer from "@/components/Footer";
-import { useServiceHeroImage } from "@/hooks/useServiceHeroImage";
+import { useServiceImages } from "@/hooks/useServiceImages";
 import type { ServiceData } from "@/data/serviceData";
 
 interface ServiceLandingPageProps {
@@ -38,7 +38,7 @@ const LOCATION_FAQ = {
 
 const ServiceLandingPage = ({ service }: ServiceLandingPageProps) => {
   const bookingRef = useRef<HTMLDivElement>(null);
-  const heroImage = useServiceHeroImage(service.slug, service.heroImage);
+  const { resolvedHero: heroImage, resolvedBanner: bannerImage } = useServiceImages(service.slug, service.heroImage);
 
   const scrollToBooking = useCallback(() => {
     bookingRef.current?.scrollIntoView({ behavior: "smooth", block: "start" });
@@ -240,7 +240,7 @@ const ServiceLandingPage = ({ service }: ServiceLandingPageProps) => {
       {/* ── FULL-WIDTH IMAGE DIVIDER ─────────────────────────── */}
       <div className="h-72 md:h-96 overflow-hidden">
         <img
-          src={heroImage}
+          src={bannerImage}
           alt={service.title}
           className="w-full h-full object-cover object-center"
           loading="lazy"
@@ -441,7 +441,7 @@ const ServiceLandingPage = ({ service }: ServiceLandingPageProps) => {
       {/* ── IMAGE DIVIDER ────────────────────────────────────── */}
       <div className="h-64 md:h-80 overflow-hidden">
         <img
-          src={heroImage}
+          src={bannerImage}
           alt={service.title}
           className="w-full h-full object-cover"
           loading="lazy"
