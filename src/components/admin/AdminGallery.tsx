@@ -5,14 +5,16 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Badge } from "@/components/ui/badge";
 import { Progress } from "@/components/ui/progress";
+import { Checkbox } from "@/components/ui/checkbox";
 import {
   Trash2, Upload, ImageIcon, ChevronDown, ChevronRight, Eye,
-  Image as ImageLucide, FolderOpen, ArrowUp, ArrowDown, Loader2,
+  Image as ImageLucide, FolderOpen, ArrowUp, ArrowDown, Loader2, CheckSquare,
 } from "lucide-react";
 import { SERVICES_DATA } from "@/data/serviceData";
 import { getActivDeals } from "@/data/dealsData";
 import { toast } from "sonner";
 import { compressImages } from "@/lib/imageCompressor";
+import { cn } from "@/lib/utils";
 import ServiceImageManager from "./ServiceImageManager";
 
 interface GalleryPhoto {
@@ -32,6 +34,8 @@ const AdminGallery = () => {
   const [initialLoading, setInitialLoading] = useState(true);
   const [deletingId, setDeletingId] = useState<string | null>(null);
   const [serviceImageUrls, setServiceImageUrls] = useState<Record<string, string | null>>({});
+  const [selectedPhotos, setSelectedPhotos] = useState<Set<string>>(new Set());
+  const [bulkDeleting, setBulkDeleting] = useState(false);
 
   const fetchServiceImageUrls = useCallback(async () => {
     const { data } = await supabase
@@ -74,6 +78,52 @@ const AdminGallery = () => {
 
   const toggleExpand = (slug: string) => {
     setExpandedSlug((prev) => (prev === slug ? null : slug));
+    setSelectedPhotos(new Set());
+  };
+
+  const togglePhotoSelection = (photoId: string) => {
+    setSelectedPhotos(prev => {
+      const next = new Set(prev);
+      if (next.has(photoId)) next.delete(photoId);
+      else next.add(photoId);
+      return next;
+    });
+  };
+
+  const selectAllInSlug = (slug: string) => {
+    const photos = allPhotos[slug] || [];
+    const allSelected = photos.every(p => selectedPhotos.has(p.id));
+    if (allSelected) {
+      setSelectedPhotos(new Set());
+    } else {
+      setSelectedPhotos(new Set(photos.map(p => p.id)));
+    }
+  };
+
+  const handleBulkDelete = async (slug: string) => {
+    if (selectedPhotos.size === 0) return;
+    if (!confirm(`${selectedPhotos.size} Foto(s) endgültig löschen?`)) return;
+    setBulkDeleting(true);
+
+    const photos = (allPhotos[slug] || []).filter(p => selectedPhotos.has(p.id));
+    const filePaths: string[] = [];
+    for (const photo of photos) {
+      const urlParts = photo.file_url.split("/service-gallery/");
+      if (urlParts.length > 1) filePaths.push(urlParts[1]);
+    }
+
+    if (filePaths.length > 0) {
+      await supabase.storage.from("service-gallery").remove(filePaths);
+    }
+
+    for (const photo of photos) {
+      await supabase.from("service_gallery_photos").delete().eq("id", photo.id);
+    }
+
+    toast.success(`${photos.length} Foto(s) gelöscht!`);
+    setSelectedPhotos(new Set());
+    setBulkDeleting(false);
+    fetchAllPhotos();
   };
 
   const handleUpload = async (slug: string, e: React.ChangeEvent<HTMLInputElement>) => {
@@ -83,7 +133,6 @@ const AdminGallery = () => {
     setUploadProgress(0);
     setUploadTotal(files.length);
 
-    // Compress all images
     toast.info(`Optimiere ${files.length} Bilder...`);
     const fileArray = Array.from(files);
     const compressed = await compressImages(fileArray);
@@ -113,7 +162,7 @@ const AdminGallery = () => {
       await supabase.from("service_gallery_photos").insert({
         service_slug: slug,
         file_url: urlData.publicUrl,
-        file_name: fileArray[i].name, // keep original name
+        file_name: fileArray[i].name,
         sort_order: maxOrder + i + 1,
       });
 
@@ -130,6 +179,7 @@ const AdminGallery = () => {
   };
 
   const handleDelete = async (photo: GalleryPhoto) => {
+    if (!confirm("Dieses Foto endgültig löschen?")) return;
     setDeletingId(photo.id);
     const urlParts = photo.file_url.split("/service-gallery/");
     const filePath = urlParts.length > 1 ? urlParts[1] : "";
@@ -138,6 +188,7 @@ const AdminGallery = () => {
     }
     await supabase.from("service_gallery_photos").delete().eq("id", photo.id);
     setDeletingId(null);
+    toast.success("Foto gelöscht!");
     fetchAllPhotos();
   };
 
@@ -196,7 +247,7 @@ const AdminGallery = () => {
       {/* Homepage Images Section */}
       <div className="bg-card border-2 border-primary/20 rounded-xl overflow-hidden">
         <button
-          onClick={() => setExpandedSlug(expandedSlug === "__homepage__" ? null : "__homepage__")}
+          onClick={() => { setExpandedSlug(expandedSlug === "__homepage__" ? null : "__homepage__"); setSelectedPhotos(new Set()); }}
           className="w-full flex items-center gap-4 px-4 py-3 hover:bg-secondary/30 transition-colors text-left"
         >
           <div className="w-12 h-12 rounded-lg overflow-hidden flex-shrink-0 border border-primary/30 bg-primary/10 flex items-center justify-center">
@@ -214,23 +265,14 @@ const AdminGallery = () => {
               <h4 className="text-sm font-semibold text-foreground flex items-center gap-2 mb-3">
                 <ImageLucide className="w-4 h-4 text-primary" /> Hero-Bild (Startseite)
               </h4>
-              <ServiceImageManager
-                serviceSlug="homepage"
-                serviceTitle="Startseite"
-                fallbackImage="/placeholder.svg"
-              />
+              <ServiceImageManager serviceSlug="homepage" serviceTitle="Startseite" fallbackImage="/placeholder.svg" />
             </div>
-            {/* Deal images */}
             {getActivDeals().map(deal => (
               <div key={deal.id}>
                 <h4 className="text-sm font-semibold text-foreground flex items-center gap-2 mb-3">
                   <ImageLucide className="w-4 h-4 text-primary" /> Deal: {deal.title}
                 </h4>
-                <ServiceImageManager
-                  serviceSlug={`deal-${deal.id}`}
-                  serviceTitle={deal.title}
-                  fallbackImage="/placeholder.svg"
-                />
+                <ServiceImageManager serviceSlug={`deal-${deal.id}`} serviceTitle={deal.title} fallbackImage="/placeholder.svg" />
               </div>
             ))}
           </div>
@@ -242,6 +284,7 @@ const AdminGallery = () => {
           const photos = allPhotos[service.slug] || [];
           const isExpanded = expandedSlug === service.slug;
           const isUploading = uploading === service.slug;
+          const selectedInSlug = photos.filter(p => selectedPhotos.has(p.id)).length;
 
           return (
             <div key={service.slug} className="bg-card border border-border rounded-xl overflow-hidden transition-colors">
@@ -264,25 +307,33 @@ const AdminGallery = () => {
 
               {isExpanded && (
                 <div className="border-t border-border px-4 py-4 space-y-5">
-                  {/* Service Images Management (Thumbnail, Hero, Banner) */}
                   <div>
                     <h4 className="text-sm font-semibold text-foreground flex items-center gap-2 mb-3">
                       <ImageLucide className="w-4 h-4 text-primary" /> Bilder verwalten
                     </h4>
-                    <ServiceImageManager
-                      serviceSlug={service.slug}
-                      serviceTitle={service.title}
-                      fallbackImage={service.heroImage}
-                    />
+                    <ServiceImageManager serviceSlug={service.slug} serviceTitle={service.title} fallbackImage={service.heroImage} />
                   </div>
 
-                  {/* Gallery Photos Section */}
                   <div>
-                    <div className="flex items-center justify-between mb-3">
+                    <div className="flex items-center justify-between mb-3 flex-wrap gap-2">
                       <h4 className="text-sm font-semibold text-foreground flex items-center gap-2">
                         <FolderOpen className="w-4 h-4 text-primary" /> Gallery Photos ({photos.length})
                       </h4>
-                      <div>
+                      <div className="flex items-center gap-2">
+                        {photos.length > 0 && (
+                          <>
+                            <Button variant="outline" size="sm" className="h-8 text-xs gap-1.5" onClick={() => selectAllInSlug(service.slug)}>
+                              <CheckSquare className="w-3.5 h-3.5" />
+                              {photos.every(p => selectedPhotos.has(p.id)) ? "Alle abwählen" : "Alle auswählen"}
+                            </Button>
+                            {selectedInSlug > 0 && (
+                              <Button variant="destructive" size="sm" className="h-8 text-xs gap-1.5" onClick={() => handleBulkDelete(service.slug)} disabled={bulkDeleting}>
+                                {bulkDeleting ? <Loader2 className="w-3.5 h-3.5 animate-spin" /> : <Trash2 className="w-3.5 h-3.5" />}
+                                {selectedInSlug} löschen
+                              </Button>
+                            )}
+                          </>
+                        )}
                         <Label htmlFor={`upload-${service.slug}`} className="cursor-pointer">
                           <div className="inline-flex items-center gap-2 px-3 py-1.5 bg-primary text-primary-foreground rounded-md hover:bg-primary/90 transition-colors text-xs font-medium">
                             {isUploading ? <Loader2 className="w-3.5 h-3.5 animate-spin" /> : <Upload className="w-3.5 h-3.5" />}
@@ -309,7 +360,15 @@ const AdminGallery = () => {
                     ) : (
                       <div className="space-y-1.5">
                         {photos.map((photo, idx) => (
-                          <div key={photo.id} className="flex items-center gap-3 bg-secondary/10 hover:bg-secondary/20 rounded-lg px-3 py-2 transition-colors group">
+                          <div key={photo.id} className={cn(
+                            "flex items-center gap-3 rounded-lg px-3 py-2 transition-colors group",
+                            selectedPhotos.has(photo.id) ? "bg-primary/10 border border-primary/30" : "bg-secondary/10 hover:bg-secondary/20"
+                          )}>
+                            <Checkbox
+                              checked={selectedPhotos.has(photo.id)}
+                              onCheckedChange={() => togglePhotoSelection(photo.id)}
+                              className="flex-shrink-0"
+                            />
                             <span className="text-xs text-muted-foreground w-5 text-center font-mono flex-shrink-0">{idx + 1}</span>
                             <div className="w-16 h-12 rounded overflow-hidden flex-shrink-0 border border-border">
                               <img src={photo.file_url} alt={photo.file_name} className="w-full h-full object-cover" loading="lazy" />
