@@ -436,11 +436,19 @@ const BookingFlow = ({ preselectedService, preselectedDealId, onClearDeal }: Boo
     scrollToStep(2); // scroll to participants (still within step 1)
   };
 
-  // Auto-select preselected service
+  // Auto-select preselected service (without scrolling)
   useEffect(() => {
     if (preselectedService && !preselectedApplied.current) {
       preselectedApplied.current = true;
-      handleServiceSelect(preselectedService);
+      if (preselectedService === "Food und Produkt Fotografie") {
+        setShowFoodMessage(true);
+        return;
+      }
+      setShowFoodMessage(false);
+      setBooking({
+        ...INITIAL_BOOKING,
+        service: preselectedService,
+      });
     }
   }, [preselectedService]);
 
