@@ -30,12 +30,18 @@ const Footer = () => {
           </div>
 
           <div className="border-t border-warm-brown/30 pt-8 space-y-4">
-            <div className="flex items-center justify-center gap-6 text-sm">
+            <div className="flex flex-wrap items-center justify-center gap-4 md:gap-6 text-sm">
               <Link to="/impressum" className="text-warm-sand/80 hover:text-warm-gold transition-colors">
                 Impressum
               </Link>
+              <Link to="/agb" className="text-warm-sand/80 hover:text-warm-gold transition-colors">
+                AGB
+              </Link>
               <Link to="/datenschutz" className="text-warm-sand/80 hover:text-warm-gold transition-colors">
                 Datenschutzerklärung
+              </Link>
+              <Link to="/widerruf" className="text-warm-sand/80 hover:text-warm-gold transition-colors">
+                Widerrufsbelehrung
               </Link>
             </div>
             <p className="text-warm-sand/60 text-sm">

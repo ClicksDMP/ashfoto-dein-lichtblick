@@ -976,7 +976,11 @@ const BookingFlow = ({ preselectedService }: BookingFlowProps = {}) => {
                   }
                 />
                 <label htmlFor="terms" className="text-sm text-muted-foreground cursor-pointer">
-                  Ich akzeptiere die Buchungsbedingungen und Datenschutz
+                  Ich akzeptiere die{" "}
+                  <Link to="/agb" target="_blank" className="underline hover:text-foreground">AGB</Link>,{" "}
+                  <Link to="/datenschutz" target="_blank" className="underline hover:text-foreground">Datenschutzerklärung</Link>{" "}
+                  und{" "}
+                  <Link to="/widerruf" target="_blank" className="underline hover:text-foreground">Widerrufsbelehrung</Link>.
                 </label>
               </div>
 

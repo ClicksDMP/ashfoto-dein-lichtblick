@@ -12,6 +12,8 @@ import ServicePage from "./pages/ServicePage";
 import NotFound from "./pages/NotFound";
 import Impressum from "./pages/Impressum";
 import Datenschutz from "./pages/Datenschutz";
+import AGB from "./pages/AGB";
+import Widerruf from "./pages/Widerruf";
 import CookieBanner from "./components/CookieBanner";
 
 const queryClient = new QueryClient();
@@ -31,6 +33,8 @@ const App = () => (
             <Route path="/shooting/:slug" element={<ServicePage />} />
             <Route path="/impressum" element={<Impressum />} />
             <Route path="/datenschutz" element={<Datenschutz />} />
+            <Route path="/agb" element={<AGB />} />
+            <Route path="/widerruf" element={<Widerruf />} />
             {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}
             <Route path="*" element={<NotFound />} />
           </Routes>
