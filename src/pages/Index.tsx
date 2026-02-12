@@ -3,6 +3,7 @@ import HeroSection from "@/components/HeroSection";
 import AboutSection from "@/components/AboutSection";
 import ProcessSection from "@/components/ProcessSection";
 import ServiceAreaSection from "@/components/ServiceAreaSection";
+import TestimonialsSection from "@/components/TestimonialsSection";
 import BookingFlow from "@/components/BookingFlow";
 import Footer from "@/components/Footer";
 import Header from "@/components/Header";
@@ -25,6 +26,7 @@ const Index = () => {
         <ProcessSection onCtaClick={scrollToBooking} />
       </div>
       <ServiceAreaSection />
+      <TestimonialsSection />
       <div id="booking" ref={bookingRef} className="scroll-mt-8">
         <BookingFlow />
       </div>

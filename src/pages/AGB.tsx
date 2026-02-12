@@ -41,7 +41,9 @@ const AGB = () => {
             <p>
               Die Darstellung der Leistungen auf der Website stellt kein verbindliches Angebot dar. Durch
               das Absenden der Buchung gibt der Kunde ein verbindliches Angebot ab. Der Vertrag kommt
-              zustande, wenn der Fotograf die Buchung per E-Mail bestätigt.
+              zustande, wenn der Fotograf die Buchung telefonisch oder per E-Mail bestätigt. Die Buchung
+              erhält zunächst den Status „ausstehend" und wird nach persönlicher Kontaktaufnahme durch den
+              Fotografen bestätigt.
             </p>
           </section>
 
@@ -74,8 +76,9 @@ const AGB = () => {
             <h2 className="text-xl font-semibold text-foreground mb-3">§ 6 Leistungserbringung und Lieferung</h2>
             <p>
               Die bearbeiteten Bilder werden dem Kunden innerhalb von 14 Werktagen nach dem Shooting
-              digital zur Verfügung gestellt. Der Fotograf ist bemüht, diesen Zeitrahmen einzuhalten,
-              kann jedoch keine Garantie dafür übernehmen.
+              digital über das Kundenportal zur Verfügung gestellt. Der Kunde wird per E-Mail benachrichtigt,
+              sobald die Bilder zum Download bereitstehen. Der Fotograf ist bemüht, diesen Zeitrahmen
+              einzuhalten, kann jedoch keine Garantie dafür übernehmen.
             </p>
             <p className="mt-2">
               Nicht genutzte Shooting-Zeit kann innerhalb von 6 Monaten für ein weiteres Shooting
@@ -129,7 +132,27 @@ const AGB = () => {
           </section>
 
           <section>
-            <h2 className="text-xl font-semibold text-foreground mb-3">§ 11 Datenschutz</h2>
+            <h2 className="text-xl font-semibold text-foreground mb-3">§ 11 Kundenbewertungen</h2>
+            <p>
+              Kunden können nach Erhalt ihrer Fotos über das Kundenportal eine Bewertung hinterlassen.
+              Der Fotograf behält sich das Recht vor, Bewertungen vor der Veröffentlichung auf der Website
+              zu prüfen und freizugeben. Der Vorname, Nachname und die Art des gebuchten Shootings werden
+              zusammen mit der Bewertung veröffentlicht. Durch das Absenden einer Bewertung erklärt sich
+              der Kunde mit der Veröffentlichung einverstanden.
+            </p>
+          </section>
+
+          <section>
+            <h2 className="text-xl font-semibold text-foreground mb-3">§ 12 Terminerinnerungen</h2>
+            <p>
+              Der Kunde erhält automatisierte Terminerinnerungen per E-Mail (3 Tage und 1 Tag vor dem
+              Shooting). Diese dienen ausschließlich der Information und ersetzen nicht die Pflicht
+              des Kunden, den vereinbarten Termin eigenständig wahrzunehmen.
+            </p>
+          </section>
+
+          <section>
+            <h2 className="text-xl font-semibold text-foreground mb-3">§ 13 Datenschutz</h2>
             <p>
               Die Verarbeitung personenbezogener Daten erfolgt gemäß der{" "}
               <Link to="/datenschutz" className="underline hover:text-foreground transition-colors">
@@ -139,7 +162,7 @@ const AGB = () => {
           </section>
 
           <section>
-            <h2 className="text-xl font-semibold text-foreground mb-3">§ 12 Schlussbestimmungen</h2>
+            <h2 className="text-xl font-semibold text-foreground mb-3">§ 14 Schlussbestimmungen</h2>
             <p>
               Es gilt das Recht der Bundesrepublik Deutschland. Sollten einzelne Bestimmungen dieser AGB
               unwirksam sein oder werden, bleibt die Wirksamkeit der übrigen Bestimmungen unberührt.

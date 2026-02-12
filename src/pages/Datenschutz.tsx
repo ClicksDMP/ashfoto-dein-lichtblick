@@ -19,8 +19,7 @@ const Datenschutz = () => {
             <p>
               Die folgenden Hinweise geben einen einfachen Überblick darüber, was mit Ihren personenbezogenen Daten
               passiert, wenn Sie diese Website besuchen. Personenbezogene Daten sind alle Daten, mit denen Sie
-              persönlich identifiziert werden können. Ausführliche Informationen zum Thema Datenschutz entnehmen
-              Sie unserer unter diesem Text aufgeführten Datenschutzerklärung.
+              persönlich identifiziert werden können.
             </p>
           </section>
 
@@ -35,10 +34,6 @@ const Datenschutz = () => {
               Telefon: +49 176 700 27 200<br />
               E-Mail: info@ClicksDMP.com
             </p>
-            <p className="mt-2">
-              Verantwortliche Stelle ist die natürliche oder juristische Person, die allein oder gemeinsam mit anderen
-              über die Zwecke und Mittel der Verarbeitung von personenbezogenen Daten (z.&nbsp;B. Namen, E-Mail-Adressen o.&nbsp;Ä.) entscheidet.
-            </p>
           </section>
 
           <section>
@@ -47,22 +42,16 @@ const Datenschutz = () => {
             <h3 className="text-lg font-semibold text-foreground mb-2">Cookies</h3>
             <p>
               Diese Website verwendet sogenannte „Cookies". Cookies sind kleine Datenpakete und richten auf Ihrem
-              Endgerät keinen Schaden an. Sie werden entweder vorübergehend für die Dauer einer Sitzung
-              (Session-Cookies) oder dauerhaft (permanente Cookies) auf Ihrem Endgerät gespeichert. Session-Cookies
-              werden nach Ende Ihres Besuchs automatisch gelöscht. Permanente Cookies bleiben auf Ihrem Endgerät
-              gespeichert, bis Sie diese selbst löschen oder eine automatische Löschung durch Ihren Webbrowser erfolgt.
+              Endgerät keinen Schaden an. Sie werden entweder vorübergehend (Session-Cookies) oder dauerhaft
+              (permanente Cookies) auf Ihrem Endgerät gespeichert.
             </p>
             <p className="mt-2">
-              Cookies, die zur Durchführung des elektronischen Kommunikationsvorgangs oder zur Bereitstellung
-              bestimmter, von Ihnen erwünschter Funktionen erforderlich sind, werden auf Grundlage von Art. 6 Abs. 1
-              lit. f DSGVO gespeichert. Der Websitebetreiber hat ein berechtigtes Interesse an der Speicherung von
-              technisch notwendigen Cookies zur optimierten Bereitstellung seiner Dienste.
+              Technisch notwendige Cookies werden auf Grundlage von Art. 6 Abs. 1 lit. f DSGVO gespeichert.
             </p>
 
             <h3 className="text-lg font-semibold text-foreground mt-4 mb-2">Server-Log-Dateien</h3>
             <p>
-              Der Provider der Seiten erhebt und speichert automatisch Informationen in sogenannten
-              Server-Log-Dateien, die Ihr Browser automatisch an uns übermittelt. Dies sind:
+              Der Provider der Seiten erhebt und speichert automatisch Informationen in Server-Log-Dateien:
             </p>
             <ul className="list-disc list-inside mt-2 space-y-1">
               <li>Browsertyp und Browserversion</li>
@@ -72,20 +61,9 @@ const Datenschutz = () => {
               <li>Uhrzeit der Serveranfrage</li>
               <li>IP-Adresse</li>
             </ul>
-            <p className="mt-2">
-              Eine Zusammenführung dieser Daten mit anderen Datenquellen wird nicht vorgenommen. Die Erfassung
-              dieser Daten erfolgt auf Grundlage von Art. 6 Abs. 1 lit. f DSGVO. Der Websitebetreiber hat ein
-              berechtigtes Interesse an der technisch fehlerfreien Darstellung und der Optimierung seiner Website.
-            </p>
 
             <h3 className="text-lg font-semibold text-foreground mt-4 mb-2">Kontaktformular und Buchung</h3>
             <p>
-              Wenn Sie uns per Kontaktformular oder über unsere Buchungsfunktion Anfragen zukommen lassen, werden
-              Ihre Angaben aus dem Formular inklusive der von Ihnen dort angegebenen Kontaktdaten zwecks Bearbeitung
-              der Anfrage und für den Fall von Anschlussfragen bei uns gespeichert. Diese Daten geben wir nicht
-              ohne Ihre Einwilligung weiter.
-            </p>
-            <p className="mt-2">
               Im Rahmen der Buchung erheben wir folgende Daten:
             </p>
             <ul className="list-disc list-inside mt-2 space-y-1">
@@ -98,23 +76,15 @@ const Datenschutz = () => {
               <li>Zusätzliche Hinweise (optional)</li>
             </ul>
             <p className="mt-2">
-              Die Verarbeitung dieser Daten erfolgt auf Grundlage von Art. 6 Abs. 1 lit. b DSGVO, sofern Ihre
-              Anfrage mit der Erfüllung eines Vertrags zusammenhängt oder zur Durchführung vorvertraglicher
-              Maßnahmen erforderlich ist. In allen übrigen Fällen beruht die Verarbeitung auf unserem berechtigten
-              Interesse an der effektiven Bearbeitung der an uns gerichteten Anfragen (Art. 6 Abs. 1 lit. f DSGVO).
+              Die Verarbeitung erfolgt auf Grundlage von Art. 6 Abs. 1 lit. b DSGVO (Vertragserfüllung).
             </p>
           </section>
 
           <section>
             <h2 className="text-xl font-semibold text-foreground mb-3">4. Registrierung auf dieser Website</h2>
             <p>
-              Sie können sich auf dieser Website registrieren, um zusätzliche Funktionen auf der Seite zu nutzen
-              (Kundenportal, Fotogalerie, Gutscheinverwaltung).
-              Die dazu eingegebenen Daten verwenden wir nur zum Zwecke der Nutzung des jeweiligen Angebotes oder
-              Dienstes, für den Sie sich registriert haben.
-            </p>
-            <p className="mt-2">
-              Bei der Registrierung werden folgende Daten erhoben:
+              Sie können sich registrieren, um das Kundenportal zu nutzen (Buchungsübersicht, Fotogalerie,
+              Gutscheine, Bewertungen). Bei der Registrierung werden erhoben:
             </p>
             <ul className="list-disc list-inside mt-2 space-y-1">
               <li>Vorname und Nachname</li>
@@ -124,60 +94,85 @@ const Datenschutz = () => {
               <li>Passwort (verschlüsselt gespeichert)</li>
             </ul>
             <p className="mt-2">
-              Die Verarbeitung der bei der Registrierung eingegebenen Daten erfolgt zum Zwecke der Durchführung
-              des durch die Registrierung begründeten Nutzungsverhältnisses und ggf. zur Anbahnung weiterer
-              Verträge (Art. 6 Abs. 1 lit. b DSGVO).
+              Die Verarbeitung erfolgt auf Grundlage von Art. 6 Abs. 1 lit. b DSGVO.
             </p>
           </section>
 
           <section>
-            <h2 className="text-xl font-semibold text-foreground mb-3">5. Hosting und Auftragsverarbeitung</h2>
+            <h2 className="text-xl font-semibold text-foreground mb-3">5. Kundenportal und Fotobereitstellung</h2>
             <p>
-              Diese Website wird bei einem externen Dienstleister gehostet (Hoster). Die personenbezogenen Daten,
-              die auf dieser Website erfasst werden, werden auf den Servern des Hosters gespeichert. Hierbei kann
-              es sich v.&nbsp;a. um IP-Adressen, Kontaktanfragen, Meta- und Kommunikationsdaten, Vertragsdaten,
-              Kontaktdaten, Namen, Websitezugriffe und sonstige Daten, die über eine Website generiert werden, handeln.
+              Nach Durchführung eines Shootings werden die bearbeiteten Fotos über das Kundenportal digital
+              bereitgestellt. Die Fotos werden verschlüsselt in einem Cloud-Speicher abgelegt und sind nur
+              für den jeweiligen Kunden über sein persönliches Konto zugänglich.
             </p>
             <p className="mt-2">
-              Der Einsatz des Hosters erfolgt im Interesse einer sicheren, schnellen und effizienten Bereitstellung
-              unseres Online-Angebots durch einen professionellen Anbieter (Art. 6 Abs. 1 lit. f DSGVO). Sofern eine
-              entsprechende Einwilligung abgefragt wurde, erfolgt die Verarbeitung ausschließlich auf Grundlage von
-              Art. 6 Abs. 1 lit. a DSGVO.
-            </p>
-            <p className="mt-2">
-              Wir haben einen Vertrag über Auftragsverarbeitung (AVV) mit unserem Hoster geschlossen. Dieser Vertrag
-              stellt sicher, dass der Hoster die personenbezogenen Daten unserer Websitebesucher nur nach unseren
-              Weisungen und unter Einhaltung der DSGVO verarbeitet.
+              Die Speicherung und Bereitstellung der Fotos erfolgt auf Grundlage von Art. 6 Abs. 1 lit. b DSGVO
+              (Vertragserfüllung).
             </p>
           </section>
 
           <section>
-            <h2 className="text-xl font-semibold text-foreground mb-3">6. E-Mail-Versand</h2>
+            <h2 className="text-xl font-semibold text-foreground mb-3">6. Kundenbewertungen</h2>
             <p>
-              Wir versenden transaktionale E-Mails (z.&nbsp;B. Buchungsbestätigung, Willkommensnachricht mit
-              Gutscheincode, E-Mail-Verifizierung) über einen externen Dienstleister. Dabei werden Ihre
-              E-Mail-Adresse und Ihr Name an den E-Mail-Dienstleister übermittelt.
+              Kunden können nach Erhalt ihrer Fotos eine Bewertung über das Kundenportal abgeben. Dabei werden
+              folgende Daten erhoben und ggf. auf der Website veröffentlicht:
             </p>
+            <ul className="list-disc list-inside mt-2 space-y-1">
+              <li>Vorname und Nachname</li>
+              <li>Art des gebuchten Shootings</li>
+              <li>Bewertungstext und Sternebewertung (1–5)</li>
+            </ul>
             <p className="mt-2">
-              Die Datenverarbeitung erfolgt auf Grundlage von Art. 6 Abs. 1 lit. b DSGVO (Vertragserfüllung)
-              bzw. Art. 6 Abs. 1 lit. f DSGVO (berechtigtes Interesse an zuverlässiger Kommunikation).
+              Die Veröffentlichung erfolgt nur nach Prüfung und Freigabe durch den Fotografen. Mit dem Absenden
+              einer Bewertung erklärt sich der Kunde mit der Veröffentlichung einverstanden (Art. 6 Abs. 1 lit. a DSGVO).
+              Der Kunde kann seine Einwilligung jederzeit widerrufen.
             </p>
           </section>
 
           <section>
-            <h2 className="text-xl font-semibold text-foreground mb-3">7. Speicherdauer</h2>
+            <h2 className="text-xl font-semibold text-foreground mb-3">7. E-Mail-Versand und Terminerinnerungen</h2>
             <p>
-              Ihre personenbezogenen Daten werden gelöscht oder gesperrt, sobald der Zweck der Speicherung
-              entfällt. Eine Speicherung kann darüber hinaus erfolgen, wenn dies durch europäische oder nationale
-              Gesetze vorgesehen ist (z.&nbsp;B. handels- und steuerrechtliche Aufbewahrungsfristen von bis zu 10 Jahren).
+              Wir versenden folgende automatisierte E-Mails:
+            </p>
+            <ul className="list-disc list-inside mt-2 space-y-1">
+              <li>Buchungseingangsbestätigung (Status: ausstehend)</li>
+              <li>Buchungsbestätigung (nach persönlicher Terminbestätigung)</li>
+              <li>Terminerinnerung 3 Tage vor dem Shooting</li>
+              <li>Terminerinnerung 1 Tag vor dem Shooting</li>
+              <li>Benachrichtigung bei Fotobereitstellung</li>
+              <li>Willkommensnachricht mit Gutscheincode bei Registrierung</li>
+              <li>E-Mail-Verifizierung</li>
+            </ul>
+            <p className="mt-2">
+              Der Versand erfolgt über einen externen Dienstleister. Die Datenverarbeitung erfolgt auf
+              Grundlage von Art. 6 Abs. 1 lit. b DSGVO (Vertragserfüllung).
             </p>
           </section>
 
           <section>
-            <h2 className="text-xl font-semibold text-foreground mb-3">8. Ihre Rechte</h2>
+            <h2 className="text-xl font-semibold text-foreground mb-3">8. Hosting und Auftragsverarbeitung</h2>
+            <p>
+              Diese Website wird bei einem externen Dienstleister gehostet. Die personenbezogenen Daten
+              werden auf den Servern des Hosters gespeichert. Der Einsatz erfolgt auf Grundlage von
+              Art. 6 Abs. 1 lit. f DSGVO. Wir haben einen AVV mit unserem Hoster geschlossen.
+            </p>
+          </section>
+
+          <section>
+            <h2 className="text-xl font-semibold text-foreground mb-3">9. Speicherdauer</h2>
+            <p>
+              Ihre personenbezogenen Daten werden gelöscht, sobald der Zweck der Speicherung entfällt.
+              Eine Speicherung kann darüber hinaus erfolgen, wenn dies durch Gesetze vorgesehen ist
+              (z.&nbsp;B. handels- und steuerrechtliche Aufbewahrungsfristen von bis zu 10 Jahren).
+              Fotos im Kundenportal werden nach Ablauf von 12 Monaten nach Bereitstellung archiviert.
+            </p>
+          </section>
+
+          <section>
+            <h2 className="text-xl font-semibold text-foreground mb-3">10. Ihre Rechte</h2>
             <p>Sie haben jederzeit das Recht:</p>
             <ul className="list-disc list-inside mt-2 space-y-1">
-              <li>Auskunft über Ihre bei uns gespeicherten personenbezogenen Daten zu erhalten (Art. 15 DSGVO)</li>
+              <li>Auskunft über Ihre gespeicherten Daten zu erhalten (Art. 15 DSGVO)</li>
               <li>Berichtigung unrichtiger Daten zu verlangen (Art. 16 DSGVO)</li>
               <li>Löschung Ihrer Daten zu verlangen (Art. 17 DSGVO)</li>
               <li>Einschränkung der Verarbeitung zu verlangen (Art. 18 DSGVO)</li>
@@ -192,21 +187,17 @@ const Datenschutz = () => {
           </section>
 
           <section>
-            <h2 className="text-xl font-semibold text-foreground mb-3">9. SSL- bzw. TLS-Verschlüsselung</h2>
+            <h2 className="text-xl font-semibold text-foreground mb-3">11. SSL-/TLS-Verschlüsselung</h2>
             <p>
-              Diese Seite nutzt aus Sicherheitsgründen und zum Schutz der Übertragung vertraulicher Inhalte eine
-              SSL- bzw. TLS-Verschlüsselung. Eine verschlüsselte Verbindung erkennen Sie daran, dass die
-              Adresszeile des Browsers von „http://" auf „https://" wechselt und an dem Schloss-Symbol in Ihrer
-              Browserzeile.
+              Diese Seite nutzt aus Sicherheitsgründen eine SSL-/TLS-Verschlüsselung.
             </p>
           </section>
 
           <section>
-            <h2 className="text-xl font-semibold text-foreground mb-3">10. Widerruf Ihrer Einwilligung</h2>
+            <h2 className="text-xl font-semibold text-foreground mb-3">12. Widerruf Ihrer Einwilligung</h2>
             <p>
-              Viele Datenverarbeitungsvorgänge sind nur mit Ihrer ausdrücklichen Einwilligung möglich. Sie können
-              eine bereits erteilte Einwilligung jederzeit widerrufen. Die Rechtmäßigkeit der bis zum Widerruf
-              erfolgten Datenverarbeitung bleibt vom Widerruf unberührt.
+              Sie können eine bereits erteilte Einwilligung jederzeit widerrufen. Die Rechtmäßigkeit
+              der bis zum Widerruf erfolgten Datenverarbeitung bleibt unberührt.
             </p>
           </section>
 
