@@ -1,6 +1,6 @@
 import { useRef, useCallback, useEffect, useLayoutEffect } from "react";
 import { Link } from "react-router-dom";
-import { motion, useScroll, useTransform } from "framer-motion";
+import { motion } from "framer-motion";
 import { ArrowLeft, CheckCircle2, ChevronDown, Star, Camera, Heart, Sparkles, Shield } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import {
@@ -19,33 +19,13 @@ interface ServiceLandingPageProps {
   service: ServiceData;
 }
 
-/* ── Enhanced animation variants ─────────────────────────── */
-
 const fadeUp = {
-  hidden: { opacity: 0, y: 50 },
-  visible: {
-    opacity: 1,
-    y: 0,
-    transition: { duration: 0.7, type: "spring" as const, stiffness: 80, damping: 20 },
-  },
-};
-
-const scaleIn = {
-  hidden: { opacity: 0, y: 40, scale: 0.95 },
-  visible: {
-    opacity: 1,
-    y: 0,
-    scale: 1,
-    transition: { duration: 0.6, type: "spring" as const, stiffness: 100, damping: 18 },
-  },
+  hidden: { opacity: 0, y: 30 },
+  visible: { opacity: 1, y: 0, transition: { duration: 0.6 } },
 };
 
 const stagger = {
-  visible: { transition: { staggerChildren: 0.12 } },
-};
-
-const staggerFast = {
-  visible: { transition: { staggerChildren: 0.08 } },
+  visible: { transition: { staggerChildren: 0.1 } },
 };
 
 const whyIcons = [Camera, Star, Heart, Sparkles, Shield, CheckCircle2];
@@ -55,44 +35,6 @@ const LOCATION_FAQ = {
   answer:
     "Ich bin mit Sitz in Mannheim in der gesamten Metropolregion Rhein-Neckar unterwegs. Dazu gehören unter anderem Heidelberg, Ludwigshafen am Rhein, Frankenthal, Speyer, Worms, Weinheim, Viernheim, Lampertheim, Hockenheim, Leimen, Wiesloch, Bensheim und Neustadt an der Weinstraße. Deine Stadt ist nicht dabei? Schreib mir – oft ist mehr möglich, als du denkst.",
 };
-
-/* ── Parallax Image Divider ──────────────────────────────── */
-
-const ParallaxDivider = ({ src, alt }: { src: string; alt: string }) => {
-  const ref = useRef<HTMLDivElement>(null);
-  const { scrollYProgress } = useScroll({
-    target: ref,
-    offset: ["start end", "end start"],
-  });
-  const y = useTransform(scrollYProgress, [0, 1], ["-15%", "15%"]);
-
-  return (
-    <div ref={ref} className="relative h-72 md:h-96 overflow-hidden">
-      <motion.img
-        src={src}
-        alt={alt}
-        style={{ y, filter: "brightness(0.85)" }}
-        className="absolute inset-0 w-full h-[130%] object-cover object-center -top-[15%]"
-        loading="lazy"
-      />
-      {/* Decorative edge lines */}
-      <div className="absolute top-0 inset-x-0 h-px bg-gradient-to-r from-transparent via-warm-brown/30 to-transparent" />
-      <div className="absolute bottom-0 inset-x-0 h-px bg-gradient-to-r from-transparent via-warm-brown/30 to-transparent" />
-    </div>
-  );
-};
-
-/* ── Section Divider ─────────────────────────────────────── */
-
-const SectionDivider = () => (
-  <div className="flex items-center justify-center py-2">
-    <div className="h-px w-16 bg-warm-brown/20" />
-    <div className="mx-3 w-1.5 h-1.5 rounded-full bg-warm-brown/30" />
-    <div className="h-px w-16 bg-warm-brown/20" />
-  </div>
-);
-
-/* ── Main Component ──────────────────────────────────────── */
 
 const ServiceLandingPage = ({ service }: ServiceLandingPageProps) => {
   const bookingRef = useRef<HTMLDivElement>(null);
@@ -177,27 +119,17 @@ const ServiceLandingPage = ({ service }: ServiceLandingPageProps) => {
 
   return (
     <main className="min-h-screen bg-background">
-      {/* ── HERO with zoom-out entrance ───────────────────────── */}
-      <section className="relative min-h-[80vh] flex items-end overflow-hidden">
-        <motion.div
-          className="absolute inset-0"
-          initial={{ scale: 1.12 }}
-          animate={{ scale: 1 }}
-          transition={{ duration: 1.8, ease: [0.25, 0.46, 0.45, 0.94] }}
-        >
+      {/* ── HERO ──────────────────────────────────────────────── */}
+      <section className="relative min-h-[80vh] flex items-end">
+        <div className="absolute inset-0">
           <img
             src={heroImage}
             alt={service.title}
             className="w-full h-full object-cover"
             loading="eager"
           />
-          <motion.div
-            className="absolute inset-0 bg-gradient-to-t from-warm-dark/85 via-warm-dark/40 to-warm-dark/10"
-            initial={{ opacity: 0.6 }}
-            animate={{ opacity: 1 }}
-            transition={{ duration: 1.2, delay: 0.3 }}
-          />
-        </motion.div>
+          <div className="absolute inset-0 bg-gradient-to-t from-warm-dark/85 via-warm-dark/40 to-warm-dark/10" />
+        </div>
 
         <Link
           to="/"
@@ -285,15 +217,15 @@ const ServiceLandingPage = ({ service }: ServiceLandingPageProps) => {
               </p>
             </motion.div>
 
-            {/* Highlights with staggered scale-in */}
+            {/* Highlights */}
             <motion.div
-              variants={staggerFast}
+              variants={stagger}
               className="grid sm:grid-cols-2 gap-4 max-w-2xl mx-auto"
             >
               {service.highlights.map((highlight, i) => (
                 <motion.div
                   key={i}
-                  variants={scaleIn}
+                  variants={fadeUp}
                   className="flex items-start gap-3 bg-card rounded-lg p-4 shadow-soft"
                 >
                   <CheckCircle2 className="w-5 h-5 text-warm-brown mt-0.5 shrink-0" />
@@ -305,12 +237,16 @@ const ServiceLandingPage = ({ service }: ServiceLandingPageProps) => {
         </div>
       </section>
 
-      <SectionDivider />
-
-      {/* ── PARALLAX IMAGE DIVIDER ───────────────────────────── */}
-      <ParallaxDivider src={bannerImage} alt={service.title} />
-
-      <SectionDivider />
+      {/* ── FULL-WIDTH IMAGE DIVIDER ─────────────────────────── */}
+      <div className="h-72 md:h-96 overflow-hidden">
+        <img
+          src={bannerImage}
+          alt={service.title}
+          className="w-full h-full object-cover object-center"
+          loading="lazy"
+          style={{ filter: "brightness(0.85)" }}
+        />
+      </div>
 
       {/* ── EXPERIENCE SECTION ───────────────────────────────── */}
       <section className="py-20 md:py-28 bg-background">
@@ -344,7 +280,7 @@ const ServiceLandingPage = ({ service }: ServiceLandingPageProps) => {
               {service.experienceSteps.map((step, i) => (
                 <motion.div
                   key={i}
-                  variants={scaleIn}
+                  variants={fadeUp}
                   className="flex gap-5 md:gap-8 items-start"
                 >
                   <div className="shrink-0 w-12 h-12 rounded-full bg-warm-brown/15 flex items-center justify-center">
@@ -404,8 +340,6 @@ const ServiceLandingPage = ({ service }: ServiceLandingPageProps) => {
         </div>
       </section>
 
-      <SectionDivider />
-
       {/* ── WHY CHOOSE US ────────────────────────────────────── */}
       <section className="py-20 md:py-28 bg-warm-white">
         <div className="container mx-auto px-6 md:px-12 max-w-5xl">
@@ -435,7 +369,7 @@ const ServiceLandingPage = ({ service }: ServiceLandingPageProps) => {
             </motion.p>
 
             <motion.div
-              variants={staggerFast}
+              variants={stagger}
               className="grid sm:grid-cols-2 lg:grid-cols-3 gap-6"
             >
               {service.whyChooseUs.map((reason, i) => {
@@ -443,7 +377,7 @@ const ServiceLandingPage = ({ service }: ServiceLandingPageProps) => {
                 return (
                   <motion.div
                     key={i}
-                    variants={scaleIn}
+                    variants={fadeUp}
                     className="bg-card rounded-xl p-6 shadow-soft flex items-start gap-4"
                   >
                     <div className="w-10 h-10 rounded-full bg-warm-brown/10 flex items-center justify-center shrink-0">
@@ -479,11 +413,11 @@ const ServiceLandingPage = ({ service }: ServiceLandingPageProps) => {
             >
               So holst du das Beste aus deinem {service.title} heraus
             </motion.p>
-            <motion.div variants={staggerFast} className="grid md:grid-cols-3 gap-6">
+            <motion.div variants={stagger} className="grid md:grid-cols-3 gap-6">
               {service.tips.map((tip, i) => (
                 <motion.div
                   key={i}
-                  variants={scaleIn}
+                  variants={fadeUp}
                   className="bg-card rounded-xl p-6 shadow-card text-center"
                 >
                   <div className="w-10 h-10 rounded-full bg-warm-brown/15 flex items-center justify-center mx-auto mb-4">
@@ -504,12 +438,16 @@ const ServiceLandingPage = ({ service }: ServiceLandingPageProps) => {
         </div>
       </section>
 
-      <SectionDivider />
-
-      {/* ── PARALLAX IMAGE DIVIDER 2 ─────────────────────────── */}
-      <ParallaxDivider src={bannerImage} alt={service.title} />
-
-      <SectionDivider />
+      {/* ── IMAGE DIVIDER ────────────────────────────────────── */}
+      <div className="h-64 md:h-80 overflow-hidden">
+        <img
+          src={bannerImage}
+          alt={service.title}
+          className="w-full h-full object-cover"
+          loading="lazy"
+          style={{ filter: "brightness(0.8) saturate(1.1)", objectPosition: "center 30%" }}
+        />
+      </div>
 
       {/* ── FAQ SECTION ──────────────────────────────────────── */}
       <section className="py-20 bg-background">
