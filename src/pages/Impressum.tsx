@@ -34,7 +34,8 @@ const Impressum = () => {
           <section>
             <h2 className="text-lg font-semibold text-foreground mb-2">Umsatzsteuer</h2>
             <p>
-              Gemäß § 19 UStG wird keine Umsatzsteuer erhoben (Kleinunternehmerregelung).
+              Alle angegebenen Preise verstehen sich inklusive der gesetzlichen Mehrwertsteuer
+              von 19%.
             </p>
           </section>
 

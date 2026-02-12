@@ -66,6 +66,7 @@ serve(async (req) => {
     const couponId = body.coupon_id || null;
     const userId = body.user_id || null;
     const welcomeDiscount = !!body.welcome_discount;
+    const modelRelease = !!body.model_release;
 
     // Validate required fields
     if (!firstName || !email || !service || !duration) {
@@ -128,6 +129,12 @@ serve(async (req) => {
     const isBabybauch = service === "Babybauch Fotoshooting";
     if (isBabybauch && babybaumKombi) {
       totalPrice += BABYBAUCH_KOMBI_PRICE;
+    }
+
+    // Apply model release discount (up to 99.99 off duration price)
+    if (modelRelease) {
+      const modelDiscount = Math.min(99.99, durationPrice);
+      totalPrice -= modelDiscount;
     }
 
     // Apply welcome 10% discount on photo package for new registrations during booking
@@ -220,6 +227,7 @@ serve(async (req) => {
       city,
       notes,
       total_price: totalPrice,
+      model_release: modelRelease,
     }).select("id").single();
 
     if (bookingError) {

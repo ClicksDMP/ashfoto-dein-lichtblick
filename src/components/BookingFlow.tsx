@@ -52,6 +52,7 @@ interface BookingData {
   city: string;
   notes: string;
   agreedToTerms: boolean;
+  modelRelease: boolean;
   createAccount: boolean;
   password: string;
   passwordRepeat: string;
@@ -76,6 +77,7 @@ const INITIAL_BOOKING: BookingData = {
   city: "",
   notes: "",
   agreedToTerms: false,
+  modelRelease: false,
   createAccount: false,
   password: "",
   passwordRepeat: "",
@@ -301,10 +303,19 @@ const BookingFlow = ({ preselectedService }: BookingFlowProps = {}) => {
 
   const canSelectOhne = !isMini && !requiresAllFotos;
 
+  const modelReleaseDiscount = () => {
+    if (!booking.modelRelease || !booking.durationPrice) return 0;
+    return Math.min(99.99, booking.durationPrice);
+  };
+
   const totalPrice = () => {
     let total = booking.durationPrice + booking.packagePrice;
     if (isBabybauch && booking.babybaumKombi) {
       total += 49.99;
+    }
+    // Model release discount
+    if (booking.modelRelease) {
+      total -= modelReleaseDiscount();
     }
     // Apply welcome 10% if creating account during booking (on photo package only)
     if (booking.createAccount && booking.photoPackage !== "none" && booking.photoPackage !== "" && !couponApplied) {
@@ -448,56 +459,6 @@ const BookingFlow = ({ preselectedService }: BookingFlowProps = {}) => {
     <section className="py-24 bg-warm-white" id="booking">
       <div className="container mx-auto px-6 md:px-12 max-w-4xl">
         {renderProgress()}
-
-        {/* COUPON CODE */}
-        <div className="mb-16">
-          <div className="text-center mb-6">
-            <h3 className="font-display text-xl font-bold text-foreground">
-              Hast du einen Gutscheincode?
-            </h3>
-            <p className="text-sm text-muted-foreground mt-1">Gib deinen 16-stelligen Code ein</p>
-          </div>
-          <div className="flex items-center justify-center gap-3 mb-4">
-            {couponParts.map((part, i) => (
-              <Input
-                key={i}
-                ref={el => (couponRefs.current[i] = el)}
-                value={part}
-                onChange={e => handleCouponPartChange(i, e.target.value)}
-                maxLength={4}
-                placeholder="XXXX"
-                className="w-20 text-center font-mono text-lg tracking-widest uppercase"
-              />
-            ))}
-          </div>
-          <div className="text-center">
-            <Button
-              variant="outline"
-              size="sm"
-              onClick={handleCouponCheck}
-              disabled={couponChecking || couponParts.join("").length !== 16}
-            >
-              {couponChecking ? "Prüfe..." : "Code einlösen"}
-            </Button>
-          </div>
-          {couponError && (
-            <p className="text-center text-sm text-destructive mt-2">{couponError}</p>
-          )}
-          {couponApplied && (
-            <div className="text-center mt-3 bg-primary/10 rounded-lg p-3 max-w-sm mx-auto">
-              <p className="text-sm font-semibold text-primary">✓ {couponApplied.title}</p>
-              {couponApplied.discount_percent && (
-                <p className="text-xs text-muted-foreground">{couponApplied.discount_percent}% Rabatt wird angewendet</p>
-              )}
-              {couponApplied.discount_amount && (
-                <p className="text-xs text-muted-foreground">{couponApplied.discount_amount.toFixed(2).replace(".", ",")} € Rabatt wird angewendet</p>
-              )}
-              {couponApplied.photo_package_only && (
-                <p className="text-xs text-muted-foreground mt-1">* Nur gültig mit einem Fotopaket</p>
-              )}
-            </div>
-          )}
-        </div>
 
         {/* STEP 1: Services */}
         <div ref={el => (stepRefs.current[1] = el)} className="scroll-mt-24">
@@ -649,6 +610,7 @@ const BookingFlow = ({ preselectedService }: BookingFlowProps = {}) => {
                 </button>
               ))}
             </div>
+            <p className="text-center text-xs text-muted-foreground mt-3">Alle Preise inkl. 19% MwSt.</p>
           </div>
 
         {/* Photo Package (part of Step 2) */}
@@ -741,6 +703,7 @@ const BookingFlow = ({ preselectedService }: BookingFlowProps = {}) => {
                 </button>
               )}
             </div>
+            <p className="text-center text-xs text-muted-foreground mt-3">Alle Preise inkl. 19% MwSt.</p>
           </div>
 
         {/* STEP 3: Calendar */}
@@ -967,6 +930,140 @@ const BookingFlow = ({ preselectedService }: BookingFlowProps = {}) => {
                 />
               </div>
 
+              {/* Gutscheincode – moved here */}
+              <div className="bg-card rounded-xl p-5 border border-border shadow-soft">
+                <h4 className="font-display text-sm font-bold text-foreground mb-3">Hast du einen Gutscheincode?</h4>
+                <div className="flex items-center gap-2 mb-3">
+                  {couponParts.map((part, i) => (
+                    <Input
+                      key={i}
+                      ref={el => (couponRefs.current[i] = el)}
+                      value={part}
+                      onChange={e => handleCouponPartChange(i, e.target.value)}
+                      maxLength={4}
+                      placeholder="XXXX"
+                      className="w-16 text-center font-mono text-sm tracking-widest uppercase h-10"
+                    />
+                  ))}
+                  <Button
+                    variant="outline"
+                    size="sm"
+                    onClick={handleCouponCheck}
+                    disabled={couponChecking || couponParts.join("").length !== 16}
+                    className="shrink-0"
+                  >
+                    {couponChecking ? "..." : "Einlösen"}
+                  </Button>
+                </div>
+                {couponError && <p className="text-xs text-destructive">{couponError}</p>}
+                {couponApplied && (
+                  <div className="bg-primary/10 rounded-lg p-3">
+                    <p className="text-sm font-semibold text-primary">✓ {couponApplied.title}</p>
+                    {couponApplied.discount_percent && (
+                      <p className="text-xs text-muted-foreground">{couponApplied.discount_percent}% Rabatt</p>
+                    )}
+                    {couponApplied.discount_amount && (
+                      <p className="text-xs text-muted-foreground">{couponApplied.discount_amount.toFixed(2).replace(".", ",")} € Rabatt</p>
+                    )}
+                  </div>
+                )}
+              </div>
+
+              {/* Model Release Offer */}
+              <div className="bg-gradient-to-br from-primary/5 to-accent/10 rounded-xl p-5 border border-primary/20 shadow-soft">
+                <div className="flex items-start gap-3">
+                  <Checkbox
+                    id="modelRelease"
+                    checked={booking.modelRelease}
+                    onCheckedChange={(checked) =>
+                      setBooking(prev => ({ ...prev, modelRelease: checked === true }))
+                    }
+                    className="mt-0.5"
+                  />
+                  <label htmlFor="modelRelease" className="cursor-pointer">
+                    <p className="font-display font-bold text-foreground text-sm">
+                      📸 Spare {formatPrice(modelReleaseDiscount())} auf deine Shooting-Zeit!
+                    </p>
+                    <p className="text-xs text-muted-foreground mt-1 leading-relaxed">
+                      Ich erteile dem Fotografen (Ashraf AlSalaita, Clicks DMP) das unwiderrufliche, zeitlich und
+                      örtlich unbeschränkte Recht, die im Rahmen des gebuchten Shootings entstandenen Fotos für
+                      folgende Zwecke zu nutzen: Portfolio, Website (ashfoto.de), Social-Media-Kanäle (Instagram,
+                      Facebook, TikTok, Pinterest u.&nbsp;a.), bezahlte Werbeanzeigen sowie Druck- und
+                      Online-Marketingmaterialien. Die Nutzung erfolgt ohne Namensnennung, sofern nicht anders
+                      vereinbart. Diese Einwilligung ist freiwillig und gilt als Gegenleistung für den gewährten
+                      Rabatt auf die Shooting-Zeit.
+                    </p>
+                    <p className="text-xs text-primary font-semibold mt-2">
+                      Dein Vorteil: Bis zu 99,99 € Rabatt auf die Shooting-Dauer
+                    </p>
+                    <p className="text-xs text-muted-foreground mt-1">
+                      <Link to="/agb#model-release" target="_blank" className="underline hover:text-foreground">
+                        Vollständige Nutzungsbedingungen lesen
+                      </Link>
+                    </p>
+                  </label>
+                </div>
+              </div>
+
+              {/* Price Summary */}
+              {booking.service && booking.duration && (
+                <div className="bg-card rounded-xl p-5 border border-border shadow-soft">
+                  <h4 className="font-display text-sm font-bold text-foreground mb-3">Preisübersicht</h4>
+                  <div className="space-y-2 text-sm">
+                    <div className="flex justify-between">
+                      <span className="text-muted-foreground">{booking.service}</span>
+                    </div>
+                    <div className="flex justify-between">
+                      <span className="text-muted-foreground">Dauer: {getDurationLabel(booking.duration)}</span>
+                      <span className="text-foreground font-medium">{formatPrice(booking.durationPrice)}</span>
+                    </div>
+                    {booking.photoPackage && booking.photoPackage !== "none" && (
+                      <div className="flex justify-between">
+                        <span className="text-muted-foreground">Bildpaket: {getPackageLabel(booking.photoPackage)}</span>
+                        <span className="text-foreground font-medium">{formatPrice(booking.packagePrice)}</span>
+                      </div>
+                    )}
+                    {booking.photoPackage === "none" && (
+                      <div className="flex justify-between">
+                        <span className="text-muted-foreground">Bildpaket: Ohne Paket</span>
+                        <span className="text-foreground font-medium">0,00 €</span>
+                      </div>
+                    )}
+                    {isBabybauch && booking.babybaumKombi && (
+                      <div className="flex justify-between">
+                        <span className="text-muted-foreground">Babybauch + Baby Kombi</span>
+                        <span className="text-foreground font-medium">+{formatPrice(49.99)}</span>
+                      </div>
+                    )}
+                    {booking.modelRelease && (
+                      <div className="flex justify-between text-primary">
+                        <span>Model-Release Rabatt</span>
+                        <span className="font-medium">−{formatPrice(modelReleaseDiscount())}</span>
+                      </div>
+                    )}
+                    {booking.createAccount && booking.photoPackage !== "none" && booking.photoPackage !== "" && !couponApplied && (
+                      <div className="flex justify-between text-primary">
+                        <span>Willkommensrabatt (10%)</span>
+                        <span className="font-medium">−{formatPrice(booking.packagePrice * 0.1)}</span>
+                      </div>
+                    )}
+                    {couponApplied && (
+                      <div className="flex justify-between text-primary">
+                        <span>Gutschein: {couponApplied.title}</span>
+                        <span className="font-medium">Rabatt angewendet</span>
+                      </div>
+                    )}
+                    <div className="border-t border-border pt-2 mt-2">
+                      <div className="flex justify-between items-center">
+                        <span className="font-display font-bold text-foreground">Gesamtsumme</span>
+                        <span className="font-display text-lg font-bold text-primary">{formatPrice(totalPrice())}</span>
+                      </div>
+                      <p className="text-xs text-muted-foreground mt-1">Alle Preise inkl. 19% MwSt.</p>
+                    </div>
+                  </div>
+                </div>
+              )}
+
               <div className="flex items-start gap-3 pt-2">
                 <Checkbox
                   id="terms"
@@ -1083,6 +1180,13 @@ const BookingFlow = ({ preselectedService }: BookingFlowProps = {}) => {
                 </div>
               )}
 
+              {booking.modelRelease && (
+                <div className="bg-primary/5 rounded-lg p-4 border border-primary/20">
+                  <p className="text-sm font-semibold text-primary">📸 Model-Release vereinbart</p>
+                  <p className="text-sm text-muted-foreground">Rabatt auf Shooting-Zeit: −{formatPrice(modelReleaseDiscount())}</p>
+                </div>
+              )}
+
               <div className="border-t border-border pt-4 mt-4">
                 {(booking.durationPrice + booking.packagePrice + (isBabybauch && booking.babybaumKombi ? 49.99 : 0)) !== totalPrice() && (
                   <div className="flex justify-between items-center mb-2">
@@ -1098,6 +1202,7 @@ const BookingFlow = ({ preselectedService }: BookingFlowProps = {}) => {
                     {formatPrice(totalPrice())}
                   </span>
                 </div>
+                <p className="text-xs text-muted-foreground mt-1">Alle Preise inkl. 19% MwSt.</p>
               </div>
 
               {submitError && <p className="text-destructive text-sm text-center">{submitError}</p>}
@@ -1162,6 +1267,7 @@ const BookingFlow = ({ preselectedService }: BookingFlowProps = {}) => {
                           notes: booking.notes,
                           coupon_id: couponApplied?.id || null,
                           welcome_discount: booking.createAccount && !couponApplied,
+                          model_release: booking.modelRelease,
                         },
                       });
                       if (bookingFnError || !bookingResult?.success) {

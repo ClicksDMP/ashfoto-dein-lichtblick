@@ -187,14 +187,29 @@ const Datenschutz = () => {
           </section>
 
           <section>
-            <h2 className="text-xl font-semibold text-foreground mb-3">11. SSL-/TLS-Verschlüsselung</h2>
+            <h2 className="text-xl font-semibold text-foreground mb-3">11. Model-Release-Vereinbarung</h2>
+            <p>
+              Kunden haben die Möglichkeit, dem Fotografen im Rahmen der Buchung eine erweiterte
+              Nutzungserlaubnis für die Shooting-Fotos zu erteilen (Model-Release). Dabei wird
+              die Einwilligung zur Nutzung für Portfolio, Website, Social Media und Werbezwecke
+              erteilt. Als Gegenleistung erhält der Kunde einen Rabatt auf die Shooting-Dauer.
+            </p>
+            <p className="mt-2">
+              Die Verarbeitung erfolgt auf Grundlage von Art. 6 Abs. 1 lit. b DSGVO (Vertragserfüllung
+              im Rahmen der Rabattvereinbarung). Der Status der Model-Release-Vereinbarung wird in der
+              Buchung gespeichert.
+            </p>
+          </section>
+
+          <section>
+            <h2 className="text-xl font-semibold text-foreground mb-3">12. SSL-/TLS-Verschlüsselung</h2>
             <p>
               Diese Seite nutzt aus Sicherheitsgründen eine SSL-/TLS-Verschlüsselung.
             </p>
           </section>
 
           <section>
-            <h2 className="text-xl font-semibold text-foreground mb-3">12. Widerruf Ihrer Einwilligung</h2>
+            <h2 className="text-xl font-semibold text-foreground mb-3">13. Widerruf Ihrer Einwilligung</h2>
             <p>
               Sie können eine bereits erteilte Einwilligung jederzeit widerrufen. Die Rechtmäßigkeit
               der bis zum Widerruf erfolgten Datenverarbeitung bleibt unberührt.

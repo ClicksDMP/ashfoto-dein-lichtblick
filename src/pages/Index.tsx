@@ -1,5 +1,6 @@
 import { useRef, useCallback } from "react";
 import HeroSection from "@/components/HeroSection";
+import ModelReleaseBanner from "@/components/ModelReleaseBanner";
 import AboutSection from "@/components/AboutSection";
 import ProcessSection from "@/components/ProcessSection";
 import ServiceAreaSection from "@/components/ServiceAreaSection";
@@ -19,6 +20,7 @@ const Index = () => {
     <main className="min-h-screen">
       <Header onBookClick={scrollToBooking} />
       <HeroSection onBookClick={scrollToBooking} onConsultClick={scrollToBooking} />
+      <ModelReleaseBanner onBookClick={scrollToBooking} />
       <div id="about">
         <AboutSection onCtaClick={scrollToBooking} />
       </div>
