@@ -1,6 +1,6 @@
-import { useRef, useCallback } from "react";
+import { useRef, useCallback, useState } from "react";
 import HeroSection from "@/components/HeroSection";
-import ModelReleaseBanner from "@/components/ModelReleaseBanner";
+import PromoBannerSlider from "@/components/PromoBannerSlider";
 import AboutSection from "@/components/AboutSection";
 import ProcessSection from "@/components/ProcessSection";
 import ServiceAreaSection from "@/components/ServiceAreaSection";
@@ -11,8 +11,14 @@ import Header from "@/components/Header";
 
 const Index = () => {
   const bookingRef = useRef<HTMLDivElement>(null);
+  const [selectedDealId, setSelectedDealId] = useState<string | undefined>();
 
   const scrollToBooking = useCallback(() => {
+    bookingRef.current?.scrollIntoView({ behavior: "smooth", block: "start" });
+  }, []);
+
+  const handleDealSelect = useCallback((dealId: string) => {
+    setSelectedDealId(dealId);
     bookingRef.current?.scrollIntoView({ behavior: "smooth", block: "start" });
   }, []);
 
@@ -20,7 +26,7 @@ const Index = () => {
     <main className="min-h-screen">
       <Header onBookClick={scrollToBooking} />
       <HeroSection onBookClick={scrollToBooking} onConsultClick={scrollToBooking} />
-      <ModelReleaseBanner onBookClick={scrollToBooking} />
+      <PromoBannerSlider onBookClick={scrollToBooking} onDealSelect={handleDealSelect} />
       <div id="about">
         <AboutSection onCtaClick={scrollToBooking} />
       </div>
@@ -30,7 +36,7 @@ const Index = () => {
       <ServiceAreaSection />
       <TestimonialsSection />
       <div id="booking" ref={bookingRef} className="scroll-mt-8">
-        <BookingFlow />
+        <BookingFlow preselectedDealId={selectedDealId} onClearDeal={() => setSelectedDealId(undefined)} />
       </div>
       <Footer />
     </main>

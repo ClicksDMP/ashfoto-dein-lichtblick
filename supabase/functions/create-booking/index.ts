@@ -31,12 +31,25 @@ const RESTRICTED_DURATION_SERVICES = ["Live und Event Fotografie", "Messe Fotogr
 const ALL_FOTOS_REQUIRED = ["Live und Event Fotografie", "Messe Fotografie"];
 const BABYBAUCH_KOMBI_PRICE = 49.99;
 
+// Deal definitions (server-side source of truth)
+const VALID_DEALS: Record<string, { service: string; duration: string; photoPackage: string; fixedPrice: number; validUntil: string }> = {
+  "valentinstag-200": { service: "Paar Fotoshooting", duration: "1h", photoPackage: "10", fixedPrice: 199.99, validUntil: "2026-03-14" },
+  "valentinstag-250": { service: "Paar Fotoshooting", duration: "1h", photoPackage: "15", fixedPrice: 249.99, validUntil: "2026-03-14" },
+};
+
 function sanitize(str: string, maxLen = 500): string {
   return String(str || "").trim().slice(0, maxLen);
 }
 
 function isValidEmail(email: string): boolean {
   return /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email) && email.length <= 255;
+}
+
+function generateCouponCode(): string {
+  const chars = "ABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789";
+  const arr = new Uint8Array(16);
+  crypto.getRandomValues(arr);
+  return Array.from(arr, b => chars[b % chars.length]).join("");
 }
 
 serve(async (req) => {
@@ -67,6 +80,8 @@ serve(async (req) => {
     const userId = body.user_id || null;
     const welcomeDiscount = !!body.welcome_discount;
     const modelRelease = !!body.model_release;
+    const dealId = body.deal_id ? sanitize(body.deal_id, 50) : null;
+    const dealModelReleaseCoupon = !!body.deal_model_release_coupon;
 
     // Validate required fields
     if (!firstName || !email || !service || !duration) {
@@ -88,58 +103,87 @@ serve(async (req) => {
       });
     }
 
-    // Validate duration and get price
-    const isMini = service === "Mini Shooting";
-    const isRestricted = RESTRICTED_DURATION_SERVICES.includes(service);
-    const durations = isMini ? MINI_DURATIONS : STANDARD_DURATIONS;
-    const durationPrice = durations[duration];
-    if (durationPrice === undefined) {
-      return new Response(JSON.stringify({ error: "Ungültige Dauer." }), {
-        status: 400, headers: { ...corsHeaders, "Content-Type": "application/json" },
-      });
-    }
-    if (isRestricted && !["2h", "4h", "8h"].includes(duration)) {
-      return new Response(JSON.stringify({ error: "Ungültige Dauer für diesen Service." }), {
-        status: 400, headers: { ...corsHeaders, "Content-Type": "application/json" },
-      });
-    }
+    let totalPrice: number;
+    let durationPrice: number;
+    let packagePrice: number;
 
-    // Validate photo package and get price
-    let packagePrice = 0;
-    if (photoPackage === "none" || photoPackage === "") {
-      packagePrice = 0;
+    // ── Deal mode ──────────────────────────────────────────────
+    if (dealId) {
+      const deal = VALID_DEALS[dealId];
+      if (!deal) {
+        return new Response(JSON.stringify({ error: "Ungültiger Deal." }), {
+          status: 400, headers: { ...corsHeaders, "Content-Type": "application/json" },
+        });
+      }
+      // Check deal expiry
+      if (new Date(deal.validUntil) < new Date()) {
+        return new Response(JSON.stringify({ error: "Dieser Deal ist abgelaufen." }), {
+          status: 400, headers: { ...corsHeaders, "Content-Type": "application/json" },
+        });
+      }
+      // Validate service/duration/package match the deal
+      if (service !== deal.service || duration !== deal.duration || photoPackage !== deal.photoPackage) {
+        return new Response(JSON.stringify({ error: "Deal-Daten stimmen nicht überein." }), {
+          status: 400, headers: { ...corsHeaders, "Content-Type": "application/json" },
+        });
+      }
+      totalPrice = deal.fixedPrice;
+      durationPrice = STANDARD_DURATIONS[deal.duration] || 0;
+      packagePrice = PHOTO_PACKAGES[deal.photoPackage] || 0;
+
     } else {
-      const requiresAllFotos = ALL_FOTOS_REQUIRED.includes(service);
-      if (requiresAllFotos && photoPackage !== "all") {
-        return new Response(JSON.stringify({ error: "Dieser Service erfordert das 'Alle Fotos' Paket." }), {
+      // ── Regular mode ────────────────────────────────────────
+      const isMini = service === "Mini Shooting";
+      const isRestricted = RESTRICTED_DURATION_SERVICES.includes(service);
+      const durations = isMini ? MINI_DURATIONS : STANDARD_DURATIONS;
+      durationPrice = durations[duration];
+      if (durationPrice === undefined) {
+        return new Response(JSON.stringify({ error: "Ungültige Dauer." }), {
           status: 400, headers: { ...corsHeaders, "Content-Type": "application/json" },
         });
       }
-      const pp = PHOTO_PACKAGES[photoPackage];
-      if (pp === undefined) {
-        return new Response(JSON.stringify({ error: "Ungültiges Fotopaket." }), {
+      if (isRestricted && !["2h", "4h", "8h"].includes(duration)) {
+        return new Response(JSON.stringify({ error: "Ungültige Dauer für diesen Service." }), {
           status: 400, headers: { ...corsHeaders, "Content-Type": "application/json" },
         });
       }
-      packagePrice = pp;
-    }
 
-    // Calculate total price server-side
-    let totalPrice = durationPrice + packagePrice;
-    const isBabybauch = service === "Babybauch Fotoshooting";
-    if (isBabybauch && babybaumKombi) {
-      totalPrice += BABYBAUCH_KOMBI_PRICE;
-    }
+      // Validate photo package
+      packagePrice = 0;
+      if (photoPackage === "none" || photoPackage === "") {
+        packagePrice = 0;
+      } else {
+        const requiresAllFotos = ALL_FOTOS_REQUIRED.includes(service);
+        if (requiresAllFotos && photoPackage !== "all") {
+          return new Response(JSON.stringify({ error: "Dieser Service erfordert das 'Alle Fotos' Paket." }), {
+            status: 400, headers: { ...corsHeaders, "Content-Type": "application/json" },
+          });
+        }
+        const pp = PHOTO_PACKAGES[photoPackage];
+        if (pp === undefined) {
+          return new Response(JSON.stringify({ error: "Ungültiges Fotopaket." }), {
+            status: 400, headers: { ...corsHeaders, "Content-Type": "application/json" },
+          });
+        }
+        packagePrice = pp;
+      }
 
-    // Apply model release discount (up to 99.99 off duration price)
-    if (modelRelease) {
-      const modelDiscount = Math.min(99.99, durationPrice);
-      totalPrice -= modelDiscount;
-    }
+      totalPrice = durationPrice + packagePrice;
+      const isBabybauch = service === "Babybauch Fotoshooting";
+      if (isBabybauch && babybaumKombi) {
+        totalPrice += BABYBAUCH_KOMBI_PRICE;
+      }
 
-    // Apply welcome 10% discount on photo package for new registrations during booking
-    if (welcomeDiscount && photoPackage !== "none" && photoPackage !== "" && !couponId) {
-      totalPrice -= packagePrice * 0.1;
+      // Apply model release discount (up to 99.99 off duration price) - only for regular bookings
+      if (modelRelease) {
+        const modelDiscount = Math.min(99.99, durationPrice);
+        totalPrice -= modelDiscount;
+      }
+
+      // Apply welcome 10% discount on photo package for new registrations
+      if (welcomeDiscount && photoPackage !== "none" && photoPackage !== "" && !couponId) {
+        totalPrice -= packagePrice * 0.1;
+      }
     }
 
     // Validate date format if provided
@@ -168,7 +212,7 @@ serve(async (req) => {
     const serviceKey = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!;
     const supabase = createClient(supabaseUrl, serviceKey);
 
-    // Apply coupon if provided
+    // Apply coupon if provided (works for both deal and regular)
     if (couponId) {
       const { data: coupon } = await supabase
         .from("offers")
@@ -183,20 +227,30 @@ serve(async (req) => {
         } else if (coupon.single_use && coupon.used_at) {
           // already used, ignore
         } else {
-          // Apply discount
-          if (coupon.photo_package_only && photoPackage !== "none" && photoPackage !== "") {
-            if (coupon.discount_percent) {
-              totalPrice -= packagePrice * (coupon.discount_percent / 100);
-            }
-            if (coupon.discount_amount) {
-              totalPrice = Math.max(0, totalPrice - coupon.discount_amount);
-            }
-          } else if (!coupon.photo_package_only) {
+          if (dealId) {
+            // For deals, apply coupon to total price directly
             if (coupon.discount_percent) {
               totalPrice = totalPrice * (1 - coupon.discount_percent / 100);
             }
             if (coupon.discount_amount) {
               totalPrice = Math.max(0, totalPrice - coupon.discount_amount);
+            }
+          } else {
+            // Regular mode coupon logic
+            if (coupon.photo_package_only && photoPackage !== "none" && photoPackage !== "") {
+              if (coupon.discount_percent) {
+                totalPrice -= packagePrice * (coupon.discount_percent / 100);
+              }
+              if (coupon.discount_amount) {
+                totalPrice = Math.max(0, totalPrice - coupon.discount_amount);
+              }
+            } else if (!coupon.photo_package_only) {
+              if (coupon.discount_percent) {
+                totalPrice = totalPrice * (1 - coupon.discount_percent / 100);
+              }
+              if (coupon.discount_amount) {
+                totalPrice = Math.max(0, totalPrice - coupon.discount_amount);
+              }
             }
           }
         }
@@ -206,15 +260,15 @@ serve(async (req) => {
     // Ensure price is not negative
     totalPrice = Math.max(0, Math.round(totalPrice * 100) / 100);
 
-    // Insert booking using service role (bypasses RLS)
+    // Insert booking
     const { data: bookingData, error: bookingError } = await supabase.from("bookings").insert({
       user_id: userId,
       service,
       participants: validParticipants,
       duration,
-      duration_price: durationPrice,
+      duration_price: dealId ? durationPrice : durationPrice,
       photo_package: photoPackage || "none",
-      package_price: packagePrice,
+      package_price: dealId ? packagePrice : packagePrice,
       babybauch_kombi: babybaumKombi,
       booking_date: bookingDate,
       booking_time: bookingTime,
@@ -245,7 +299,34 @@ serve(async (req) => {
       });
     }
 
-    return new Response(JSON.stringify({ success: true, id: bookingData.id, total_price: totalPrice }), {
+    // Generate model release coupon for deal bookings
+    let generatedCouponCode: string | null = null;
+    if (dealId && dealModelReleaseCoupon && bookingData) {
+      const code = generateCouponCode();
+      const validUntil = new Date();
+      validUntil.setMonth(validUntil.getMonth() + 6);
+
+      await supabase.from("offers").insert({
+        title: "Model-Release Gutschein (Deal)",
+        description: `Gutschein aus Deal-Buchung: 99,99 € auf Shooting-Zeit. Gültig 6 Monate.`,
+        discount_amount: 99.99,
+        code,
+        valid_until: validUntil.toISOString(),
+        single_use: true,
+        is_active: true,
+        photo_package_only: false,
+        target_user_id: userId,
+        source: "deal_model_release",
+      });
+      generatedCouponCode = code;
+    }
+
+    return new Response(JSON.stringify({
+      success: true,
+      id: bookingData.id,
+      total_price: totalPrice,
+      coupon_code: generatedCouponCode,
+    }), {
       status: 200, headers: { ...corsHeaders, "Content-Type": "application/json" },
     });
   } catch (error) {

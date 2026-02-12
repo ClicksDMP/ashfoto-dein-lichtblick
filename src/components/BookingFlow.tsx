@@ -10,9 +10,10 @@ import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover
 import { cn } from "@/lib/utils";
 import { format } from "date-fns";
 import { de } from "date-fns/locale";
-import { CalendarIcon, Check, Minus, Plus, Mail, Phone, ArrowRight } from "lucide-react";
+import { CalendarIcon, Check, Minus, Plus, Mail, Phone, ArrowRight, Heart, Tag, Sparkles } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { SERVICES_DATA } from "@/data/serviceData";
+import { DEALS, getActivDeals, type Deal } from "@/data/dealsData";
 
 import imgFamily from "@/assets/shooting-family.jpg";
 import imgBaby from "@/assets/shooting-baby.jpg";
@@ -144,9 +145,13 @@ const DURATION_HOURS: Record<string, number> = {
 // ── Component ──────────────────────────────────────────────────
 interface BookingFlowProps {
   preselectedService?: string;
+  preselectedDealId?: string;
+  onClearDeal?: () => void;
 }
 
-const BookingFlow = ({ preselectedService }: BookingFlowProps = {}) => {
+const BookingFlow = ({ preselectedService, preselectedDealId, onClearDeal }: BookingFlowProps = {}) => {
+  const [bookingMode, setBookingMode] = useState<"regular" | "deals">("regular");
+  const [selectedDeal, setSelectedDeal] = useState<Deal | null>(null);
   const [currentStep, setCurrentStep] = useState(1);
   const [booking, setBooking] = useState<BookingData>(INITIAL_BOOKING);
   const [showFoodMessage, setShowFoodMessage] = useState(false);
@@ -160,6 +165,58 @@ const BookingFlow = ({ preselectedService }: BookingFlowProps = {}) => {
   const couponRefs = useRef<(HTMLInputElement | null)[]>([]);
   const [bookedSlots, setBookedSlots] = useState<{ date: string; time: string; duration: string }[]>([]);
   const [blockedSlots, setBlockedSlots] = useState<{ date: string; time: string | null }[]>([]);
+  const [dealModelRelease, setDealModelRelease] = useState(false);
+  const [generatedCouponCode, setGeneratedCouponCode] = useState<string | null>(null);
+
+  // Handle preselected deal from banner
+  useEffect(() => {
+    if (preselectedDealId) {
+      const deal = DEALS.find(d => d.id === preselectedDealId);
+      if (deal) {
+        setBookingMode("deals");
+        setSelectedDeal(deal);
+        setBooking(prev => ({
+          ...INITIAL_BOOKING,
+          service: deal.service,
+          duration: deal.duration,
+          durationPrice: deal.fixedPrice,
+          photoPackage: deal.photoPackage,
+          packagePrice: 0, // included in fixed price
+        }));
+      }
+    }
+  }, [preselectedDealId]);
+
+  const handleSelectDeal = (deal: Deal) => {
+    setSelectedDeal(deal);
+    setBooking(prev => ({
+      ...INITIAL_BOOKING,
+      service: deal.service,
+      duration: deal.duration,
+      durationPrice: deal.fixedPrice,
+      photoPackage: deal.photoPackage,
+      packagePrice: 0,
+    }));
+    setDealModelRelease(false);
+    scrollToStep(5); // skip to calendar
+  };
+
+  const handleSwitchToRegular = () => {
+    setBookingMode("regular");
+    setSelectedDeal(null);
+    setDealModelRelease(false);
+    setBooking(INITIAL_BOOKING);
+    setCurrentStep(1);
+    onClearDeal?.();
+  };
+
+  const handleSwitchToDeals = () => {
+    setBookingMode("deals");
+    setSelectedDeal(null);
+    setDealModelRelease(false);
+    setBooking(INITIAL_BOOKING);
+    setCurrentStep(1);
+  };
 
   const stepRefs = useRef<(HTMLDivElement | null)[]>([]);
   const preselectedApplied = useRef(false);
@@ -309,6 +366,21 @@ const BookingFlow = ({ preselectedService }: BookingFlowProps = {}) => {
   };
 
   const totalPrice = () => {
+    // Deal mode: fixed price, no additional discounts except coupon
+    if (selectedDeal) {
+      let total = selectedDeal.fixedPrice;
+      if (couponApplied) {
+        if (couponApplied.discount_percent) {
+          total = total * (1 - couponApplied.discount_percent / 100);
+        }
+        if (couponApplied.discount_amount) {
+          total = Math.max(0, total - couponApplied.discount_amount);
+        }
+      }
+      return Math.max(0, total);
+    }
+    
+    // Regular mode
     let total = booking.durationPrice + booking.packagePrice;
     if (isBabybauch && booking.babybaumKombi) {
       total += 49.99;
@@ -461,18 +533,154 @@ const BookingFlow = ({ preselectedService }: BookingFlowProps = {}) => {
               <p>💳 Nach Bestätigung erhältst du eine Rechnung – die Buchung wird erst nach Zahlungseingang (innerhalb von 3 Tagen) endgültig bestätigt.</p>
               <p>❌ Erfolgt die Zahlung nicht innerhalb von 3 Tagen, wird die Buchung automatisch storniert.</p>
             </div>
+            {generatedCouponCode && (
+              <div className="bg-primary/10 rounded-lg p-5 border border-primary/30 mt-4 text-center">
+                <p className="text-sm font-semibold text-primary mb-2">🎁 Dein Model-Release Gutscheincode</p>
+                <p className="font-mono text-lg font-bold text-foreground tracking-widest bg-card rounded-lg py-3 px-4 border border-border">
+                  {generatedCouponCode.match(/.{1,4}/g)?.join(" – ")}
+                </p>
+                <p className="text-xs text-muted-foreground mt-2">
+                  99,99 € Rabatt auf die Shooting-Zeit deiner nächsten Buchung · Gültig für 6 Monate
+                </p>
+              </div>
+            )}
           </div>
         </div>
       </section>
     );
   }
 
+  const activeDeals = getActivDeals();
+  const formatPriceFn = formatPrice; // alias for JSX
+
   return (
     <section className="py-24 bg-warm-white" id="booking">
       <div className="container mx-auto px-6 md:px-12 max-w-4xl">
         {renderProgress()}
 
-        {/* STEP 1: Services */}
+        {/* Booking Mode Toggle */}
+        {!confirmed && !selectedDeal && (
+          <div className="mb-12">
+            <div className="text-center mb-6">
+              <h2 className="font-display text-3xl md:text-4xl font-bold text-foreground mb-2">
+                Wie möchtest du buchen?
+              </h2>
+              <p className="text-muted-foreground">Wähle dein individuelles Shooting oder sichere dir ein vergünstigtes Deal-Paket.</p>
+            </div>
+            <div className="flex justify-center gap-4">
+              <button
+                onClick={handleSwitchToRegular}
+                className={cn(
+                  "flex-1 max-w-xs p-6 rounded-xl border-2 text-center transition-all hover:shadow-card",
+                  bookingMode === "regular"
+                    ? "border-primary bg-primary/10 shadow-card"
+                    : "border-border bg-card hover:border-primary/40"
+                )}
+              >
+                <Sparkles className="w-6 h-6 mx-auto mb-2 text-primary" />
+                <p className="font-display text-lg font-bold text-foreground">Individuelles Shooting</p>
+                <p className="text-sm text-muted-foreground mt-1">Wähle Service, Dauer und Bildpaket frei aus</p>
+              </button>
+              <button
+                onClick={handleSwitchToDeals}
+                className={cn(
+                  "flex-1 max-w-xs p-6 rounded-xl border-2 text-center transition-all hover:shadow-card relative overflow-hidden",
+                  bookingMode === "deals"
+                    ? "border-destructive bg-destructive/5 shadow-card"
+                    : "border-border bg-card hover:border-destructive/40"
+                )}
+              >
+                {activeDeals.length > 0 && (
+                  <span className="absolute top-2 right-2 bg-destructive text-destructive-foreground text-[10px] font-bold px-2 py-0.5 rounded-full">
+                    {activeDeals.length} {activeDeals.length === 1 ? "Deal" : "Deals"}
+                  </span>
+                )}
+                <Heart className="w-6 h-6 mx-auto mb-2 text-destructive" />
+                <p className="font-display text-lg font-bold text-foreground">Deals & Angebote</p>
+                <p className="text-sm text-muted-foreground mt-1">Fixpreis-Pakete mit bis zu 70 € Ersparnis</p>
+              </button>
+            </div>
+          </div>
+        )}
+
+        {/* Deal Selection */}
+        {bookingMode === "deals" && !selectedDeal && (
+          <div className="mb-12 animate-fade-in">
+            <div className="text-center mb-8">
+              <p className="text-destructive font-body font-semibold tracking-[0.25em] uppercase text-sm mb-4">
+                Aktuelle Deals
+              </p>
+              <h2 className="font-display text-3xl md:text-4xl font-bold text-foreground">
+                Spare mit unseren Angeboten
+              </h2>
+            </div>
+            {activeDeals.length === 0 ? (
+              <div className="text-center py-12">
+                <p className="text-muted-foreground">Aktuell gibt es keine aktiven Deals. Wähle stattdessen dein individuelles Shooting.</p>
+                <Button variant="booking" size="lg" onClick={handleSwitchToRegular} className="mt-4">Zum Shooting</Button>
+              </div>
+            ) : (
+              <div className="grid md:grid-cols-2 gap-6 max-w-3xl mx-auto">
+                {activeDeals.map(deal => (
+                  <div key={deal.id} className="bg-card rounded-2xl overflow-hidden border-2 border-border hover:border-destructive/40 transition-all hover:shadow-elevated group">
+                    <div className="aspect-[16/9] overflow-hidden relative">
+                      <img src={deal.image} alt={deal.title} className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500" loading="lazy" />
+                      <div className="absolute top-3 left-3">
+                        <span className="bg-destructive text-destructive-foreground text-xs font-bold px-3 py-1 rounded-full shadow-lg">
+                          {deal.badge}
+                        </span>
+                      </div>
+                    </div>
+                    <div className="p-6">
+                      <h3 className="font-display text-xl font-bold text-foreground mb-1">{deal.title}</h3>
+                      <p className="text-sm text-muted-foreground mb-2">{deal.subtitle}</p>
+                      <p className="text-xs text-muted-foreground mb-4">{deal.description}</p>
+                      <div className="flex items-center gap-3 mb-4">
+                        <span className="text-muted-foreground line-through text-sm">{formatPriceFn(deal.originalPrice)}</span>
+                        <span className="font-display text-2xl font-bold text-primary">{formatPriceFn(deal.fixedPrice)}</span>
+                        <span className="text-xs text-muted-foreground">inkl. MwSt.</span>
+                      </div>
+                      <Button variant="booking" size="lg" className="w-full" onClick={() => handleSelectDeal(deal)}>
+                        Deal auswählen
+                      </Button>
+                    </div>
+                  </div>
+                ))}
+              </div>
+            )}
+          </div>
+        )}
+
+        {/* Deal Selected Info Card */}
+        {selectedDeal && !confirmed && (
+          <div className="mb-8 animate-fade-in">
+            <div className="bg-gradient-to-br from-destructive/5 to-primary/5 rounded-2xl p-6 border-2 border-destructive/20 shadow-card">
+              <div className="flex flex-col sm:flex-row items-start gap-4">
+                <div className="w-20 h-20 rounded-xl overflow-hidden shrink-0">
+                  <img src={selectedDeal.image} alt={selectedDeal.title} className="w-full h-full object-cover" />
+                </div>
+                <div className="flex-1">
+                  <div className="flex items-center gap-2 mb-1">
+                    <span className="bg-destructive text-destructive-foreground text-xs font-bold px-2 py-0.5 rounded-full">{selectedDeal.badge}</span>
+                    <span className="text-xs text-muted-foreground">Deal ausgewählt</span>
+                  </div>
+                  <h3 className="font-display text-lg font-bold text-foreground">{selectedDeal.title}</h3>
+                  <p className="text-sm text-muted-foreground">{selectedDeal.subtitle}</p>
+                  <div className="flex items-center gap-2 mt-2">
+                    <span className="text-muted-foreground line-through text-sm">{formatPriceFn(selectedDeal.originalPrice)}</span>
+                    <span className="font-display text-xl font-bold text-primary">{formatPriceFn(selectedDeal.fixedPrice)}</span>
+                  </div>
+                </div>
+                <Button variant="outline" size="sm" onClick={() => { setSelectedDeal(null); setBooking(INITIAL_BOOKING); setDealModelRelease(false); }}>
+                  Ändern
+                </Button>
+              </div>
+            </div>
+          </div>
+        )}
+
+        {/* STEP 1: Services (only in regular mode) */}
+        {bookingMode === "regular" && (
         <div ref={el => (stepRefs.current[1] = el)} className="scroll-mt-24">
           <div className="text-center mb-12">
             <p className="text-primary font-body font-semibold tracking-[0.25em] uppercase text-sm mb-4">
@@ -548,8 +756,10 @@ const BookingFlow = ({ preselectedService }: BookingFlowProps = {}) => {
             </div>
           )}
         </div>
+        )}
 
-        {/* Participants (part of Step 1) */}
+        {/* Participants (part of Step 1, regular mode only) */}
+        {bookingMode === "regular" && (<>
         <div ref={el => (stepRefs.current[2] = el)} className="mt-20 scroll-mt-24">
             <div className="text-center mb-10">
               <h2 className="font-display text-3xl md:text-4xl font-bold text-foreground">
@@ -717,6 +927,7 @@ const BookingFlow = ({ preselectedService }: BookingFlowProps = {}) => {
             </div>
             <p className="text-center text-xs text-muted-foreground mt-3">Alle Preise inkl. 19% MwSt.</p>
           </div>
+        </>)}
 
         {/* STEP 3: Calendar */}
         <div ref={el => (stepRefs.current[5] = el)} className="mt-20 scroll-mt-24">
@@ -981,7 +1192,8 @@ const BookingFlow = ({ preselectedService }: BookingFlowProps = {}) => {
                 )}
               </div>
 
-              {/* Model Release Offer */}
+              {/* Model Release Offer - Regular Mode */}
+              {!selectedDeal && (
               <div className={cn(
                 "bg-gradient-to-br from-primary/5 to-accent/10 rounded-xl p-5 border shadow-soft",
                 booking.photoPackage === "none" || booking.photoPackage === ""
@@ -1027,54 +1239,125 @@ const BookingFlow = ({ preselectedService }: BookingFlowProps = {}) => {
                   </label>
                 </div>
               </div>
+              )}
+
+              {/* Model Release as Coupon - Deal Mode */}
+              {selectedDeal && (
+              <div className="bg-gradient-to-br from-primary/5 to-accent/10 rounded-xl p-5 border border-primary/20 shadow-soft">
+                <div className="flex items-start gap-3">
+                  <Checkbox
+                    id="dealModelRelease"
+                    checked={dealModelRelease}
+                    onCheckedChange={(checked) => setDealModelRelease(checked === true)}
+                    className="mt-0.5"
+                  />
+                  <label htmlFor="dealModelRelease" className="cursor-pointer">
+                    <p className="font-display font-bold text-foreground text-sm">
+                      🎁 Gutscheincode für deine nächste Buchung erhalten!
+                    </p>
+                    <p className="text-xs text-muted-foreground mt-1 leading-relaxed">
+                      Erlaube mir, die Fotos aus diesem Shooting für mein Portfolio, Website, Social Media und
+                      Werbezwecke zu nutzen – und erhalte dafür einen <strong>Gutscheincode im Wert von
+                      99,99 €</strong> auf die Shooting-Zeit deiner nächsten Buchung (gültig für 6 Monate).
+                    </p>
+                    <p className="text-xs text-muted-foreground mt-1 leading-relaxed">
+                      Ich erteile dem Fotografen (Ashraf AlSalaita, Clicks DMP) das unwiderrufliche, zeitlich und
+                      örtlich unbeschränkte Recht, die entstandenen Fotos für Portfolio, Website (ashfoto.de),
+                      Social-Media-Kanäle, bezahlte Werbeanzeigen sowie Marketing zu nutzen.
+                    </p>
+                    <p className="text-xs text-primary font-semibold mt-2">
+                      Dein Vorteil: 99,99 € Gutschein für dein nächstes Shooting
+                    </p>
+                    <p className="text-xs text-muted-foreground mt-1">
+                      <Link to="/agb#model-release" target="_blank" className="underline hover:text-foreground">
+                        Vollständige Nutzungsbedingungen lesen
+                      </Link>
+                    </p>
+                  </label>
+                </div>
+              </div>
+              )}
 
               {/* Price Summary */}
-              {booking.service && booking.duration && (
+              {(booking.service && booking.duration) && (
                 <div className="bg-card rounded-xl p-5 border border-border shadow-soft">
                   <h4 className="font-display text-sm font-bold text-foreground mb-3">Preisübersicht</h4>
                   <div className="space-y-2 text-sm">
-                    <div className="flex justify-between">
-                      <span className="text-muted-foreground">{booking.service}</span>
-                    </div>
-                    <div className="flex justify-between">
-                      <span className="text-muted-foreground">Dauer: {getDurationLabel(booking.duration)}</span>
-                      <span className="text-foreground font-medium">{formatPrice(booking.durationPrice)}</span>
-                    </div>
-                    {booking.photoPackage && booking.photoPackage !== "none" && (
-                      <div className="flex justify-between">
-                        <span className="text-muted-foreground">Bildpaket: {getPackageLabel(booking.photoPackage)}</span>
-                        <span className="text-foreground font-medium">{formatPrice(booking.packagePrice)}</span>
-                      </div>
-                    )}
-                    {booking.photoPackage === "none" && (
-                      <div className="flex justify-between">
-                        <span className="text-muted-foreground">Bildpaket: Ohne Paket</span>
-                        <span className="text-foreground font-medium">0,00 €</span>
-                      </div>
-                    )}
-                    {isBabybauch && booking.babybaumKombi && (
-                      <div className="flex justify-between">
-                        <span className="text-muted-foreground">Babybauch + Baby Kombi</span>
-                        <span className="text-foreground font-medium">+{formatPrice(49.99)}</span>
-                      </div>
-                    )}
-                    {booking.modelRelease && (
-                      <div className="flex justify-between text-primary">
-                        <span>Model-Release Rabatt</span>
-                        <span className="font-medium">−{formatPrice(modelReleaseDiscount())}</span>
-                      </div>
-                    )}
-                    {booking.createAccount && booking.photoPackage !== "none" && booking.photoPackage !== "" && !couponApplied && (
-                      <div className="flex justify-between text-primary">
-                        <span>Willkommensrabatt (10%)</span>
-                        <span className="font-medium">−{formatPrice(booking.packagePrice * 0.1)}</span>
-                      </div>
-                    )}
-                    {couponApplied && (
-                      <div className="flex justify-between text-primary">
-                        <span>Gutschein: {couponApplied.title}</span>
-                        <span className="font-medium">Rabatt angewendet</span>
-                      </div>
+                    {selectedDeal ? (
+                      <>
+                        <div className="flex justify-between">
+                          <span className="text-muted-foreground">{selectedDeal.title}</span>
+                        </div>
+                        <div className="flex justify-between">
+                          <span className="text-muted-foreground">{selectedDeal.subtitle}</span>
+                        </div>
+                        <div className="flex justify-between">
+                          <span className="text-muted-foreground">Regulärer Preis</span>
+                          <span className="text-muted-foreground line-through">{formatPrice(selectedDeal.originalPrice)}</span>
+                        </div>
+                        <div className="flex justify-between text-primary">
+                          <span className="font-medium">Deal-Preis</span>
+                          <span className="font-medium">{formatPrice(selectedDeal.fixedPrice)}</span>
+                        </div>
+                        {couponApplied && (
+                          <div className="flex justify-between text-primary">
+                            <span>Gutschein: {couponApplied.title}</span>
+                            <span className="font-medium">Rabatt angewendet</span>
+                          </div>
+                        )}
+                        {dealModelRelease && (
+                          <div className="flex justify-between text-accent">
+                            <span>🎁 Gutscheincode (99,99 €) für nächste Buchung</span>
+                            <span className="font-medium text-primary">✓</span>
+                          </div>
+                        )}
+                      </>
+                    ) : (
+                      <>
+                        <div className="flex justify-between">
+                          <span className="text-muted-foreground">{booking.service}</span>
+                        </div>
+                        <div className="flex justify-between">
+                          <span className="text-muted-foreground">Dauer: {getDurationLabel(booking.duration)}</span>
+                          <span className="text-foreground font-medium">{formatPrice(booking.durationPrice)}</span>
+                        </div>
+                        {booking.photoPackage && booking.photoPackage !== "none" && (
+                          <div className="flex justify-between">
+                            <span className="text-muted-foreground">Bildpaket: {getPackageLabel(booking.photoPackage)}</span>
+                            <span className="text-foreground font-medium">{formatPrice(booking.packagePrice)}</span>
+                          </div>
+                        )}
+                        {booking.photoPackage === "none" && (
+                          <div className="flex justify-between">
+                            <span className="text-muted-foreground">Bildpaket: Ohne Paket</span>
+                            <span className="text-foreground font-medium">0,00 €</span>
+                          </div>
+                        )}
+                        {isBabybauch && booking.babybaumKombi && (
+                          <div className="flex justify-between">
+                            <span className="text-muted-foreground">Babybauch + Baby Kombi</span>
+                            <span className="text-foreground font-medium">+{formatPrice(49.99)}</span>
+                          </div>
+                        )}
+                        {booking.modelRelease && (
+                          <div className="flex justify-between text-primary">
+                            <span>Model-Release Rabatt</span>
+                            <span className="font-medium">−{formatPrice(modelReleaseDiscount())}</span>
+                          </div>
+                        )}
+                        {booking.createAccount && booking.photoPackage !== "none" && booking.photoPackage !== "" && !couponApplied && (
+                          <div className="flex justify-between text-primary">
+                            <span>Willkommensrabatt (10%)</span>
+                            <span className="font-medium">−{formatPrice(booking.packagePrice * 0.1)}</span>
+                          </div>
+                        )}
+                        {couponApplied && (
+                          <div className="flex justify-between text-primary">
+                            <span>Gutschein: {couponApplied.title}</span>
+                            <span className="font-medium">Rabatt angewendet</span>
+                          </div>
+                        )}
+                      </>
                     )}
                     <div className="border-t border-border pt-2 mt-2">
                       <div className="flex justify-between items-center">
@@ -1144,25 +1427,36 @@ const BookingFlow = ({ preselectedService }: BookingFlowProps = {}) => {
             </div>
 
             <div className="max-w-xl mx-auto bg-card rounded-xl p-8 shadow-card space-y-4">
-              <SummaryRow label="Shooting" value={booking.service} />
-              <SummaryRow
-                label="Teilnehmer"
-                value={`${booking.participants.adults} Erwachsene, ${booking.participants.children} Kinder, ${booking.participants.babies} Babys, ${booking.participants.animals} Tiere`}
-              />
-              <SummaryRow
-                label="Dauer"
-                value={`${getDurationLabel(booking.duration)} · ${formatPrice(booking.durationPrice)}`}
-              />
-              <SummaryRow
-                label="Bildpaket"
-                value={
-                  booking.photoPackage === "none"
-                    ? "Ohne Paket"
-                    : `${getPackageLabel(booking.photoPackage)} · ${formatPrice(booking.packagePrice)}`
-                }
-              />
-              {isBabybauch && booking.babybaumKombi && (
-                <SummaryRow label="Kombi" value={`Baby Shooting Zusatz · ${formatPrice(49.99)}`} />
+              {selectedDeal ? (
+                <>
+                  <SummaryRow label="Deal" value={selectedDeal.title} />
+                  <SummaryRow label="Shooting" value={selectedDeal.service} />
+                  <SummaryRow label="Dauer" value={selectedDeal.durationLabel} />
+                  <SummaryRow label="Bildpaket" value={selectedDeal.photoPackageLabel} />
+                </>
+              ) : (
+                <>
+                  <SummaryRow label="Shooting" value={booking.service} />
+                  <SummaryRow
+                    label="Teilnehmer"
+                    value={`${booking.participants.adults} Erwachsene, ${booking.participants.children} Kinder, ${booking.participants.babies} Babys, ${booking.participants.animals} Tiere`}
+                  />
+                  <SummaryRow
+                    label="Dauer"
+                    value={`${getDurationLabel(booking.duration)} · ${formatPrice(booking.durationPrice)}`}
+                  />
+                  <SummaryRow
+                    label="Bildpaket"
+                    value={
+                      booking.photoPackage === "none"
+                        ? "Ohne Paket"
+                        : `${getPackageLabel(booking.photoPackage)} · ${formatPrice(booking.packagePrice)}`
+                    }
+                  />
+                  {isBabybauch && booking.babybaumKombi && (
+                    <SummaryRow label="Kombi" value={`Baby Shooting Zusatz · ${formatPrice(49.99)}`} />
+                  )}
+                </>
               )}
               <SummaryRow
                 label="Termin"
@@ -1215,21 +1509,37 @@ const BookingFlow = ({ preselectedService }: BookingFlowProps = {}) => {
                 </div>
               )}
 
-              {booking.modelRelease && (
+              {booking.modelRelease && !selectedDeal && (
                 <div className="bg-primary/5 rounded-lg p-4 border border-primary/20">
                   <p className="text-sm font-semibold text-primary">📸 Model-Release vereinbart</p>
                   <p className="text-sm text-muted-foreground">Rabatt auf Shooting-Zeit: −{formatPrice(modelReleaseDiscount())}</p>
                 </div>
               )}
 
+              {selectedDeal && dealModelRelease && (
+                <div className="bg-primary/5 rounded-lg p-4 border border-primary/20">
+                  <p className="text-sm font-semibold text-primary">🎁 Model-Release vereinbart</p>
+                  <p className="text-sm text-muted-foreground">Du erhältst einen Gutscheincode über 99,99 € für deine nächste Buchung (gültig 6 Monate).</p>
+                </div>
+              )}
+
               <div className="border-t border-border pt-4 mt-4">
-                {(booking.durationPrice + booking.packagePrice + (isBabybauch && booking.babybaumKombi ? 49.99 : 0)) !== totalPrice() && (
-                  <div className="flex justify-between items-center mb-2">
-                    <span className="text-sm text-muted-foreground">Zwischensumme</span>
-                    <span className="text-sm text-muted-foreground line-through">
-                      {formatPrice(booking.durationPrice + booking.packagePrice + (isBabybauch && booking.babybaumKombi ? 49.99 : 0))}
-                    </span>
-                  </div>
+                {selectedDeal ? (
+                  selectedDeal.fixedPrice !== totalPrice() && (
+                    <div className="flex justify-between items-center mb-2">
+                      <span className="text-sm text-muted-foreground">Regulärer Preis</span>
+                      <span className="text-sm text-muted-foreground line-through">{formatPrice(selectedDeal.originalPrice)}</span>
+                    </div>
+                  )
+                ) : (
+                  (booking.durationPrice + booking.packagePrice + (isBabybauch && booking.babybaumKombi ? 49.99 : 0)) !== totalPrice() && (
+                    <div className="flex justify-between items-center mb-2">
+                      <span className="text-sm text-muted-foreground">Zwischensumme</span>
+                      <span className="text-sm text-muted-foreground line-through">
+                        {formatPrice(booking.durationPrice + booking.packagePrice + (isBabybauch && booking.babybaumKombi ? 49.99 : 0))}
+                      </span>
+                    </div>
+                  )
                 )}
                 <div className="flex justify-between items-center">
                   <span className="font-display text-xl font-bold text-foreground">Gesamtsumme</span>
@@ -1299,10 +1609,15 @@ const BookingFlow = ({ preselectedService }: BookingFlowProps = {}) => {
                           street: booking.street,
                           zip: booking.zip,
                           city: booking.city,
-                          notes: booking.notes,
+                          notes: selectedDeal
+                            ? `[DEAL: ${selectedDeal.id}] ${booking.notes}`
+                            : booking.notes,
                           coupon_id: couponApplied?.id || null,
                           welcome_discount: booking.createAccount && !couponApplied,
-                          model_release: booking.modelRelease,
+                          model_release: selectedDeal ? dealModelRelease : booking.modelRelease,
+                          deal_id: selectedDeal?.id || null,
+                          deal_fixed_price: selectedDeal?.fixedPrice || null,
+                          deal_model_release_coupon: selectedDeal && dealModelRelease,
                         },
                       });
                       if (bookingFnError || !bookingResult?.success) {
@@ -1323,6 +1638,11 @@ const BookingFlow = ({ preselectedService }: BookingFlowProps = {}) => {
                           },
                         },
                       }).catch(console.error);
+
+                      // Store generated coupon code if any
+                      if (bookingResult?.coupon_code) {
+                        setGeneratedCouponCode(bookingResult.coupon_code);
+                      }
 
                       setConfirmed(true);
                     } catch (err: any) {
