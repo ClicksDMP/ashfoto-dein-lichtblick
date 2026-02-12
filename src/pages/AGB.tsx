@@ -50,8 +50,8 @@ const AGB = () => {
           <section>
             <h2 className="text-xl font-semibold text-foreground mb-3">§ 4 Preise und Zahlung</h2>
             <p>
-              Alle angegebenen Preise sind Endpreise. Gemäß § 19 UStG wird keine Umsatzsteuer erhoben
-              (Kleinunternehmerregelung).
+              Alle angegebenen Preise sind Endpreise und verstehen sich inklusive der gesetzlichen
+              Mehrwertsteuer von 19%.
             </p>
             <p className="mt-2">
               Die Zahlung erfolgt spätestens am Tag des Shootings, sofern keine abweichende Vereinbarung
@@ -103,8 +103,52 @@ const AGB = () => {
             </p>
           </section>
 
+          <section id="model-release">
+            <h2 className="text-xl font-semibold text-foreground mb-3">§ 8 Model-Release-Vereinbarung und Rabatt</h2>
+            <p>
+              Der Kunde hat die Möglichkeit, dem Fotografen im Rahmen der Buchung eine erweiterte
+              Nutzungserlaubnis für die im Shooting entstandenen Fotos zu erteilen
+              („Model-Release-Vereinbarung").
+            </p>
+            <h3 className="text-lg font-semibold text-foreground mt-4 mb-2">8.1 Umfang der Nutzungsrechte</h3>
+            <p>
+              Mit der Model-Release-Vereinbarung räumt der Kunde dem Fotografen das unwiderrufliche,
+              zeitlich und örtlich unbeschränkte Recht ein, die Fotos für folgende Zwecke zu nutzen:
+            </p>
+            <ul className="list-disc list-inside mt-2 space-y-1">
+              <li>Portfolio und Website des Fotografen (ashfoto.de)</li>
+              <li>Social-Media-Kanäle (Instagram, Facebook, TikTok, Pinterest u.&nbsp;a.)</li>
+              <li>Bezahlte Werbeanzeigen (Online und Print)</li>
+              <li>Druck- und Online-Marketingmaterialien</li>
+              <li>Messe- und Ausstellungszwecke</li>
+            </ul>
+            <h3 className="text-lg font-semibold text-foreground mt-4 mb-2">8.2 Gegenleistung</h3>
+            <p>
+              Als Gegenleistung für die Model-Release-Vereinbarung erhält der Kunde einen Rabatt in Höhe
+              von bis zu 99,99 € auf die gebuchte Shooting-Dauer (maximal der Preis der ersten Stunde
+              bzw. der gewählten Shooting-Dauer, falls diese unter 99,99 € liegt).
+            </p>
+            <h3 className="text-lg font-semibold text-foreground mt-4 mb-2">8.3 Freiwilligkeit</h3>
+            <p>
+              Die Model-Release-Vereinbarung ist freiwillig und keine Voraussetzung für die Buchung.
+              Sie kann während des Buchungsvorgangs aktiviert oder deaktiviert werden.
+            </p>
+            <h3 className="text-lg font-semibold text-foreground mt-4 mb-2">8.4 Unwiderruflichkeit und Rückzahlung</h3>
+            <p>
+              Die erteilte Nutzungserlaubnis ist unwiderruflich, da sie als Gegenleistung für einen
+              gewährten Preisnachlass vereinbart wird. Widerruft der Kunde die Nutzungserlaubnis
+              nachträglich, ist der Fotograf berechtigt, den gewährten Rabatt (bis zu 99,99 €)
+              nachzuberechnen.
+            </p>
+            <h3 className="text-lg font-semibold text-foreground mt-4 mb-2">8.5 Namensnennung</h3>
+            <p>
+              Die Nutzung der Fotos erfolgt grundsätzlich ohne Namensnennung des Kunden, sofern nicht
+              ausdrücklich anders vereinbart.
+            </p>
+          </section>
+
           <section>
-            <h2 className="text-xl font-semibold text-foreground mb-3">§ 8 Mitwirkungspflichten des Kunden</h2>
+            <h2 className="text-xl font-semibold text-foreground mb-3">§ 9 Mitwirkungspflichten des Kunden</h2>
             <p>
               Der Kunde verpflichtet sich, pünktlich zum vereinbarten Termin zu erscheinen und den
               Shooting-Ort in einem geeigneten Zustand bereitzustellen, sofern das Shooting beim Kunden
@@ -113,7 +157,7 @@ const AGB = () => {
           </section>
 
           <section>
-            <h2 className="text-xl font-semibold text-foreground mb-3">§ 9 Haftung</h2>
+            <h2 className="text-xl font-semibold text-foreground mb-3">§ 10 Haftung</h2>
             <p>
               Der Fotograf haftet nur für Schäden, die auf vorsätzlichem oder grob fahrlässigem Verhalten
               beruhen. Die Haftung für leichte Fahrlässigkeit ist, soweit gesetzlich zulässig, auf den
@@ -123,7 +167,7 @@ const AGB = () => {
           </section>
 
           <section>
-            <h2 className="text-xl font-semibold text-foreground mb-3">§ 10 Gutscheine und Rabattaktionen</h2>
+            <h2 className="text-xl font-semibold text-foreground mb-3">§ 11 Gutscheine und Rabattaktionen</h2>
             <p>
               Gutscheincodes sind personengebunden und nicht übertragbar. Pro Buchung kann nur ein
               Gutscheincode eingelöst werden. Eine Barauszahlung ist ausgeschlossen. Gutscheine
@@ -132,7 +176,7 @@ const AGB = () => {
           </section>
 
           <section>
-            <h2 className="text-xl font-semibold text-foreground mb-3">§ 11 Kundenbewertungen</h2>
+            <h2 className="text-xl font-semibold text-foreground mb-3">§ 12 Kundenbewertungen</h2>
             <p>
               Kunden können nach Erhalt ihrer Fotos über das Kundenportal eine Bewertung hinterlassen.
               Der Fotograf behält sich das Recht vor, Bewertungen vor der Veröffentlichung auf der Website
@@ -143,7 +187,7 @@ const AGB = () => {
           </section>
 
           <section>
-            <h2 className="text-xl font-semibold text-foreground mb-3">§ 12 Terminerinnerungen</h2>
+            <h2 className="text-xl font-semibold text-foreground mb-3">§ 13 Terminerinnerungen</h2>
             <p>
               Der Kunde erhält automatisierte Terminerinnerungen per E-Mail (3 Tage und 1 Tag vor dem
               Shooting). Diese dienen ausschließlich der Information und ersetzen nicht die Pflicht
@@ -152,7 +196,7 @@ const AGB = () => {
           </section>
 
           <section>
-            <h2 className="text-xl font-semibold text-foreground mb-3">§ 13 Datenschutz</h2>
+            <h2 className="text-xl font-semibold text-foreground mb-3">§ 14 Datenschutz</h2>
             <p>
               Die Verarbeitung personenbezogener Daten erfolgt gemäß der{" "}
               <Link to="/datenschutz" className="underline hover:text-foreground transition-colors">
@@ -162,7 +206,7 @@ const AGB = () => {
           </section>
 
           <section>
-            <h2 className="text-xl font-semibold text-foreground mb-3">§ 14 Schlussbestimmungen</h2>
+            <h2 className="text-xl font-semibold text-foreground mb-3">§ 15 Schlussbestimmungen</h2>
             <p>
               Es gilt das Recht der Bundesrepublik Deutschland. Sollten einzelne Bestimmungen dieser AGB
               unwirksam sein oder werden, bleibt die Wirksamkeit der übrigen Bestimmungen unberührt.

@@ -55,6 +55,7 @@ export type Database = {
           first_name: string
           id: string
           last_name: string
+          model_release: boolean
           notes: string | null
           package_price: number
           participants: Json
@@ -84,6 +85,7 @@ export type Database = {
           first_name: string
           id?: string
           last_name: string
+          model_release?: boolean
           notes?: string | null
           package_price?: number
           participants?: Json
@@ -113,6 +115,7 @@ export type Database = {
           first_name?: string
           id?: string
           last_name?: string
+          model_release?: boolean
           notes?: string | null
           package_price?: number
           participants?: Json
