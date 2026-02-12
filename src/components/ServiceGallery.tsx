@@ -41,8 +41,8 @@ const ServiceGallery = ({ serviceSlug, fallbackImage }: ServiceGalleryProps) => 
   if (photos.length === 0) {
     return (
       <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-        <div className="aspect-[4/3] rounded-xl overflow-hidden">
-          <img src={fallbackImage} alt="Galerie" className="w-full h-full object-cover" loading="lazy" />
+        <div className="rounded-xl overflow-hidden">
+          <img src={fallbackImage} alt="Galerie" className="w-full h-auto rounded-xl" loading="lazy" />
         </div>
       </div>
     );
@@ -52,8 +52,8 @@ const ServiceGallery = ({ serviceSlug, fallbackImage }: ServiceGalleryProps) => 
     return (
       <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
         {photos.map((photo) => (
-          <div key={photo.id} className="aspect-[4/3] rounded-xl overflow-hidden">
-            <img src={photo.file_url} alt={photo.file_name} className="w-full h-full object-cover" loading="lazy" />
+          <div key={photo.id} className="rounded-xl overflow-hidden">
+            <img src={photo.file_url} alt={photo.file_name} className="w-full h-auto rounded-xl" loading="lazy" />
           </div>
         ))}
       </div>
@@ -65,11 +65,11 @@ const ServiceGallery = ({ serviceSlug, fallbackImage }: ServiceGalleryProps) => 
       <CarouselContent className="-ml-4">
         {photos.map((photo) => (
           <CarouselItem key={photo.id} className="pl-4 md:basis-1/2 lg:basis-1/3">
-            <div className="aspect-[4/3] rounded-xl overflow-hidden">
+            <div className="rounded-xl overflow-hidden">
               <img
                 src={photo.file_url}
                 alt={photo.file_name}
-                className="w-full h-full object-cover hover:scale-105 transition-transform duration-500"
+                className="w-full h-auto rounded-xl hover:scale-105 transition-transform duration-500"
                 loading="lazy"
               />
             </div>

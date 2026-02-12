@@ -14,6 +14,7 @@ import { CalendarIcon, Check, Minus, Plus, Mail, Phone, ArrowRight, Heart, Tag, 
 import { supabase } from "@/integrations/supabase/client";
 import { SERVICES_DATA } from "@/data/serviceData";
 import { DEALS, getActivDeals, type Deal } from "@/data/dealsData";
+import { useServiceThumbnails } from "@/hooks/useServiceThumbnails";
 
 import imgFamily from "@/assets/shooting-family.jpg";
 import imgBaby from "@/assets/shooting-baby.jpg";
@@ -150,6 +151,7 @@ interface BookingFlowProps {
 }
 
 const BookingFlow = ({ preselectedService, preselectedDealId, onClearDeal }: BookingFlowProps = {}) => {
+  const serviceThumbnails = useServiceThumbnails();
   const [bookingMode, setBookingMode] = useState<"regular" | "deals">("regular");
   const [selectedDeal, setSelectedDeal] = useState<Deal | null>(null);
   const [currentStep, setCurrentStep] = useState(1);
@@ -694,6 +696,7 @@ const BookingFlow = ({ preselectedService, preselectedDealId, onClearDeal }: Boo
           <div className="grid sm:grid-cols-2 md:grid-cols-3 gap-6 mb-6">
             {SERVICES.map(({ name, img }) => {
               const serviceData = SERVICES_DATA.find(s => s.serviceName === name);
+              const thumbnailUrl = serviceData ? (serviceThumbnails[serviceData.slug] || img) : img;
               return (
                 <div
                   key={name}
@@ -710,7 +713,7 @@ const BookingFlow = ({ preselectedService, preselectedDealId, onClearDeal }: Boo
                   >
                     <div className="aspect-[16/9] overflow-hidden relative">
                       <img
-                        src={img}
+                        src={thumbnailUrl}
                         alt={name}
                         className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500"
                         loading="lazy"
