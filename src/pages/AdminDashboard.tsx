@@ -176,6 +176,7 @@ const AdminDashboard = () => {
                     <TableHead>Termin</TableHead>
                     <TableHead>Preis</TableHead>
                     <TableHead>Status</TableHead>
+                    <TableHead>MR</TableHead>
                     <TableHead>Actions</TableHead>
                   </TableRow>
                 </TableHeader>
@@ -198,6 +199,13 @@ const AdminDashboard = () => {
                         }`}>{b.status}</span>
                       </TableCell>
                       <TableCell>
+                        {b.model_release ? (
+                          <span className="px-2 py-1 rounded-full text-xs font-medium bg-purple-100 text-purple-800" title="Model Release akzeptiert">📸 Ja</span>
+                        ) : (
+                          <span className="text-xs text-muted-foreground">–</span>
+                        )}
+                      </TableCell>
+                      <TableCell>
                         <div className="flex gap-1">
                           {b.status !== "confirmed" && (
                             <Button size="sm" variant="ghost" onClick={() => updateBookingStatus(b.id, "confirmed")} title="Confirm">✓</Button>
@@ -213,7 +221,7 @@ const AdminDashboard = () => {
                     </TableRow>
                   ))}
                   {filteredBookings.length === 0 && (
-                    <TableRow><TableCell colSpan={8} className="text-center py-8 text-muted-foreground">No bookings found</TableCell></TableRow>
+                    <TableRow><TableCell colSpan={9} className="text-center py-8 text-muted-foreground">No bookings found</TableCell></TableRow>
                   )}
                 </TableBody>
               </Table>

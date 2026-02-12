@@ -401,7 +401,13 @@ const BookingFlow = ({ preselectedService }: BookingFlowProps = {}) => {
   };
 
   const handlePackageSelect = (value: string, price: number) => {
-    setBooking(prev => ({ ...prev, photoPackage: value, packagePrice: price }));
+    setBooking(prev => ({
+      ...prev,
+      photoPackage: value,
+      packagePrice: price,
+      // Auto-uncheck model release if no package selected
+      modelRelease: value === "none" ? false : prev.modelRelease,
+    }));
     setCurrentStep(3);
     scrollToStep(5); // scroll to calendar
   };
@@ -441,14 +447,20 @@ const BookingFlow = ({ preselectedService }: BookingFlowProps = {}) => {
               <Check className="w-8 h-8 text-primary" />
             </div>
             <h2 className="font-display text-3xl font-bold text-foreground mb-4">
-              Buchung eingegangen!
+              Buchungsanfrage eingegangen!
             </h2>
             <p className="text-muted-foreground text-lg mb-2">
-              Vielen Dank für deine Buchung! Dein Termin ist noch <strong>nicht bestätigt</strong>.
+              Vielen Dank für deine Anfrage! Dein Termin ist noch <strong>nicht bestätigt</strong>.
             </p>
-            <p className="text-muted-foreground">
-              Wir melden uns in Kürze bei dir, um den Termin zu bestätigen. Eine E-Mail wurde an {booking.email} gesendet.
+            <p className="text-muted-foreground mb-4">
+              Wir melden uns in Kürze bei dir, um den Termin persönlich zu bestätigen. Anschließend erhältst du eine Rechnung per E-Mail.
             </p>
+            <div className="bg-accent/10 rounded-lg p-4 border border-accent/30 text-left text-sm text-muted-foreground space-y-1">
+              <p>📧 Eine Bestätigung wurde an <strong>{booking.email}</strong> gesendet.</p>
+              <p>📞 Wir kontaktieren dich zur Terminbestätigung.</p>
+              <p>💳 Nach Bestätigung erhältst du eine Rechnung – die Buchung wird erst nach Zahlungseingang (innerhalb von 3 Tagen) endgültig bestätigt.</p>
+              <p>❌ Erfolgt die Zahlung nicht innerhalb von 3 Tagen, wird die Buchung automatisch storniert.</p>
+            </div>
           </div>
         </div>
       </section>
@@ -970,11 +982,17 @@ const BookingFlow = ({ preselectedService }: BookingFlowProps = {}) => {
               </div>
 
               {/* Model Release Offer */}
-              <div className="bg-gradient-to-br from-primary/5 to-accent/10 rounded-xl p-5 border border-primary/20 shadow-soft">
+              <div className={cn(
+                "bg-gradient-to-br from-primary/5 to-accent/10 rounded-xl p-5 border shadow-soft",
+                booking.photoPackage === "none" || booking.photoPackage === ""
+                  ? "border-border opacity-60"
+                  : "border-primary/20"
+              )}>
                 <div className="flex items-start gap-3">
                   <Checkbox
                     id="modelRelease"
                     checked={booking.modelRelease}
+                    disabled={booking.photoPackage === "none" || booking.photoPackage === ""}
                     onCheckedChange={(checked) =>
                       setBooking(prev => ({ ...prev, modelRelease: checked === true }))
                     }
@@ -1001,6 +1019,11 @@ const BookingFlow = ({ preselectedService }: BookingFlowProps = {}) => {
                         Vollständige Nutzungsbedingungen lesen
                       </Link>
                     </p>
+                    {(booking.photoPackage === "none" || booking.photoPackage === "") && (
+                      <p className="text-xs text-destructive mt-2 font-medium">
+                        ⚠️ Dieses Angebot ist nur mit einem Bildpaket (mind. 10 Bilder) verfügbar.
+                      </p>
+                    )}
                   </label>
                 </div>
               </div>
@@ -1063,6 +1086,18 @@ const BookingFlow = ({ preselectedService }: BookingFlowProps = {}) => {
                   </div>
                 </div>
               )}
+
+              {/* Payment Info Notice */}
+              <div className="bg-accent/10 rounded-xl p-5 border border-accent/30">
+                <h4 className="font-display text-sm font-bold text-foreground mb-2">💡 Wichtige Hinweise zur Buchung</h4>
+                <ul className="text-xs text-muted-foreground space-y-1.5 list-disc list-inside leading-relaxed">
+                  <li>Diese Buchung ist <strong>kostenlos und unverbindlich</strong> – du zahlst jetzt nichts.</li>
+                  <li>Nach Eingang deiner Anfrage kontaktieren wir dich persönlich zur Terminbestätigung.</li>
+                  <li>Anschließend erhältst du eine Rechnung per E-Mail.</li>
+                  <li>Die Buchung wird erst nach <strong>Zahlungseingang bestätigt</strong>.</li>
+                  <li>Erfolgt die Zahlung nicht innerhalb von <strong>3 Tagen</strong>, wird die Buchung automatisch storniert.</li>
+                </ul>
+              </div>
 
               <div className="flex items-start gap-3 pt-2">
                 <Checkbox
@@ -1297,7 +1332,7 @@ const BookingFlow = ({ preselectedService }: BookingFlowProps = {}) => {
                     }
                   }}
                 >
-                  {submitting ? "Wird gesendet..." : "Buchung verbindlich bestätigen"}
+                  {submitting ? "Wird gesendet..." : "Buchungsanfrage absenden (kostenlos)"}
                 </Button>
               </div>
             </div>
