@@ -4,11 +4,11 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Badge } from "@/components/ui/badge";
-import { Trash2, Upload, Crop, Loader2, ImageIcon } from "lucide-react";
+import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
+import { Trash2, Upload, Crop, Loader2, ImageIcon, Images } from "lucide-react";
 import { toast } from "sonner";
 import { compressImages } from "@/lib/imageCompressor";
 import CropDialog from "./CropDialog";
-import type { Area } from "react-easy-crop";
 
 interface ServiceImageManagerProps {
   serviceSlug: string;
@@ -23,6 +23,12 @@ interface ImageRecord {
   crop_data: any;
 }
 
+interface GalleryPhoto {
+  id: string;
+  file_url: string;
+  file_name: string;
+}
+
 const IMAGE_TYPES = [
   { key: "thumbnail", label: "Thumbnail (Karte)", aspect: 16 / 9, description: "Wird auf der Hauptseite als Kartenbild angezeigt" },
   { key: "hero", label: "Hero (Cover)", aspect: 16 / 9, description: "Großes Titelbild auf der Service-Seite" },
@@ -31,9 +37,7 @@ const IMAGE_TYPES = [
 
 const ServiceImageManager = ({ serviceSlug, serviceTitle, fallbackImage }: ServiceImageManagerProps) => {
   const [images, setImages] = useState<Record<string, ImageRecord | null>>({
-    thumbnail: null,
-    hero: null,
-    banner: null,
+    thumbnail: null, hero: null, banner: null,
   });
   const [uploading, setUploading] = useState<string | null>(null);
   const [cropDialog, setCropDialog] = useState<{
@@ -43,6 +47,11 @@ const ServiceImageManager = ({ serviceSlug, serviceTitle, fallbackImage }: Servi
     aspect: number;
     title: string;
   } | null>(null);
+  const [galleryPicker, setGalleryPicker] = useState<{
+    open: boolean;
+    targetType: string;
+  } | null>(null);
+  const [galleryPhotos, setGalleryPhotos] = useState<GalleryPhoto[]>([]);
 
   const fetchImages = useCallback(async () => {
     const { data } = await supabase
@@ -52,27 +61,27 @@ const ServiceImageManager = ({ serviceSlug, serviceTitle, fallbackImage }: Servi
 
     const result: Record<string, ImageRecord | null> = { thumbnail: null, hero: null, banner: null };
     if (data) {
-      data.forEach((row) => {
-        result[row.image_type] = row;
-      });
+      data.forEach((row) => { result[row.image_type] = row; });
     }
     setImages(result);
   }, [serviceSlug]);
 
-  useEffect(() => {
-    fetchImages();
-  }, [fetchImages]);
+  useEffect(() => { fetchImages(); }, [fetchImages]);
 
-  const handleUpload = async (imageType: string, e: React.ChangeEvent<HTMLInputElement>) => {
-    const file = e.target.files?.[0];
-    if (!file) return;
-    setUploading(imageType);
+  const fetchGalleryPhotos = useCallback(async () => {
+    const { data } = await supabase
+      .from("service_gallery_photos")
+      .select("id, file_url, file_name")
+      .eq("service_slug", serviceSlug)
+      .order("sort_order", { ascending: true });
+    setGalleryPhotos(data || []);
+  }, [serviceSlug]);
 
-    const [compressed] = await compressImages([file]);
-    const fileExt = compressed.name.split(".").pop() || "jpg";
-    const fileName = `${serviceSlug}/${imageType}-${Date.now()}.${fileExt}`;
+  const uploadBlob = async (imageType: string, blob: Blob, filenameHint?: string) => {
+    const ext = "jpg";
+    const fileName = `${serviceSlug}/${imageType}-${Date.now()}.${ext}`;
 
-    // Remove old file from storage if exists
+    // Remove old file
     const existing = images[imageType];
     if (existing) {
       const urlParts = existing.file_url.split("/service-gallery/");
@@ -83,7 +92,43 @@ const ServiceImageManager = ({ serviceSlug, serviceTitle, fallbackImage }: Servi
 
     const { error: uploadError } = await supabase.storage
       .from("service-gallery")
-      .upload(fileName, compressed);
+      .upload(fileName, blob, { contentType: "image/jpeg" });
+
+    if (uploadError) {
+      toast.error("Upload fehlgeschlagen: " + uploadError.message);
+      return;
+    }
+
+    const { data: urlData } = supabase.storage.from("service-gallery").getPublicUrl(fileName);
+
+    await supabase.from("service_images").upsert(
+      { service_slug: serviceSlug, image_type: imageType, file_url: urlData.publicUrl, crop_data: null },
+      { onConflict: "service_slug,image_type" }
+    );
+
+    toast.success(`${imageType === "thumbnail" ? "Thumbnail" : imageType === "hero" ? "Hero" : "Banner"} aktualisiert!`);
+    fetchImages();
+  };
+
+  const handleUpload = async (imageType: string, e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+    setUploading(imageType);
+
+    const [compressed] = await compressImages([file]);
+    const fileExt = compressed.name.split(".").pop() || "jpg";
+    const fileName = `${serviceSlug}/${imageType}-${Date.now()}.${fileExt}`;
+
+    const existing = images[imageType];
+    if (existing) {
+      const urlParts = existing.file_url.split("/service-gallery/");
+      if (urlParts.length > 1) {
+        await supabase.storage.from("service-gallery").remove([urlParts[1]]);
+      }
+    }
+
+    const { error: uploadError } = await supabase.storage
+      .from("service-gallery").upload(fileName, compressed);
 
     if (uploadError) {
       toast.error("Upload fehlgeschlagen: " + uploadError.message);
@@ -94,18 +139,10 @@ const ServiceImageManager = ({ serviceSlug, serviceTitle, fallbackImage }: Servi
 
     const { data: urlData } = supabase.storage.from("service-gallery").getPublicUrl(fileName);
 
-    // Upsert into service_images
-    const { error: dbError } = await supabase
-      .from("service_images")
-      .upsert(
-        {
-          service_slug: serviceSlug,
-          image_type: imageType,
-          file_url: urlData.publicUrl,
-          crop_data: null,
-        },
-        { onConflict: "service_slug,image_type" }
-      );
+    const { error: dbError } = await supabase.from("service_images").upsert(
+      { service_slug: serviceSlug, image_type: imageType, file_url: urlData.publicUrl, crop_data: null },
+      { onConflict: "service_slug,image_type" }
+    );
 
     if (dbError) {
       toast.error("DB-Fehler: " + dbError.message);
@@ -121,49 +158,53 @@ const ServiceImageManager = ({ serviceSlug, serviceTitle, fallbackImage }: Servi
   const handleDelete = async (imageType: string) => {
     const existing = images[imageType];
     if (!existing) return;
-
-    // Remove from storage
     const urlParts = existing.file_url.split("/service-gallery/");
     if (urlParts.length > 1) {
       await supabase.storage.from("service-gallery").remove([urlParts[1]]);
     }
-
     await supabase.from("service_images").delete().eq("id", existing.id);
     toast.success("Bild entfernt – Standard wird verwendet.");
     fetchImages();
   };
 
-  const handleCropSave = async (imageType: string, croppedArea: Area, _croppedAreaPixels: Area) => {
-    const existing = images[imageType];
-    if (!existing) return;
-
-    await supabase
-      .from("service_images")
-      .update({ crop_data: { area: croppedArea, pixels: _croppedAreaPixels } })
-      .eq("id", existing.id);
-
-    toast.success("Zuschnitt gespeichert!");
-    fetchImages();
+  const handleCropSave = async (imageType: string, croppedBlob: Blob) => {
+    setUploading(imageType);
+    await uploadBlob(imageType, croppedBlob);
+    setUploading(null);
   };
 
   const handleUseAsSource = async (sourceType: string, targetType: string) => {
     const source = images[sourceType];
     if (!source) return;
+    // Open crop dialog with the source image so user can crop for target dimensions
+    const targetConfig = IMAGE_TYPES.find(t => t.key === targetType);
+    if (!targetConfig) return;
+    setCropDialog({
+      open: true,
+      imageType: targetType,
+      imageUrl: source.file_url,
+      aspect: targetConfig.aspect,
+      title: `${targetConfig.label} zuschneiden`,
+    });
+  };
 
-    await supabase
-      .from("service_images")
-      .upsert(
-        {
-          service_slug: serviceSlug,
-          image_type: targetType,
-          file_url: source.file_url,
-          crop_data: null,
-        },
-        { onConflict: "service_slug,image_type" }
-      );
+  const handleOpenGalleryPicker = async (targetType: string) => {
+    await fetchGalleryPhotos();
+    setGalleryPicker({ open: true, targetType });
+  };
 
-    toast.success("Bild übernommen! Du kannst den Zuschnitt separat anpassen.");
-    fetchImages();
+  const handleSelectGalleryPhoto = (photo: GalleryPhoto) => {
+    if (!galleryPicker) return;
+    const targetConfig = IMAGE_TYPES.find(t => t.key === galleryPicker.targetType);
+    if (!targetConfig) return;
+    setGalleryPicker(null);
+    setCropDialog({
+      open: true,
+      imageType: galleryPicker.targetType,
+      imageUrl: photo.file_url,
+      aspect: targetConfig.aspect,
+      title: `${targetConfig.label} zuschneiden`,
+    });
   };
 
   return (
@@ -172,8 +213,6 @@ const ServiceImageManager = ({ serviceSlug, serviceTitle, fallbackImage }: Servi
         const img = images[key];
         const isUploading = uploading === key;
         const displayUrl = img?.file_url || fallbackImage;
-
-        // Determine which other types can be used as source
         const otherTypes = IMAGE_TYPES.filter(t => t.key !== key && images[t.key]);
 
         return (
@@ -202,18 +241,12 @@ const ServiceImageManager = ({ serviceSlug, serviceTitle, fallbackImage }: Servi
                   src={displayUrl}
                   alt={`${label}: ${serviceTitle}`}
                   className="w-full h-full object-cover"
-                  style={
-                    img?.crop_data?.area
-                      ? {
-                          objectPosition: `${50 + (img.crop_data.area.x || 0)}% ${50 + (img.crop_data.area.y || 0)}%`,
-                        }
-                      : undefined
-                  }
                 />
               </div>
 
               <div className="space-y-2 flex-1 min-w-0">
                 <div className="flex flex-wrap gap-2">
+                  {/* Upload button */}
                   <Label htmlFor={`img-upload-${serviceSlug}-${key}`} className="cursor-pointer">
                     <div className="inline-flex items-center gap-1.5 px-3 py-1.5 bg-primary text-primary-foreground rounded-md hover:bg-primary/90 transition-colors text-xs font-medium">
                       {isUploading ? <Loader2 className="w-3 h-3 animate-spin" /> : <Upload className="w-3 h-3" />}
@@ -228,6 +261,16 @@ const ServiceImageManager = ({ serviceSlug, serviceTitle, fallbackImage }: Servi
                     disabled={isUploading}
                     className="hidden"
                   />
+
+                  {/* Gallery picker button */}
+                  <Button
+                    variant="outline"
+                    size="sm"
+                    className="h-7 text-xs"
+                    onClick={() => handleOpenGalleryPicker(key)}
+                  >
+                    <Images className="w-3 h-3 mr-1" /> Aus Galerie
+                  </Button>
 
                   {img && (
                     <>
@@ -259,8 +302,8 @@ const ServiceImageManager = ({ serviceSlug, serviceTitle, fallbackImage }: Servi
                   )}
                 </div>
 
-                {/* Use existing image from another type */}
-                {otherTypes.length > 0 && !img && (
+                {/* Reuse from other type */}
+                {otherTypes.length > 0 && (
                   <div className="flex flex-wrap gap-1.5">
                     {otherTypes.map((ot) => (
                       <Button
@@ -281,6 +324,7 @@ const ServiceImageManager = ({ serviceSlug, serviceTitle, fallbackImage }: Servi
         );
       })}
 
+      {/* Crop Dialog */}
       {cropDialog && (
         <CropDialog
           open={cropDialog.open}
@@ -288,11 +332,44 @@ const ServiceImageManager = ({ serviceSlug, serviceTitle, fallbackImage }: Servi
           imageUrl={cropDialog.imageUrl}
           aspect={cropDialog.aspect}
           title={cropDialog.title}
-          onCropComplete={(area, pixels) => {
-            handleCropSave(cropDialog.imageType, area, pixels);
+          onCropComplete={(blob) => {
+            handleCropSave(cropDialog.imageType, blob);
             setCropDialog(null);
           }}
         />
+      )}
+
+      {/* Gallery Picker Dialog */}
+      {galleryPicker && (
+        <Dialog open={galleryPicker.open} onOpenChange={(o) => !o && setGalleryPicker(null)}>
+          <DialogContent className="max-w-2xl max-h-[80vh] overflow-y-auto">
+            <DialogHeader>
+              <DialogTitle>Bild aus Galerie wählen</DialogTitle>
+            </DialogHeader>
+            {galleryPhotos.length === 0 ? (
+              <p className="text-sm text-muted-foreground text-center py-8">
+                Keine Galerie-Bilder vorhanden. Lade zuerst Bilder in die Galerie hoch.
+              </p>
+            ) : (
+              <div className="grid grid-cols-3 sm:grid-cols-4 gap-2">
+                {galleryPhotos.map((photo) => (
+                  <button
+                    key={photo.id}
+                    onClick={() => handleSelectGalleryPhoto(photo)}
+                    className="rounded-lg overflow-hidden border-2 border-transparent hover:border-primary transition-colors focus:outline-none focus:border-primary"
+                  >
+                    <img
+                      src={photo.file_url}
+                      alt={photo.file_name}
+                      className="w-full aspect-square object-cover"
+                      loading="lazy"
+                    />
+                  </button>
+                ))}
+              </div>
+            )}
+          </DialogContent>
+        </Dialog>
       )}
     </div>
   );
