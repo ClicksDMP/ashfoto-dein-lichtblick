@@ -73,20 +73,7 @@ serve(async (req) => {
       });
     }
 
-    // Check if user registered through booking flow (already got 10% directly)
-    const { data: existingBooking } = await supabase
-      .from("bookings")
-      .select("id")
-      .eq("user_id", user.id)
-      .limit(1)
-      .maybeSingle();
-
-    if (existingBooking) {
-      return new Response(JSON.stringify({ already_exists: true, reason: "registered_via_booking" }), {
-        status: 200,
-        headers: { ...corsHeaders, "Content-Type": "application/json" },
-      });
-    }
+    // Welcome coupon is always generated after email confirmation (no longer given as direct discount)
 
     // Generate 16-char code
     const chars = "ABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789";

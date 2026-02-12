@@ -392,10 +392,7 @@ const BookingFlow = ({ preselectedService, preselectedDealId, onClearDeal }: Boo
     if (booking.modelRelease) {
       total -= modelReleaseDiscount();
     }
-    // Apply welcome 10% if creating account during booking (on photo package only)
-    if (booking.createAccount && booking.photoPackage !== "none" && booking.photoPackage !== "" && !couponApplied) {
-      total -= booking.packagePrice * 0.1;
-    }
+    // Welcome discount is never applied directly – always sent as coupon for future use
     if (couponApplied) {
       if (couponApplied.photo_package_only && booking.photoPackage === "none") {
         // No discount if no photo package selected
@@ -1371,12 +1368,6 @@ const BookingFlow = ({ preselectedService, preselectedDealId, onClearDeal }: Boo
                             <span className="font-medium">−{formatPrice(modelReleaseDiscount())}</span>
                           </div>
                         )}
-                        {booking.createAccount && booking.photoPackage !== "none" && booking.photoPackage !== "" && !couponApplied && (
-                          <div className="flex justify-between text-primary">
-                            <span>Willkommensrabatt (10%)</span>
-                            <span className="font-medium">−{formatPrice(booking.packagePrice * 0.1)}</span>
-                          </div>
-                        )}
                         {couponApplied && (
                           <div className="flex justify-between text-primary">
                             <span>Gutschein: {couponApplied.title}</span>
@@ -1530,7 +1521,7 @@ const BookingFlow = ({ preselectedService, preselectedDealId, onClearDeal }: Boo
                 <div className="bg-accent/10 rounded-lg p-4 border border-accent/30">
                   <p className="text-sm font-semibold text-foreground">🎁 Willkommensrabatt</p>
                   <p className="text-sm text-muted-foreground">
-                    Mit deiner Registrierung erhältst du automatisch <strong>10% Rabatt</strong> auf dein Bildpaket – bereits im Preis enthalten!
+                    Nach Bestätigung deiner E-Mail erhältst du einen <strong>10% Gutscheincode</strong> per E-Mail, den du bei deiner nächsten Buchung einlösen kannst.
                   </p>
                 </div>
               )}
@@ -1596,8 +1587,16 @@ const BookingFlow = ({ preselectedService, preselectedDealId, onClearDeal }: Boo
                           password: booking.password,
                           options: { emailRedirectTo: window.location.origin },
                         });
-                        if (authError) throw new Error(authError.message);
-                        userId = authData.user?.id || null;
+                        if (authError) {
+                          // If user already exists, continue without creating account
+                          if (authError.message.includes("already registered") || authError.message.includes("already been registered")) {
+                            console.warn("User already exists, continuing without account creation");
+                          } else {
+                            throw new Error(authError.message);
+                          }
+                        } else {
+                          userId = authData.user?.id || null;
+                        }
 
                         // Update profile with form data
                         if (userId) {

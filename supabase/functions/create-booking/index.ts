@@ -35,6 +35,7 @@ const BABYBAUCH_KOMBI_PRICE = 49.99;
 const VALID_DEALS: Record<string, { service: string; duration: string; photoPackage: string; fixedPrice: number; validUntil: string }> = {
   "valentinstag-200": { service: "Paar Fotoshooting", duration: "1h", photoPackage: "10", fixedPrice: 199.99, validUntil: "2026-03-14" },
   "valentinstag-250": { service: "Paar Fotoshooting", duration: "1h", photoPackage: "15", fixedPrice: 249.99, validUntil: "2026-03-14" },
+  "akt-erotik-200": { service: "Akt und Erotik Fotoshooting", duration: "1h", photoPackage: "10", fixedPrice: 199.99, validUntil: "2026-03-14" },
 };
 
 function sanitize(str: string, maxLen = 500): string {
@@ -180,10 +181,7 @@ serve(async (req) => {
         totalPrice -= modelDiscount;
       }
 
-      // Apply welcome 10% discount on photo package for new registrations
-      if (welcomeDiscount && photoPackage !== "none" && photoPackage !== "" && !couponId) {
-        totalPrice -= packagePrice * 0.1;
-      }
+      // Welcome discount is never applied directly – always sent as coupon for future use
     }
 
     // Validate date format if provided
