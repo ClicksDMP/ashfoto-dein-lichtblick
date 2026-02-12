@@ -138,6 +138,29 @@ const templates: Record<string, (data: any) => { subject: string; html: string }
       </p>
     `),
   }),
+
+  upgrade_requested: (data) => ({
+    subject: "Dein Upgrade wurde angefragt! 📸 AshFoto",
+    html: emailWrapper(`
+      <h2 style="margin:0 0 16px;font-family:Georgia,'Times New Roman',serif;font-size:24px;color:#2e2621;">Dein Upgrade, ${data.firstName}! 🎉</h2>
+      <p style="margin:0 0 20px;font-size:16px;line-height:1.7;color:#5c4f44;">
+        Deine Upgrade-Anfrage für dein <strong>${data.service}</strong> ist eingegangen.
+      </p>
+      <table width="100%" cellpadding="0" cellspacing="0" style="background-color:#e8e0d6;border-radius:12px;margin:0 0 24px;">
+        <tr><td style="padding:24px;">
+          <table width="100%" cellpadding="0" cellspacing="0">
+            <tr><td style="padding:8px 0;font-size:14px;color:#8a7261;font-weight:600;width:140px;">Bisheriges Paket:</td><td style="padding:8px 0;font-size:14px;color:#2e2621;">${data.currentPackage}</td></tr>
+            <tr><td style="padding:8px 0;font-size:14px;color:#8a7261;font-weight:600;">Neues Paket:</td><td style="padding:8px 0;font-size:14px;color:#2e2621;">${data.newPackage}</td></tr>
+            ${data.extraPhotos > 0 ? `<tr><td style="padding:8px 0;font-size:14px;color:#8a7261;font-weight:600;">Einzelbilder:</td><td style="padding:8px 0;font-size:14px;color:#2e2621;">${data.extraPhotos} zusätzliche Fotos</td></tr>` : ''}
+            <tr><td style="padding:8px 0;font-size:14px;color:#8a7261;font-weight:600;">Aufpreis:</td><td style="padding:8px 0;font-size:16px;color:#2e2621;font-weight:700;">${data.upgradePrice}</td></tr>
+          </table>
+        </td></tr>
+      </table>
+      <p style="margin:0 0 20px;font-size:16px;line-height:1.7;color:#5c4f44;">
+        Wir melden uns bei dir zur Bestätigung und senden dir eine Rechnung. Die Buchung wird nach Zahlungseingang bestätigt.
+      </p>
+    `),
+  }),
 };
 
 serve(async (req) => {

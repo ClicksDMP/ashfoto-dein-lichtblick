@@ -9,7 +9,7 @@ import { Textarea } from "@/components/ui/textarea";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { format } from "date-fns";
-import { LogOut, Users, Calendar, Tag, Search, RefreshCw, CalendarDays, ImageIcon, MessageSquare } from "lucide-react";
+import { LogOut, Users, Calendar, Tag, Search, RefreshCw, CalendarDays, ImageIcon, MessageSquare, ArrowUpCircle } from "lucide-react";
 import type { Tables } from "@/integrations/supabase/types";
 import AdminCalendar from "@/components/admin/AdminCalendar";
 import AdminClients from "@/components/admin/AdminClients";
@@ -26,6 +26,7 @@ const AdminDashboard = () => {
   const [bookings, setBookings] = useState<Booking[]>([]);
   const [searchTerm, setSearchTerm] = useState("");
   const [offers, setOffers] = useState<Offer[]>([]);
+  const [upgrades, setUpgrades] = useState<any[]>([]);
   const [newOffer, setNewOffer] = useState({ title: "", description: "", discount_percent: "", discount_amount: "", code: "", valid_until: "" });
 
   const generateCode = () => {
@@ -44,7 +45,7 @@ const AdminDashboard = () => {
   }, [user, isAdmin, loading, navigate]);
 
   useEffect(() => {
-    if (isAdmin) { fetchBookings(); fetchOffers(); }
+    if (isAdmin) { fetchBookings(); fetchOffers(); fetchUpgrades(); }
   }, [isAdmin]);
 
   const fetchBookings = async () => {
@@ -55,6 +56,21 @@ const AdminDashboard = () => {
   const fetchOffers = async () => {
     const { data } = await supabase.from("offers").select("*").order("created_at", { ascending: false });
     if (data) setOffers(data);
+  };
+
+  const fetchUpgrades = async () => {
+    const { data } = await supabase.from("booking_upgrades").select("*").order("created_at", { ascending: false });
+    if (data) setUpgrades(data);
+  };
+
+  const getBookingUpgrades = (bookingId: string) => upgrades.filter(u => u.booking_id === bookingId);
+
+  const updateUpgradeStatus = async (id: string, status: string) => {
+    const updates: any = { status };
+    if (status === "confirmed") updates.confirmed_at = new Date().toISOString();
+    await supabase.from("booking_upgrades").update(updates).eq("id", id);
+    fetchUpgrades();
+    toast.success(`Upgrade ${status === "confirmed" ? "bestätigt" : "aktualisiert"}!`);
   };
 
   const updateBookingStatus = async (id: string, status: string) => {
@@ -177,6 +193,7 @@ const AdminDashboard = () => {
                     <TableHead>Preis</TableHead>
                     <TableHead>Status</TableHead>
                     <TableHead>MR</TableHead>
+                    <TableHead>Upgrades</TableHead>
                     <TableHead>Actions</TableHead>
                   </TableRow>
                 </TableHeader>
@@ -206,6 +223,31 @@ const AdminDashboard = () => {
                         )}
                       </TableCell>
                       <TableCell>
+                        {(() => {
+                          const bu = getBookingUpgrades(b.id);
+                          if (bu.length === 0) return <span className="text-xs text-muted-foreground">–</span>;
+                          return (
+                            <div className="space-y-1">
+                              {bu.map((u: any) => (
+                                <div key={u.id} className="flex items-center gap-1">
+                                  <span className={`px-2 py-0.5 rounded-full text-[10px] font-medium ${
+                                    u.status === "confirmed" ? "bg-green-100 text-green-800" :
+                                    u.status === "cancelled" ? "bg-red-100 text-red-700" :
+                                    "bg-blue-100 text-blue-800"
+                                  }`}>
+                                    <ArrowUpCircle className="w-3 h-3 inline mr-0.5" />
+                                    {formatPrice(u.total_upgrade_price)}
+                                  </span>
+                                  {u.status === "pending" && (
+                                    <Button size="sm" variant="ghost" className="h-5 w-5 p-0" onClick={() => updateUpgradeStatus(u.id, "confirmed")} title="Upgrade bestätigen">✓</Button>
+                                  )}
+                                </div>
+                              ))}
+                            </div>
+                          );
+                        })()}
+                      </TableCell>
+                      <TableCell>
                         <div className="flex gap-1">
                           {b.status !== "confirmed" && (
                             <Button size="sm" variant="ghost" onClick={() => updateBookingStatus(b.id, "confirmed")} title="Confirm">✓</Button>
@@ -221,7 +263,7 @@ const AdminDashboard = () => {
                     </TableRow>
                   ))}
                   {filteredBookings.length === 0 && (
-                    <TableRow><TableCell colSpan={9} className="text-center py-8 text-muted-foreground">No bookings found</TableCell></TableRow>
+                    <TableRow><TableCell colSpan={10} className="text-center py-8 text-muted-foreground">No bookings found</TableCell></TableRow>
                   )}
                 </TableBody>
               </Table>
