@@ -63,7 +63,7 @@ interface BookingData {
 
 const INITIAL_BOOKING: BookingData = {
   service: "",
-  participants: { adults: 1, children: 0, babies: 0, animals: 0 },
+  participants: { adults: 0, children: 0, babies: 0, animals: 0 },
   duration: "",
   durationPrice: 0,
   photoPackage: "",
@@ -364,8 +364,44 @@ const BookingFlow = ({ preselectedService, preselectedDealId, onClearDeal }: Boo
   const canSelectOhne = !isMini && !requiresAllFotos;
 
   const modelReleaseDiscount = () => {
-    if (!booking.modelRelease || !booking.durationPrice) return 0;
+    if (!booking.durationPrice) return 0;
     return Math.min(99.99, booking.durationPrice);
+  };
+
+  // Validation helpers
+  const totalParticipants = booking.participants.adults + booking.participants.children + booking.participants.babies + booking.participants.animals;
+  
+  const step1Valid = !!booking.service && totalParticipants > 0;
+  const step1Errors = () => {
+    const errs: string[] = [];
+    if (!booking.service) errs.push("Bitte wähle ein Shooting aus");
+    if (totalParticipants === 0) errs.push("Bitte gib mindestens einen Teilnehmer an");
+    return errs;
+  };
+
+  const step2Valid = !!booking.duration && !!booking.photoPackage;
+  const step2Errors = () => {
+    const errs: string[] = [];
+    if (!booking.duration) errs.push("Bitte wähle eine Shooting-Dauer");
+    if (!booking.photoPackage) errs.push("Bitte wähle ein Bildpaket");
+    return errs;
+  };
+
+  const step3DateTimeValid = !!booking.date && !!booking.time;
+  const step3FormValid = !!booking.firstName && !!booking.lastName && !!booking.email && !!booking.phone && !!booking.street && !!booking.zip && !!booking.city && booking.agreedToTerms && (!booking.createAccount || (booking.password.length >= 6 && booking.password === booking.passwordRepeat));
+  const step3FormErrors = () => {
+    const errs: string[] = [];
+    if (!booking.firstName) errs.push("Vorname fehlt");
+    if (!booking.lastName) errs.push("Nachname fehlt");
+    if (!booking.email) errs.push("E-Mail fehlt");
+    if (!booking.phone) errs.push("Telefonnummer fehlt");
+    if (!booking.street) errs.push("Straße fehlt");
+    if (!booking.zip) errs.push("PLZ fehlt");
+    if (!booking.city) errs.push("Ort fehlt");
+    if (!booking.agreedToTerms) errs.push("Bitte akzeptiere die AGB und Datenschutzerklärung");
+    if (booking.createAccount && booking.password.length < 6) errs.push("Passwort muss mindestens 6 Zeichen haben");
+    if (booking.createAccount && booking.password !== booking.passwordRepeat) errs.push("Passwörter stimmen nicht überein");
+    return errs;
   };
 
   const totalPrice = () => {
@@ -806,9 +842,17 @@ const BookingFlow = ({ preselectedService, preselectedDealId, onClearDeal }: Boo
                     >
                       <Minus className="w-4 h-4 text-foreground" />
                     </button>
-                    <span className="w-8 text-center font-semibold text-foreground">
-                      {booking.participants[key]}
-                    </span>
+                    <Input
+                      type="number"
+                      min={0}
+                      max={20}
+                      value={booking.participants[key]}
+                      onChange={e => {
+                        const val = Math.max(0, Math.min(20, parseInt(e.target.value) || 0));
+                        setBooking(prev => ({ ...prev, participants: { ...prev.participants, [key]: val } }));
+                      }}
+                      className="w-14 h-9 text-center font-semibold text-foreground p-0"
+                    />
                     <button
                       onClick={() => updateParticipant(key, 1)}
                       className="w-9 h-9 rounded-full bg-secondary flex items-center justify-center hover:bg-muted transition-colors"
@@ -821,7 +865,12 @@ const BookingFlow = ({ preselectedService, preselectedDealId, onClearDeal }: Boo
             </div>
 
             <div className="text-center">
-              <Button variant="booking" size="lg" onClick={() => { setCurrentStep(2); scrollToStep(3); }}>
+              {!step1Valid && step1Errors().length > 0 && booking.service && (
+                <div className="mb-3 text-sm text-destructive space-y-1">
+                  {step1Errors().map((e, i) => <p key={i}>⚠️ {e}</p>)}
+                </div>
+              )}
+              <Button variant="booking" size="lg" disabled={!step1Valid} onClick={() => { setCurrentStep(2); scrollToStep(3); }}>
                 Weiter
               </Button>
             </div>
@@ -895,7 +944,7 @@ const BookingFlow = ({ preselectedService, preselectedDealId, onClearDeal }: Boo
                       Nur gültig mit Alle Fotos Paket 449,99 €
                     </p>
                     <p className="text-sm font-semibold text-primary mt-1">
-                      Gesamtpreis 499,99 € · Flexibler Termin
+                      Gesamtpreis {formatPrice(booking.durationPrice + 449.99 + 49.99)} · Flexibler Termin
                     </p>
                   </label>
                 </div>
@@ -1027,10 +1076,16 @@ const BookingFlow = ({ preselectedService, preselectedDealId, onClearDeal }: Boo
               </div>
 
               <div className="text-center pt-4">
+                {!step3DateTimeValid && (booking.date || booking.time) && (
+                  <div className="mb-3 text-sm text-destructive space-y-1">
+                    {!booking.date && <p>⚠️ Bitte wähle ein Datum</p>}
+                    {!booking.time && booking.date && <p>⚠️ Bitte wähle eine Uhrzeit</p>}
+                  </div>
+                )}
                 <Button
                   variant="booking"
                   size="lg"
-                  disabled={!booking.date || !booking.time}
+                  disabled={!step3DateTimeValid}
                   onClick={() => scrollToStep(6)}
                 >
                   Weiter
@@ -1235,7 +1290,7 @@ const BookingFlow = ({ preselectedService, preselectedDealId, onClearDeal }: Boo
                   />
                   <label htmlFor="modelRelease" className="cursor-pointer">
                     <p className="font-display font-bold text-foreground text-sm">
-                      📸 Spare {formatPrice(modelReleaseDiscount())} auf deine Shooting-Zeit!
+                      📸 Spare bis zu 99,99 € auf deine Shooting-Zeit!
                     </p>
                     <p className="text-xs text-muted-foreground mt-1 leading-relaxed">
                       Ich erteile dem Fotografen (Ashraf AlSalaita, Clicks DMP) das unwiderrufliche, zeitlich und
@@ -1417,15 +1472,15 @@ const BookingFlow = ({ preselectedService, preselectedDealId, onClearDeal }: Boo
               </div>
 
               <div className="text-center pt-4">
+                {!step3FormValid && step3FormErrors().length > 0 && (booking.firstName || booking.lastName || booking.email) && (
+                  <div className="mb-3 text-sm text-destructive space-y-1">
+                    {step3FormErrors().map((e, i) => <p key={i}>⚠️ {e}</p>)}
+                  </div>
+                )}
                 <Button
                   variant="booking"
                   size="lg"
-                  disabled={
-                    !booking.firstName || !booking.lastName || !booking.email ||
-                    !booking.phone || !booking.street || !booking.zip ||
-                    !booking.city || !booking.agreedToTerms ||
-                    (booking.createAccount && (booking.password.length < 6 || booking.password !== booking.passwordRepeat))
-                  }
+                  disabled={!step3FormValid}
                   onClick={() => { setCurrentStep(4); scrollToStep(7); }}
                 >
                   Weiter zur Zusammenfassung
