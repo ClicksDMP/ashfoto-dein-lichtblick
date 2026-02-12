@@ -214,12 +214,20 @@ serve(async (req) => {
 
     // Apply coupon if provided (works for both deal and regular)
     if (couponId) {
-      const { data: coupon } = await supabase
+      let couponQuery = supabase
         .from("offers")
-        .select("id, discount_percent, discount_amount, is_active, single_use, used_at, valid_until, photo_package_only")
+        .select("id, discount_percent, discount_amount, is_active, single_use, used_at, valid_until, photo_package_only, target_user_id")
         .eq("id", couponId)
-        .eq("is_active", true)
-        .maybeSingle();
+        .eq("is_active", true);
+
+      // Only allow targeted coupons for the intended user
+      if (userId) {
+        couponQuery = couponQuery.or(`target_user_id.is.null,target_user_id.eq.${userId}`);
+      } else {
+        couponQuery = couponQuery.is("target_user_id", null);
+      }
+
+      const { data: coupon } = await couponQuery.maybeSingle();
 
       if (coupon) {
         if (coupon.valid_until && new Date(coupon.valid_until) < new Date()) {
