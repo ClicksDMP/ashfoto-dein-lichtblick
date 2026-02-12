@@ -165,27 +165,6 @@ const RevealCard = ({ photo, index, onClick }: RevealCardProps) => {
           style={{ backgroundColor: overlay }}
         />
 
-        {/* Centered Ash Photo logo */}
-        <div className="absolute inset-0 flex flex-col items-center justify-center">
-          <motion.div
-            style={{
-              opacity: useTransform(scrollYProgress, [0.15, 0.35, 0.65, 0.85], [0, 1, 1, 0]),
-            }}
-            className="text-center"
-          >
-            <h3 className="font-display text-4xl md:text-6xl lg:text-7xl font-bold text-primary-foreground tracking-wider select-none">
-              Ash Photo
-            </h3>
-            <div className="mt-3 flex items-center justify-center gap-3">
-              <div className="h-px w-12 md:w-20 bg-primary-foreground/40" />
-              <span className="font-body text-primary-foreground/60 text-xs md:text-sm tracking-[0.35em] uppercase">
-                Portfolio
-              </span>
-              <div className="h-px w-12 md:w-20 bg-primary-foreground/40" />
-            </div>
-          </motion.div>
-        </div>
-
         {/* Photo counter bottom-right */}
         <div className="absolute bottom-6 right-6 font-body text-primary-foreground/50 text-sm select-none">
           {String(index + 1).padStart(2, "0")}
