@@ -2,6 +2,7 @@ import { useState } from "react";
 import heroBg from "@/assets/hero-bg.jpg";
 import { Button } from "@/components/ui/button";
 import SignUpDialog from "@/components/SignUpDialog";
+import ConsultationDialog from "@/components/ConsultationDialog";
 import { useHomepageHeroImage } from "@/hooks/useHomepageImages";
 import { Camera } from "lucide-react";
 
@@ -12,6 +13,7 @@ interface HeroSectionProps {
 
 const HeroSection = ({ onBookClick, onConsultClick }: HeroSectionProps) => {
   const [signUpOpen, setSignUpOpen] = useState(false);
+  const [consultOpen, setConsultOpen] = useState(false);
   const heroImage = useHomepageHeroImage("");
 
   return (
@@ -59,7 +61,7 @@ const HeroSection = ({ onBookClick, onConsultClick }: HeroSectionProps) => {
             <Button variant="hero" size="xl" onClick={onBookClick}>
               Jetzt Termin buchen
             </Button>
-            <Button variant="heroOutline" size="xl" onClick={onConsultClick}>
+            <Button variant="heroOutline" size="xl" onClick={() => setConsultOpen(true)}>
               Kostenlose Beratung anfragen
             </Button>
             <Button variant="heroOutline" size="xl" onClick={() => setSignUpOpen(true)}>
@@ -70,6 +72,7 @@ const HeroSection = ({ onBookClick, onConsultClick }: HeroSectionProps) => {
       </div>
 
       <SignUpDialog open={signUpOpen} onOpenChange={setSignUpOpen} />
+      <ConsultationDialog open={consultOpen} onOpenChange={setConsultOpen} />
     </section>
   );
 };
