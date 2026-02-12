@@ -1,38 +1,18 @@
-import { useEffect, useState, useCallback, useRef } from "react";
+import { useEffect, useState, useCallback } from "react";
 import { createPortal } from "react-dom";
 import { supabase } from "@/integrations/supabase/client";
-import { motion, useScroll, useTransform, AnimatePresence } from "framer-motion";
-import { X, ChevronLeft, ChevronRight } from "lucide-react";
+import { motion, AnimatePresence } from "framer-motion";
+import { Expand, X, ChevronLeft, ChevronRight } from "lucide-react";
 
 interface ServiceGalleryProps {
   serviceSlug: string;
   fallbackImage: string;
 }
 
-type Photo = { id: string; file_url: string; file_name: string };
-
-/* ── Overlay color palette (classical muted tones) ────────── */
-const overlayColors = [
-  "rgba(62, 47, 40, 0.55)",   // warm umber
-  "rgba(44, 54, 57, 0.55)",   // slate charcoal
-  "rgba(72, 60, 50, 0.55)",   // bronze brown
-  "rgba(38, 50, 46, 0.55)",   // deep forest
-  "rgba(58, 42, 48, 0.55)",   // muted plum
-  "rgba(50, 50, 62, 0.55)",   // dusty indigo
-];
-
-/* ── Direction configs for alternating reveals ────────────── */
-const slideDirections = [
-  { x: "-100%", y: "0%" },   // from left
-  { x: "100%",  y: "0%" },   // from right
-  { x: "0%",    y: "-100%" }, // from top
-  { x: "0%",    y: "100%" },  // from bottom
-];
-
 /* ── Lightbox ─────────────────────────────────────────────── */
 
 interface LightboxProps {
-  photos: Photo[];
+  photos: { id: string; file_url: string; file_name: string }[];
   index: number;
   onClose: () => void;
   onPrev: () => void;
@@ -40,6 +20,7 @@ interface LightboxProps {
 }
 
 const Lightbox = ({ photos, index, onClose, onPrev, onNext }: LightboxProps) => {
+  // Keyboard nav
   useEffect(() => {
     const handler = (e: KeyboardEvent) => {
       if (e.key === "Escape") onClose();
@@ -61,6 +42,7 @@ const Lightbox = ({ photos, index, onClose, onPrev, onNext }: LightboxProps) => 
       className="fixed inset-0 z-[9999] flex items-center justify-center bg-warm-dark/90 backdrop-blur-sm"
       onClick={onClose}
     >
+      {/* Close */}
       <button
         onClick={onClose}
         className="absolute top-5 right-5 z-10 p-2 rounded-full bg-warm-dark/60 text-warm-white/80 hover:text-warm-white transition-colors"
@@ -69,25 +51,29 @@ const Lightbox = ({ photos, index, onClose, onPrev, onNext }: LightboxProps) => 
         <X className="w-6 h-6" />
       </button>
 
+      {/* Prev */}
       {photos.length > 1 && (
-        <>
-          <button
-            onClick={(e) => { e.stopPropagation(); onPrev(); }}
-            className="absolute left-4 md:left-8 z-10 p-2 rounded-full bg-warm-dark/60 text-warm-white/80 hover:text-warm-white transition-colors"
-            aria-label="Vorheriges Bild"
-          >
-            <ChevronLeft className="w-7 h-7" />
-          </button>
-          <button
-            onClick={(e) => { e.stopPropagation(); onNext(); }}
-            className="absolute right-4 md:right-8 z-10 p-2 rounded-full bg-warm-dark/60 text-warm-white/80 hover:text-warm-white transition-colors"
-            aria-label="Nächstes Bild"
-          >
-            <ChevronRight className="w-7 h-7" />
-          </button>
-        </>
+        <button
+          onClick={(e) => { e.stopPropagation(); onPrev(); }}
+          className="absolute left-4 md:left-8 z-10 p-2 rounded-full bg-warm-dark/60 text-warm-white/80 hover:text-warm-white transition-colors"
+          aria-label="Vorheriges Bild"
+        >
+          <ChevronLeft className="w-7 h-7" />
+        </button>
       )}
 
+      {/* Next */}
+      {photos.length > 1 && (
+        <button
+          onClick={(e) => { e.stopPropagation(); onNext(); }}
+          className="absolute right-4 md:right-8 z-10 p-2 rounded-full bg-warm-dark/60 text-warm-white/80 hover:text-warm-white transition-colors"
+          aria-label="Nächstes Bild"
+        >
+          <ChevronRight className="w-7 h-7" />
+        </button>
+      )}
+
+      {/* Image */}
       <motion.img
         key={photo.id}
         initial={{ opacity: 0, scale: 0.92 }}
@@ -101,6 +87,7 @@ const Lightbox = ({ photos, index, onClose, onPrev, onNext }: LightboxProps) => 
         draggable={false}
       />
 
+      {/* Counter */}
       <div className="absolute bottom-5 left-1/2 -translate-x-1/2 text-warm-white/60 font-body text-sm">
         {index + 1} / {photos.length}
       </div>
@@ -109,77 +96,10 @@ const Lightbox = ({ photos, index, onClose, onPrev, onNext }: LightboxProps) => 
   );
 };
 
-/* ── Full-screen reveal card ──────────────────────────────── */
-
-interface RevealCardProps {
-  photo: Photo;
-  index: number;
-  onClick: () => void;
-}
-
-const RevealCard = ({ photo, index, onClick }: RevealCardProps) => {
-  const ref = useRef<HTMLDivElement>(null);
-  const [ready, setReady] = useState(false);
-
-  // Delay scroll tracking to prevent scroll-jump on mount
-  useEffect(() => {
-    const timer = setTimeout(() => setReady(true), 300);
-    return () => clearTimeout(timer);
-  }, []);
-
-  const { scrollYProgress } = useScroll({
-    target: ready ? ref : undefined,
-    offset: ["start end", "end start"],
-  });
-
-  const dir = slideDirections[index % slideDirections.length];
-
-  // Image slides in from direction as user scrolls into view
-  const x = useTransform(
-    scrollYProgress,
-    [0, 0.2, 0.8, 1],
-    [dir.x, "0%", "0%", "0%"]
-  );
-  const y = useTransform(
-    scrollYProgress,
-    [0, 0.2, 0.8, 1],
-    [dir.y, "0%", "0%", "0%"]
-  );
-  const opacity = useTransform(scrollYProgress, [0, 0.15, 0.85, 1], [0, 1, 1, 0.2]);
-  const scale = useTransform(scrollYProgress, [0, 0.2, 0.8, 1], [0.92, 1, 1, 0.97]);
-
-  return (
-    <div
-      ref={ref}
-      className="h-screen w-full flex items-center justify-center sticky top-0 overflow-hidden cursor-pointer"
-      onClick={onClick}
-    >
-      <motion.div
-        style={{ x, y, opacity, scale }}
-        className="relative w-full h-full"
-      >
-        {/* Full-screen image */}
-        <img
-          src={photo.file_url}
-          alt={photo.file_name}
-          className="w-full h-full object-cover"
-          loading="lazy"
-        />
-
-
-        {/* Photo counter bottom-right */}
-        <div className="absolute bottom-6 right-6 font-body text-primary-foreground/50 text-sm select-none">
-          {String(index + 1).padStart(2, "0")}
-        </div>
-      </motion.div>
-    </div>
-  );
-};
-
-/* ── Gallery ──────────────────────────────────────────────── */
+/* ── Gallery Grid ─────────────────────────────────────────── */
 
 const ServiceGallery = ({ serviceSlug, fallbackImage }: ServiceGalleryProps) => {
-  const [photos, setPhotos] = useState<Photo[]>([]);
+  const [photos, setPhotos] = useState<{ id: string; file_url: string; file_name: string }[]>([]);
   const [loading, setLoading] = useState(true);
   const [lightboxIndex, setLightboxIndex] = useState<number | null>(null);
 
@@ -190,7 +110,9 @@ const ServiceGallery = ({ serviceSlug, fallbackImage }: ServiceGalleryProps) => 
         .select("id, file_url, file_name")
         .eq("service_slug", serviceSlug)
         .order("sort_order", { ascending: true });
-      if (data && data.length > 0) setPhotos(data);
+      if (data && data.length > 0) {
+        setPhotos(data);
+      }
       setLoading(false);
     };
     fetchPhotos();
@@ -198,14 +120,14 @@ const ServiceGallery = ({ serviceSlug, fallbackImage }: ServiceGalleryProps) => 
 
   const openLightbox = useCallback((i: number) => setLightboxIndex(i), []);
   const closeLightbox = useCallback(() => setLightboxIndex(null), []);
-  const goPrev = useCallback(() => setLightboxIndex((p) => (p !== null ? (p - 1 + photos.length) % photos.length : null)), [photos.length]);
-  const goNext = useCallback(() => setLightboxIndex((p) => (p !== null ? (p + 1) % photos.length : null)), [photos.length]);
+  const goPrev = useCallback(() => setLightboxIndex((prev) => (prev !== null ? (prev - 1 + photos.length) % photos.length : null)), [photos.length]);
+  const goNext = useCallback(() => setLightboxIndex((prev) => (prev !== null ? (prev + 1) % photos.length : null)), [photos.length]);
 
   if (loading) {
     return (
-      <div className="space-y-4">
-        {[1, 2, 3].map((i) => (
-          <div key={i} className="h-screen w-full bg-secondary/20 animate-pulse rounded-xl" />
+      <div className="columns-1 md:columns-2 lg:columns-3 gap-4 space-y-4">
+        {[1, 2, 3, 4, 5, 6].map((i) => (
+          <div key={i} className="w-full h-64 bg-secondary/30 rounded-xl animate-pulse break-inside-avoid" />
         ))}
       </div>
     );
@@ -218,17 +140,34 @@ const ServiceGallery = ({ serviceSlug, fallbackImage }: ServiceGalleryProps) => 
 
   return (
     <>
-      <div className="relative">
+      <div className="columns-1 md:columns-2 lg:columns-3 gap-4 space-y-4">
         {displayPhotos.map((photo, i) => (
-          <RevealCard
+          <motion.div
             key={photo.id}
-            photo={photo}
-            index={i}
+            initial={{ opacity: 0, y: 40, scale: 0.97 }}
+            whileInView={{ opacity: 1, y: 0, scale: 1 }}
+            viewport={{ once: true, margin: "-60px" }}
+            transition={{ duration: 0.5, delay: i * 0.08, type: "spring", stiffness: 120 }}
+            className="break-inside-avoid group relative cursor-pointer rounded-xl overflow-hidden"
             onClick={() => openLightbox(i)}
-          />
+          >
+            <img
+              src={photo.file_url}
+              alt={photo.file_name}
+              className="w-full h-auto rounded-xl transition-transform duration-700 ease-out group-hover:scale-[1.04]"
+              loading="lazy"
+            />
+            {/* Hover overlay */}
+            <div className="absolute inset-0 bg-warm-dark/0 group-hover:bg-warm-dark/30 transition-colors duration-300 flex items-center justify-center rounded-xl">
+              <div className="opacity-0 group-hover:opacity-100 transition-opacity duration-300 p-3 rounded-full bg-warm-white/20 backdrop-blur-sm">
+                <Expand className="w-6 h-6 text-warm-white" />
+              </div>
+            </div>
+          </motion.div>
         ))}
       </div>
 
+      {/* Lightbox */}
       <AnimatePresence>
         {lightboxIndex !== null && (
           <Lightbox

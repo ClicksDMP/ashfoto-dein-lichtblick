@@ -1,4 +1,4 @@
-import { useRef, useCallback, useEffect, useLayoutEffect, useState } from "react";
+import { useRef, useCallback, useEffect, useLayoutEffect } from "react";
 import { Link } from "react-router-dom";
 import { motion, useScroll, useTransform } from "framer-motion";
 import { ArrowLeft, CheckCircle2, ChevronDown, Star, Camera, Heart, Sparkles, Shield } from "lucide-react";
@@ -60,15 +60,8 @@ const LOCATION_FAQ = {
 
 const ParallaxDivider = ({ src, alt }: { src: string; alt: string }) => {
   const ref = useRef<HTMLDivElement>(null);
-  const [ready, setReady] = useState(false);
-
-  useEffect(() => {
-    const timer = setTimeout(() => setReady(true), 400);
-    return () => clearTimeout(timer);
-  }, []);
-
   const { scrollYProgress } = useScroll({
-    target: ready ? ref : undefined,
+    target: ref,
     offset: ["start end", "end start"],
   });
   const y = useTransform(scrollYProgress, [0, 1], ["-15%", "15%"]);
@@ -78,7 +71,7 @@ const ParallaxDivider = ({ src, alt }: { src: string; alt: string }) => {
       <motion.img
         src={src}
         alt={alt}
-        style={{ y: ready ? y : 0, filter: "brightness(0.85)" }}
+        style={{ y, filter: "brightness(0.85)" }}
         className="absolute inset-0 w-full h-[130%] object-cover object-center -top-[15%]"
         loading="lazy"
       />
@@ -109,26 +102,8 @@ const ServiceLandingPage = ({ service }: ServiceLandingPageProps) => {
     bookingRef.current?.scrollIntoView({ behavior: "smooth", block: "start" });
   }, []);
 
-  // Force scroll to top: hide overflow to prevent any scroll jumps during mount
   useLayoutEffect(() => {
-    document.documentElement.style.overflow = "hidden";
-    window.scrollTo(0, 0);
-    document.documentElement.scrollTop = 0;
-    document.body.scrollTop = 0;
-    
-    // Re-enable overflow after paint
-    const raf = requestAnimationFrame(() => {
-      window.scrollTo(0, 0);
-      requestAnimationFrame(() => {
-        window.scrollTo(0, 0);
-        document.documentElement.style.overflow = "";
-      });
-    });
-    
-    return () => {
-      cancelAnimationFrame(raf);
-      document.documentElement.style.overflow = "";
-    };
+    window.scrollTo({ top: 0, left: 0, behavior: "instant" });
   }, [service.slug]);
 
   // SEO: update document title, meta, and JSON-LD
@@ -398,9 +373,9 @@ const ServiceLandingPage = ({ service }: ServiceLandingPageProps) => {
         </div>
       </section>
 
-      {/* ── IMMERSIVE PHOTO GALLERY ────────────────────────── */}
-      <section className="bg-warm-dark">
-        <div className="container mx-auto px-6 md:px-12 max-w-6xl py-20">
+      {/* ── PHOTO GALLERY ────────────────────────────────────── */}
+      <section className="py-20 bg-warm-ivory">
+        <div className="container mx-auto px-6 md:px-12 max-w-6xl">
           <motion.div
             initial="hidden"
             whileInView="visible"
@@ -409,22 +384,24 @@ const ServiceLandingPage = ({ service }: ServiceLandingPageProps) => {
           >
             <motion.h2
               variants={fadeUp}
-              className="font-display text-3xl md:text-4xl font-bold text-warm-white mb-4 text-center"
+              className="font-display text-3xl md:text-4xl font-bold text-foreground mb-4 text-center"
             >
               Galerie
             </motion.h2>
             <motion.p
               variants={fadeUp}
-              className="text-warm-white/60 text-center mb-4"
+              className="text-muted-foreground text-center mb-10"
             >
               Eindrücke aus vergangenen Shootings
             </motion.p>
+            <motion.div variants={fadeUp}>
+              <ServiceGallery
+                serviceSlug={service.slug}
+                fallbackImage={heroImage}
+              />
+            </motion.div>
           </motion.div>
         </div>
-        <ServiceGallery
-          serviceSlug={service.slug}
-          fallbackImage={heroImage}
-        />
       </section>
 
       <SectionDivider />
