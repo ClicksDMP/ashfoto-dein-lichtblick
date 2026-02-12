@@ -98,6 +98,14 @@ const Lightbox = ({ photos, index, onClose, onPrev, onNext }: LightboxProps) => 
 
 /* ── Gallery Grid ─────────────────────────────────────────── */
 
+/* Direction patterns for reveal animations */
+const revealDirections = [
+  { initial: { opacity: 0, x: -80 }, label: "left" },   // left to right
+  { initial: { opacity: 0, x: 80 }, label: "right" },    // right to left
+  { initial: { opacity: 0, y: -60 }, label: "up" },      // up to down
+  { initial: { opacity: 0, y: 60 }, label: "down" },     // down to up
+];
+
 const ServiceGallery = ({ serviceSlug, fallbackImage }: ServiceGalleryProps) => {
   const [photos, setPhotos] = useState<{ id: string; file_url: string; file_name: string }[]>([]);
   const [loading, setLoading] = useState(true);
@@ -141,30 +149,48 @@ const ServiceGallery = ({ serviceSlug, fallbackImage }: ServiceGalleryProps) => 
   return (
     <>
       <div className="columns-1 md:columns-2 lg:columns-3 gap-4 space-y-4">
-        {displayPhotos.map((photo, i) => (
-          <motion.div
-            key={photo.id}
-            initial={{ opacity: 0, y: 40, scale: 0.97 }}
-            whileInView={{ opacity: 1, y: 0, scale: 1 }}
-            viewport={{ once: true, margin: "-60px" }}
-            transition={{ duration: 0.5, delay: i * 0.08, type: "spring", stiffness: 120 }}
-            className="break-inside-avoid group relative cursor-pointer rounded-xl overflow-hidden"
-            onClick={() => openLightbox(i)}
-          >
-            <img
-              src={photo.file_url}
-              alt={photo.file_name}
-              className="w-full h-auto rounded-xl transition-transform duration-700 ease-out group-hover:scale-[1.04]"
-              loading="lazy"
-            />
-            {/* Hover overlay */}
-            <div className="absolute inset-0 bg-warm-dark/0 group-hover:bg-warm-dark/30 transition-colors duration-300 flex items-center justify-center rounded-xl">
-              <div className="opacity-0 group-hover:opacity-100 transition-opacity duration-300 p-3 rounded-full bg-warm-white/20 backdrop-blur-sm">
-                <Expand className="w-6 h-6 text-warm-white" />
+        {displayPhotos.map((photo, i) => {
+          const dir = revealDirections[i % revealDirections.length];
+          return (
+            <motion.div
+              key={photo.id}
+              initial={{ ...dir.initial, scale: 0.95 }}
+              whileInView={{ opacity: 1, x: 0, y: 0, scale: 1 }}
+              viewport={{ once: true, margin: "-80px" }}
+              transition={{
+                duration: 0.7,
+                delay: 0.1,
+                type: "spring",
+                stiffness: 80,
+                damping: 18,
+              }}
+              className="break-inside-avoid group relative cursor-pointer rounded-xl overflow-hidden"
+              onClick={() => openLightbox(i)}
+            >
+              <img
+                src={photo.file_url}
+                alt={photo.file_name}
+                className="w-full h-auto rounded-xl transition-transform duration-700 ease-out group-hover:scale-[1.04]"
+                loading="lazy"
+              />
+
+              {/* Persistent branded overlay */}
+              <div className="absolute inset-0 rounded-xl bg-gradient-to-t from-foreground/50 via-foreground/10 to-transparent opacity-60 group-hover:opacity-80 transition-opacity duration-500" />
+
+              {/* Logo watermark */}
+              <div className="absolute bottom-3 right-3 font-display text-primary-foreground/70 text-sm tracking-widest select-none pointer-events-none group-hover:text-primary-foreground/90 transition-colors duration-300">
+                ashfoto
               </div>
-            </div>
-          </motion.div>
-        ))}
+
+              {/* Hover expand icon */}
+              <div className="absolute inset-0 flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity duration-300">
+                <div className="p-3 rounded-full bg-background/20 backdrop-blur-sm">
+                  <Expand className="w-6 h-6 text-primary-foreground" />
+                </div>
+              </div>
+            </motion.div>
+          );
+        })}
       </div>
 
       {/* Lightbox */}
