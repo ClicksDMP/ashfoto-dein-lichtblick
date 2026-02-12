@@ -159,11 +159,6 @@ const RevealCard = ({ photo, index, onClick }: RevealCardProps) => {
           loading="lazy"
         />
 
-        {/* Classical muted overlay */}
-        <div
-          className="absolute inset-0 transition-opacity duration-700"
-          style={{ backgroundColor: overlay }}
-        />
 
         {/* Photo counter bottom-right */}
         <div className="absolute bottom-6 right-6 font-body text-primary-foreground/50 text-sm select-none">
