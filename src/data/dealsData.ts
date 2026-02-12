@@ -1,4 +1,5 @@
 import imgPaar from "@/assets/shooting-paar.jpg";
+import imgAkt from "@/assets/shooting-akt.jpg";
 
 export interface Deal {
   id: string;
@@ -35,20 +36,20 @@ export const DEALS: Deal[] = [
     description: "Das perfekte Geschenk zum Valentinstag – ein romantisches Paar-Shooting mit 10 professionell bearbeiteten Bildern.",
   },
   {
-    id: "valentinstag-250",
-    title: "Valentinstag Premium 💖",
-    subtitle: "Paar Fotoshooting · 1 Stunde · 15 Bilder",
-    service: "Paar Fotoshooting",
+    id: "akt-erotik-200",
+    title: "Akt & Erotik Special 🔥",
+    subtitle: "Akt und Erotik Fotoshooting · 1 Stunde · 10 Bilder",
+    service: "Akt und Erotik Fotoshooting",
     duration: "1h",
     durationLabel: "1 Stunde",
-    photoPackage: "15",
-    photoPackageLabel: "15 Bilder",
-    fixedPrice: 249.99,
-    originalPrice: 309.98,
-    image: imgPaar,
-    badge: "Spare 60 €",
+    photoPackage: "10",
+    photoPackageLabel: "10 Bilder",
+    fixedPrice: 199.99,
+    originalPrice: 269.98,
+    image: imgAkt,
+    badge: "Spare 70 €",
     validUntil: "2026-03-14",
-    description: "Mehr Bilder, mehr Erinnerungen – dein Premium Valentinstag Paar-Shooting mit 15 bearbeiteten Fotos.",
+    description: "Entdecke deine sinnliche Seite – ein professionelles Akt-Shooting mit 10 kunstvoll bearbeiteten Bildern.",
   },
 ];
 
