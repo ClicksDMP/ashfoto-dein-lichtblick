@@ -9,12 +9,13 @@ import { Textarea } from "@/components/ui/textarea";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { format } from "date-fns";
-import { LogOut, Users, Calendar, Tag, Search, RefreshCw, CalendarDays, ImageIcon, MessageSquare, ArrowUpCircle } from "lucide-react";
+import { LogOut, Users, Calendar, Tag, Search, RefreshCw, CalendarDays, ImageIcon, MessageSquare, ArrowUpCircle, PhoneCall } from "lucide-react";
 import type { Tables } from "@/integrations/supabase/types";
 import AdminCalendar from "@/components/admin/AdminCalendar";
 import AdminClients from "@/components/admin/AdminClients";
 import AdminGallery from "@/components/admin/AdminGallery";
 import AdminFeedbacks from "@/components/admin/AdminFeedbacks";
+import AdminConsultations from "@/components/admin/AdminConsultations";
 import { toast } from "sonner";
 
 type Booking = Tables<"bookings">;
@@ -162,6 +163,7 @@ const AdminDashboard = () => {
             <TabsTrigger value="offers" className="gap-2"><Tag className="w-4 h-4" />Offers</TabsTrigger>
             <TabsTrigger value="gallery" className="gap-2"><ImageIcon className="w-4 h-4" />Gallery</TabsTrigger>
             <TabsTrigger value="feedbacks" className="gap-2"><MessageSquare className="w-4 h-4" />Feedbacks</TabsTrigger>
+            <TabsTrigger value="consultations" className="gap-2"><PhoneCall className="w-4 h-4" />Beratungen</TabsTrigger>
           </TabsList>
 
           <TabsContent value="calendar">
@@ -368,6 +370,7 @@ const AdminDashboard = () => {
 
           <TabsContent value="gallery"><AdminGallery /></TabsContent>
           <TabsContent value="feedbacks"><AdminFeedbacks /></TabsContent>
+          <TabsContent value="consultations"><AdminConsultations /></TabsContent>
         </Tabs>
       </div>
     </div>
