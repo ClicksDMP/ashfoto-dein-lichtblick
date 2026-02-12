@@ -10,6 +10,7 @@ import {
   Image as ImageLucide, FolderOpen, ArrowUp, ArrowDown, Loader2,
 } from "lucide-react";
 import { SERVICES_DATA } from "@/data/serviceData";
+import { getActivDeals } from "@/data/dealsData";
 import { toast } from "sonner";
 import { compressImages } from "@/lib/imageCompressor";
 import ServiceImageManager from "./ServiceImageManager";
@@ -190,6 +191,50 @@ const AdminGallery = () => {
             {totalPhotos} Photos
           </Badge>
         </div>
+      </div>
+
+      {/* Homepage Images Section */}
+      <div className="bg-card border-2 border-primary/20 rounded-xl overflow-hidden">
+        <button
+          onClick={() => setExpandedSlug(expandedSlug === "__homepage__" ? null : "__homepage__")}
+          className="w-full flex items-center gap-4 px-4 py-3 hover:bg-secondary/30 transition-colors text-left"
+        >
+          <div className="w-12 h-12 rounded-lg overflow-hidden flex-shrink-0 border border-primary/30 bg-primary/10 flex items-center justify-center">
+            <ImageLucide className="w-6 h-6 text-primary" />
+          </div>
+          <div className="flex-1 min-w-0">
+            <p className="font-medium text-foreground text-sm">🏠 Homepage Bilder</p>
+            <p className="text-xs text-muted-foreground">Hero-Bild & Deal-Bilder der Startseite</p>
+          </div>
+          {expandedSlug === "__homepage__" ? <ChevronDown className="w-4 h-4 text-muted-foreground" /> : <ChevronRight className="w-4 h-4 text-muted-foreground" />}
+        </button>
+        {expandedSlug === "__homepage__" && (
+          <div className="border-t border-border px-4 py-4 space-y-6">
+            <div>
+              <h4 className="text-sm font-semibold text-foreground flex items-center gap-2 mb-3">
+                <ImageLucide className="w-4 h-4 text-primary" /> Hero-Bild (Startseite)
+              </h4>
+              <ServiceImageManager
+                serviceSlug="homepage"
+                serviceTitle="Startseite"
+                fallbackImage="/placeholder.svg"
+              />
+            </div>
+            {/* Deal images */}
+            {getActivDeals().map(deal => (
+              <div key={deal.id}>
+                <h4 className="text-sm font-semibold text-foreground flex items-center gap-2 mb-3">
+                  <ImageLucide className="w-4 h-4 text-primary" /> Deal: {deal.title}
+                </h4>
+                <ServiceImageManager
+                  serviceSlug={`deal-${deal.id}`}
+                  serviceTitle={deal.title}
+                  fallbackImage="/placeholder.svg"
+                />
+              </div>
+            ))}
+          </div>
+        )}
       </div>
 
       <div className="space-y-2">

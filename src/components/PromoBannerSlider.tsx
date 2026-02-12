@@ -3,6 +3,7 @@ import { Camera, Sparkles, Heart, Flame, ChevronLeft, ChevronRight, Clock, Image
 import { Button } from "@/components/ui/button";
 import { getActivDeals, type Deal } from "@/data/dealsData";
 import { cn } from "@/lib/utils";
+import { useDealImage } from "@/hooks/useHomepageImages";
 
 interface PromoBannerSliderProps {
   onBookClick: () => void;
@@ -62,13 +63,20 @@ const ModelReleaseCard = ({ onBookClick }: { onBookClick: () => void }) => (
 /* ── Deal Card ── */
 const DealCard = ({ deal, onSelect }: { deal: Deal; onSelect: () => void }) => {
   const isAkt = deal.service.toLowerCase().includes("akt");
+  const dealImage = useDealImage(deal.id, "");
 
   return (
     <div className="group relative overflow-hidden rounded-2xl border border-border/60 bg-card shadow-card hover:shadow-elevated transition-all duration-500">
-      {/* Background image hint */}
-      <div className="absolute inset-0 opacity-[0.04] group-hover:opacity-[0.07] transition-opacity duration-700">
-        <img src={deal.image} alt="" className="w-full h-full object-cover" />
-      </div>
+      {/* Background image hint or icon placeholder */}
+      {dealImage ? (
+        <div className="absolute inset-0 opacity-[0.04] group-hover:opacity-[0.07] transition-opacity duration-700">
+          <img src={dealImage} alt="" className="w-full h-full object-cover" />
+        </div>
+      ) : (
+        <div className="absolute inset-0 opacity-[0.03] flex items-center justify-center">
+          {isAkt ? <Flame className="w-48 h-48 text-destructive" /> : <Heart className="w-48 h-48 text-primary" />}
+        </div>
+      )}
       <div className="absolute inset-0 bg-gradient-to-br from-card/95 via-card/90 to-card/80" />
       <div className="absolute -top-20 -right-20 w-40 h-40 rounded-full bg-destructive/5 blur-3xl" />
 
