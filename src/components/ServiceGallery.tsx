@@ -130,16 +130,16 @@ const RevealCard = ({ photo, index, onClick }: RevealCardProps) => {
   // Image slides in from direction as user scrolls into view
   const x = useTransform(
     scrollYProgress,
-    [0, 0.3, 0.7, 1],
+    [0, 0.2, 0.8, 1],
     [dir.x, "0%", "0%", "0%"]
   );
   const y = useTransform(
     scrollYProgress,
-    [0, 0.3, 0.7, 1],
+    [0, 0.2, 0.8, 1],
     [dir.y, "0%", "0%", "0%"]
   );
-  const opacity = useTransform(scrollYProgress, [0, 0.25, 0.75, 1], [0, 1, 1, 0.3]);
-  const scale = useTransform(scrollYProgress, [0, 0.3, 0.7, 1], [0.85, 1, 1, 0.95]);
+  const opacity = useTransform(scrollYProgress, [0, 0.15, 0.85, 1], [0, 1, 1, 0.2]);
+  const scale = useTransform(scrollYProgress, [0, 0.2, 0.8, 1], [0.92, 1, 1, 0.97]);
 
   return (
     <div
