@@ -47,6 +47,7 @@ export type Database = {
           booking_date: string | null
           booking_time: string | null
           city: string
+          confirmed_at: string | null
           created_at: string
           duration: string
           duration_price: number
@@ -59,6 +60,9 @@ export type Database = {
           participants: Json
           phone: string
           photo_package: string
+          photos_delivered_at: string | null
+          reminder_1d_sent: boolean
+          reminder_3d_sent: boolean
           service: string
           status: string
           street: string
@@ -72,6 +76,7 @@ export type Database = {
           booking_date?: string | null
           booking_time?: string | null
           city?: string
+          confirmed_at?: string | null
           created_at?: string
           duration: string
           duration_price?: number
@@ -84,6 +89,9 @@ export type Database = {
           participants?: Json
           phone?: string
           photo_package: string
+          photos_delivered_at?: string | null
+          reminder_1d_sent?: boolean
+          reminder_3d_sent?: boolean
           service: string
           status?: string
           street?: string
@@ -97,6 +105,7 @@ export type Database = {
           booking_date?: string | null
           booking_time?: string | null
           city?: string
+          confirmed_at?: string | null
           created_at?: string
           duration?: string
           duration_price?: number
@@ -109,6 +118,9 @@ export type Database = {
           participants?: Json
           phone?: string
           photo_package?: string
+          photos_delivered_at?: string | null
+          reminder_1d_sent?: boolean
+          reminder_3d_sent?: boolean
           service?: string
           status?: string
           street?: string
@@ -118,6 +130,50 @@ export type Database = {
           zip?: string
         }
         Relationships: []
+      }
+      customer_feedbacks: {
+        Row: {
+          approved: boolean
+          booking_id: string | null
+          client_name: string
+          created_at: string
+          feedback_text: string
+          id: string
+          rating: number
+          service_name: string
+          user_id: string
+        }
+        Insert: {
+          approved?: boolean
+          booking_id?: string | null
+          client_name?: string
+          created_at?: string
+          feedback_text?: string
+          id?: string
+          rating: number
+          service_name?: string
+          user_id: string
+        }
+        Update: {
+          approved?: boolean
+          booking_id?: string | null
+          client_name?: string
+          created_at?: string
+          feedback_text?: string
+          id?: string
+          rating?: number
+          service_name?: string
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "customer_feedbacks_booking_id_fkey"
+            columns: ["booking_id"]
+            isOneToOne: false
+            referencedRelation: "bookings"
+            referencedColumns: ["id"]
+          },
+        ]
       }
       customer_photos: {
         Row: {

@@ -430,13 +430,13 @@ const BookingFlow = ({ preselectedService }: BookingFlowProps = {}) => {
               <Check className="w-8 h-8 text-primary" />
             </div>
             <h2 className="font-display text-3xl font-bold text-foreground mb-4">
-              Buchung bestätigt!
+              Buchung eingegangen!
             </h2>
             <p className="text-muted-foreground text-lg mb-2">
-              Vielen Dank für deine Buchung. Ich freue mich auf dein Shooting!
+              Vielen Dank für deine Buchung! Dein Termin ist noch <strong>nicht bestätigt</strong>.
             </p>
             <p className="text-muted-foreground">
-              Eine Bestätigung wurde an {booking.email} gesendet.
+              Wir melden uns in Kürze bei dir, um den Termin zu bestätigen. Eine E-Mail wurde an {booking.email} gesendet.
             </p>
           </div>
         </div>
@@ -1168,22 +1168,20 @@ const BookingFlow = ({ preselectedService }: BookingFlowProps = {}) => {
                         throw new Error(bookingResult?.error || bookingFnError?.message || "Buchung fehlgeschlagen.");
                       }
 
-                      // Send booking confirmation email (only for logged-in users)
-                      if (userId) {
-                        supabase.functions.invoke("send-email", {
-                          body: {
-                            type: "booking_confirmation",
-                            to: booking.email,
-                            data: {
-                              firstName: booking.firstName,
-                              service: booking.service,
-                              date: booking.date ? format(booking.date, "PPP", { locale: de }) : "Noch offen",
-                              time: booking.time || "Noch offen",
-                              totalPrice: formatPrice(totalPrice()),
-                            },
+                      // Send booking pending email
+                      supabase.functions.invoke("send-booking-emails", {
+                        body: {
+                          type: "booking_pending",
+                          to: booking.email,
+                          data: {
+                            firstName: booking.firstName,
+                            service: booking.service,
+                            date: booking.date ? format(booking.date, "PPP", { locale: de }) : "Noch offen",
+                            time: booking.time || "Noch offen",
+                            totalPrice: formatPrice(totalPrice()),
                           },
-                        }).catch(console.error);
-                      }
+                        },
+                      }).catch(console.error);
 
                       setConfirmed(true);
                     } catch (err: any) {
