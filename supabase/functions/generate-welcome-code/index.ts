@@ -98,14 +98,14 @@ serve(async (req) => {
     // Create the offer
     await supabase.from("offers").insert({
       title: "Willkommensrabatt 10%",
-      description: "Dein persönlicher 10% Rabatt auf dein erstes Fotopaket!",
+      description: "Dein persönlicher 10% Rabatt auf deine Shooting-Zeit!",
       discount_percent: 10,
       code,
       valid_until: validUntil.toISOString(),
       target_user_id: user.id,
       is_active: true,
       single_use: true,
-      photo_package_only: true,
+      photo_package_only: false,
       source: "welcome_discount",
     });
 
@@ -143,14 +143,14 @@ serve(async (req) => {
   <tr><td style="padding:40px;">
     <h2 style="margin:0 0 16px;font-family:Georgia,'Times New Roman',serif;font-size:24px;color:#2e2621;">Willkommen, ${firstName}! 🎉</h2>
     <p style="margin:0 0 20px;font-size:16px;line-height:1.7;color:#5c4f44;">
-      Deine E-Mail-Adresse wurde erfolgreich bestätigt. Als Dankeschön schenke ich dir einen <strong>10% Rabatt</strong> auf dein erstes Fotopaket!
+      Deine E-Mail-Adresse wurde erfolgreich bestätigt. Als Dankeschön schenke ich dir einen <strong>10% Rabatt</strong> auf deine erste Shooting-Zeit!
     </p>
     <table width="100%" cellpadding="0" cellspacing="0" style="background-color:#e8e0d6;border-radius:12px;margin:0 0 24px;">
       <tr><td style="padding:24px;text-align:center;">
         <p style="margin:0 0 8px;font-size:14px;color:#8a7261;font-weight:600;">Dein persönlicher Gutscheincode:</p>
         <p style="margin:0;font-family:'Courier New',monospace;font-size:28px;color:#2e2621;font-weight:700;letter-spacing:4px;">${formattedCode}</p>
         <p style="margin:12px 0 0;font-size:13px;color:#8a7261;">Gültig bis ${validDate}</p>
-        <p style="margin:8px 0 0;font-size:12px;color:#a89888;">* Nur einmalig einlösbar auf Fotopakete</p>
+        <p style="margin:8px 0 0;font-size:12px;color:#a89888;">* Nur einmalig einlösbar auf Shooting-Zeit</p>
       </td></tr>
     </table>
     <table cellpadding="0" cellspacing="0" style="margin:20px auto;"><tr>

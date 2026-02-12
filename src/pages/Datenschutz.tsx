@@ -140,7 +140,8 @@ const Datenschutz = () => {
               <li>Terminerinnerung 3 Tage vor dem Shooting</li>
               <li>Terminerinnerung 1 Tag vor dem Shooting</li>
               <li>Benachrichtigung bei Fotobereitstellung</li>
-              <li>Willkommensnachricht mit Gutscheincode bei Registrierung</li>
+              <li>Willkommensnachricht mit persönlichem Gutscheincode bei Registrierung</li>
+              <li>Individuelle Gutschein-E-Mails (z.&nbsp;B. Aktionsrabatte)</li>
               <li>E-Mail-Verifizierung</li>
             </ul>
             <p className="mt-2">

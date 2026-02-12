@@ -173,6 +173,16 @@ const AGB = () => {
               Gutscheincode eingelöst werden. Eine Barauszahlung ist ausgeschlossen. Gutscheine
               verfallen nach dem auf dem Gutschein angegebenen Ablaufdatum.
             </p>
+            <p className="mt-2">
+              Der Willkommensrabatt (10% auf die Shooting-Zeit) wird nach erfolgreicher E-Mail-Bestätigung
+              als persönlicher Gutscheincode per E-Mail versendet und ist für zukünftige Buchungen einlösbar.
+              Der Willkommensrabatt wird nicht angewendet, wenn bereits ein Sonderangebot oder eine andere
+              Rabattaktion auf die aktuelle Buchung Anwendung findet.
+            </p>
+            <p className="mt-2">
+              Gutscheinrabatte gelten ausschließlich auf die Shooting-Zeit und nicht auf Bildpakete
+              oder sonstige Zusatzleistungen, sofern nicht ausdrücklich anders angegeben.
+            </p>
           </section>
 
           <section>
