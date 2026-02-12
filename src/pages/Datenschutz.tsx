@@ -26,12 +26,10 @@ const Datenschutz = () => {
 
           <section>
             <h2 className="text-xl font-semibold text-foreground mb-3">2. Verantwortliche Stelle</h2>
-            <p>
-              Verantwortlich für die Datenverarbeitung auf dieser Website ist:
-            </p>
+            <p>Verantwortlich für die Datenverarbeitung auf dieser Website ist:</p>
             <p className="mt-2">
               Ashraf AlSalaita<br />
-              Clicks DMP – Design & Media Production<br />
+              Clicks DMP – Design &amp; Media Production<br />
               Karl-Traub-Straße 15<br />
               68199 Mannheim<br /><br />
               Telefon: +49 176 700 27 200<br />
@@ -88,6 +86,18 @@ const Datenschutz = () => {
               ohne Ihre Einwilligung weiter.
             </p>
             <p className="mt-2">
+              Im Rahmen der Buchung erheben wir folgende Daten:
+            </p>
+            <ul className="list-disc list-inside mt-2 space-y-1">
+              <li>Vorname und Nachname</li>
+              <li>E-Mail-Adresse</li>
+              <li>Telefonnummer</li>
+              <li>Anschrift (Straße, PLZ, Ort)</li>
+              <li>Gewünschter Shooting-Typ, Termin, Dauer und Bildpaket</li>
+              <li>Anzahl der Teilnehmer</li>
+              <li>Zusätzliche Hinweise (optional)</li>
+            </ul>
+            <p className="mt-2">
               Die Verarbeitung dieser Daten erfolgt auf Grundlage von Art. 6 Abs. 1 lit. b DSGVO, sofern Ihre
               Anfrage mit der Erfüllung eines Vertrags zusammenhängt oder zur Durchführung vorvertraglicher
               Maßnahmen erforderlich ist. In allen übrigen Fällen beruht die Verarbeitung auf unserem berechtigten
@@ -98,15 +108,21 @@ const Datenschutz = () => {
           <section>
             <h2 className="text-xl font-semibold text-foreground mb-3">4. Registrierung auf dieser Website</h2>
             <p>
-              Sie können sich auf dieser Website registrieren, um zusätzliche Funktionen auf der Seite zu nutzen.
+              Sie können sich auf dieser Website registrieren, um zusätzliche Funktionen auf der Seite zu nutzen
+              (Kundenportal, Fotogalerie, Gutscheinverwaltung).
               Die dazu eingegebenen Daten verwenden wir nur zum Zwecke der Nutzung des jeweiligen Angebotes oder
-              Dienstes, für den Sie sich registriert haben. Die bei der Registrierung abgefragten Pflichtangaben
-              müssen vollständig angegeben werden. Anderenfalls werden wir die Registrierung ablehnen.
+              Dienstes, für den Sie sich registriert haben.
             </p>
             <p className="mt-2">
-              Für wichtige Änderungen etwa beim Angebotsumfang oder bei technisch notwendigen Änderungen nutzen
-              wir die bei der Registrierung angegebene E-Mail-Adresse, um Sie auf diesem Wege zu informieren.
+              Bei der Registrierung werden folgende Daten erhoben:
             </p>
+            <ul className="list-disc list-inside mt-2 space-y-1">
+              <li>Vorname und Nachname</li>
+              <li>E-Mail-Adresse</li>
+              <li>Telefonnummer</li>
+              <li>Anschrift (Straße, PLZ, Ort)</li>
+              <li>Passwort (verschlüsselt gespeichert)</li>
+            </ul>
             <p className="mt-2">
               Die Verarbeitung der bei der Registrierung eingegebenen Daten erfolgt zum Zwecke der Durchführung
               des durch die Registrierung begründeten Nutzungsverhältnisses und ggf. zur Anbahnung weiterer
@@ -115,7 +131,50 @@ const Datenschutz = () => {
           </section>
 
           <section>
-            <h2 className="text-xl font-semibold text-foreground mb-3">5. Ihre Rechte</h2>
+            <h2 className="text-xl font-semibold text-foreground mb-3">5. Hosting und Auftragsverarbeitung</h2>
+            <p>
+              Diese Website wird bei einem externen Dienstleister gehostet (Hoster). Die personenbezogenen Daten,
+              die auf dieser Website erfasst werden, werden auf den Servern des Hosters gespeichert. Hierbei kann
+              es sich v.&nbsp;a. um IP-Adressen, Kontaktanfragen, Meta- und Kommunikationsdaten, Vertragsdaten,
+              Kontaktdaten, Namen, Websitezugriffe und sonstige Daten, die über eine Website generiert werden, handeln.
+            </p>
+            <p className="mt-2">
+              Der Einsatz des Hosters erfolgt im Interesse einer sicheren, schnellen und effizienten Bereitstellung
+              unseres Online-Angebots durch einen professionellen Anbieter (Art. 6 Abs. 1 lit. f DSGVO). Sofern eine
+              entsprechende Einwilligung abgefragt wurde, erfolgt die Verarbeitung ausschließlich auf Grundlage von
+              Art. 6 Abs. 1 lit. a DSGVO.
+            </p>
+            <p className="mt-2">
+              Wir haben einen Vertrag über Auftragsverarbeitung (AVV) mit unserem Hoster geschlossen. Dieser Vertrag
+              stellt sicher, dass der Hoster die personenbezogenen Daten unserer Websitebesucher nur nach unseren
+              Weisungen und unter Einhaltung der DSGVO verarbeitet.
+            </p>
+          </section>
+
+          <section>
+            <h2 className="text-xl font-semibold text-foreground mb-3">6. E-Mail-Versand</h2>
+            <p>
+              Wir versenden transaktionale E-Mails (z.&nbsp;B. Buchungsbestätigung, Willkommensnachricht mit
+              Gutscheincode, E-Mail-Verifizierung) über einen externen Dienstleister. Dabei werden Ihre
+              E-Mail-Adresse und Ihr Name an den E-Mail-Dienstleister übermittelt.
+            </p>
+            <p className="mt-2">
+              Die Datenverarbeitung erfolgt auf Grundlage von Art. 6 Abs. 1 lit. b DSGVO (Vertragserfüllung)
+              bzw. Art. 6 Abs. 1 lit. f DSGVO (berechtigtes Interesse an zuverlässiger Kommunikation).
+            </p>
+          </section>
+
+          <section>
+            <h2 className="text-xl font-semibold text-foreground mb-3">7. Speicherdauer</h2>
+            <p>
+              Ihre personenbezogenen Daten werden gelöscht oder gesperrt, sobald der Zweck der Speicherung
+              entfällt. Eine Speicherung kann darüber hinaus erfolgen, wenn dies durch europäische oder nationale
+              Gesetze vorgesehen ist (z.&nbsp;B. handels- und steuerrechtliche Aufbewahrungsfristen von bis zu 10 Jahren).
+            </p>
+          </section>
+
+          <section>
+            <h2 className="text-xl font-semibold text-foreground mb-3">8. Ihre Rechte</h2>
             <p>Sie haben jederzeit das Recht:</p>
             <ul className="list-disc list-inside mt-2 space-y-1">
               <li>Auskunft über Ihre bei uns gespeicherten personenbezogenen Daten zu erhalten (Art. 15 DSGVO)</li>
@@ -126,10 +185,14 @@ const Datenschutz = () => {
               <li>Widerspruch gegen die Verarbeitung einzulegen (Art. 21 DSGVO)</li>
               <li>Sich bei einer Aufsichtsbehörde zu beschweren (Art. 77 DSGVO)</li>
             </ul>
+            <p className="mt-2">
+              Die zuständige Aufsichtsbehörde ist der Landesbeauftragte für den Datenschutz und die
+              Informationsfreiheit Baden-Württemberg.
+            </p>
           </section>
 
           <section>
-            <h2 className="text-xl font-semibold text-foreground mb-3">6. SSL- bzw. TLS-Verschlüsselung</h2>
+            <h2 className="text-xl font-semibold text-foreground mb-3">9. SSL- bzw. TLS-Verschlüsselung</h2>
             <p>
               Diese Seite nutzt aus Sicherheitsgründen und zum Schutz der Übertragung vertraulicher Inhalte eine
               SSL- bzw. TLS-Verschlüsselung. Eine verschlüsselte Verbindung erkennen Sie daran, dass die
@@ -139,7 +202,7 @@ const Datenschutz = () => {
           </section>
 
           <section>
-            <h2 className="text-xl font-semibold text-foreground mb-3">7. Widerruf Ihrer Einwilligung</h2>
+            <h2 className="text-xl font-semibold text-foreground mb-3">10. Widerruf Ihrer Einwilligung</h2>
             <p>
               Viele Datenverarbeitungsvorgänge sind nur mit Ihrer ausdrücklichen Einwilligung möglich. Sie können
               eine bereits erteilte Einwilligung jederzeit widerrufen. Die Rechtmäßigkeit der bis zum Widerruf
@@ -148,9 +211,7 @@ const Datenschutz = () => {
           </section>
 
           <section className="border-t border-border pt-6">
-            <p className="text-sm text-muted-foreground">
-              Stand: Februar 2026
-            </p>
+            <p className="text-sm text-muted-foreground">Stand: Februar 2026</p>
           </section>
         </div>
       </div>

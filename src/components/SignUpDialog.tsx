@@ -171,7 +171,11 @@ const SignUpDialog = ({ open, onOpenChange }: SignUpDialogProps) => {
                 onCheckedChange={(checked) => update("agreedToTerms", checked === true)}
               />
               <label htmlFor="signup-terms" className="text-sm text-muted-foreground cursor-pointer">
-                Ich akzeptiere die Datenschutzbedingungen
+                Ich akzeptiere die{" "}
+                <a href="/agb" target="_blank" className="underline hover:text-foreground">AGB</a>,{" "}
+                <a href="/datenschutz" target="_blank" className="underline hover:text-foreground">Datenschutzerklärung</a>{" "}
+                und{" "}
+                <a href="/widerruf" target="_blank" className="underline hover:text-foreground">Widerrufsbelehrung</a>.
               </label>
             </div>
 
