@@ -12,18 +12,18 @@ const Login = () => {
   const [password, setPassword] = useState("");
   const [error, setError] = useState("");
   const [loading, setLoading] = useState(false);
-  const [redirecting, setRedirecting] = useState(false);
+  
   const navigate = useNavigate();
   const { user, isAdmin, loading: authLoading } = useAuth();
 
   useEffect(() => {
     if (user && !authLoading) {
-      // Small delay to let isAdmin resolve
-      setRedirecting(true);
-      const timer = setTimeout(() => {
-        navigate(isAdmin ? "/admin" : "/portal");
-      }, 500);
-      return () => clearTimeout(timer);
+      if (isAdmin) {
+        navigate("/admin");
+      } else {
+        // Non-admin users shouldn't be on /login, redirect to client area
+        navigate("/kunden");
+      }
     }
   }, [user, isAdmin, authLoading, navigate]);
 
@@ -46,8 +46,8 @@ const Login = () => {
     <div className="min-h-screen bg-background flex items-center justify-center px-6">
       <div className="w-full max-w-md">
         <div className="text-center mb-8">
-          <h1 className="font-display text-3xl font-bold text-foreground">Anmelden</h1>
-          <p className="text-muted-foreground mt-2">Melde dich in deinem Konto an</p>
+          <h1 className="font-display text-3xl font-bold text-foreground">Admin Login</h1>
+          <p className="text-muted-foreground mt-2">Nur für Administratoren</p>
         </div>
         <form onSubmit={handleLogin} className="bg-card rounded-xl p-8 shadow-card space-y-4">
           {error && <p className="text-destructive text-sm">{error}</p>}
