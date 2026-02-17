@@ -28,7 +28,7 @@ const AdminDashboard = () => {
   const [upgrades, setUpgrades] = useState<any[]>([]);
 
   useEffect(() => {
-    if (!loading && (!user || !isAdmin)) navigate("/login");
+    if (!loading && (!user || !isAdmin)) navigate("/auth");
   }, [user, isAdmin, loading, navigate]);
 
   useEffect(() => {
