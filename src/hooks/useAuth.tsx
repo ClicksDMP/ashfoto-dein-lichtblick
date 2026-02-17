@@ -25,45 +25,43 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
   const [isAdmin, setIsAdmin] = useState(false);
 
   useEffect(() => {
-    const { data: { subscription } } = supabase.auth.onAuthStateChange(async (event, session) => {
+    // Get initial session
+    supabase.auth.getSession().then(({ data: { session } }) => {
       setSession(session);
       setUser(session?.user ?? null);
-      if (session?.user) {
-        await checkAdmin(session.user.id);
-        // Check if email was just confirmed and generate welcome code
-        if (event === "SIGNED_IN" && session.user.email_confirmed_at) {
-          generateWelcomeCode().catch(console.error);
-        }
-      } else {
-        setIsAdmin(false);
-      }
-      setLoading(false);
     });
 
-    supabase.auth.getSession().then(async ({ data: { session } }) => {
+    // Listen for auth changes
+    const { data: { subscription } } = supabase.auth.onAuthStateChange((event, session) => {
       setSession(session);
       setUser(session?.user ?? null);
-      if (session?.user) {
-        await checkAdmin(session.user.id);
+      if (!session?.user) {
+        setIsAdmin(false);
+        setLoading(false);
       }
-      setLoading(false);
+      // Check if email was just confirmed and generate welcome code
+      if (event === "SIGNED_IN" && session?.user?.email_confirmed_at) {
+        supabase.functions.invoke("generate-welcome-code").catch(console.error);
+      }
     });
 
     return () => subscription.unsubscribe();
   }, []);
 
-  const checkAdmin = async (userId: string) => {
-    const { data } = await supabase.rpc("has_role", { _user_id: userId, _role: "admin" });
-    setIsAdmin(!!data);
-  };
-
-  const generateWelcomeCode = async () => {
-    try {
-      await supabase.functions.invoke("generate-welcome-code");
-    } catch (e) {
-      console.error("Welcome code generation failed:", e);
+  // Separate effect to check admin role when user changes
+  useEffect(() => {
+    if (user) {
+      setLoading(true);
+      supabase.rpc("has_role", { _user_id: user.id, _role: "admin" })
+        .then(({ data }) => {
+          setIsAdmin(!!data);
+          setLoading(false);
+        });
+    } else {
+      setIsAdmin(false);
+      setLoading(false);
     }
-  };
+  }, [user?.id]);
 
   const signOut = async () => {
     await supabase.auth.signOut();
