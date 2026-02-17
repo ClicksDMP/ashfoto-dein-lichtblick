@@ -25,11 +25,11 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
   const [isAdmin, setIsAdmin] = useState(false);
 
   useEffect(() => {
-    const { data: { subscription } } = supabase.auth.onAuthStateChange((event, session) => {
+    const { data: { subscription } } = supabase.auth.onAuthStateChange(async (event, session) => {
       setSession(session);
       setUser(session?.user ?? null);
       if (session?.user) {
-        setTimeout(() => checkAdmin(session.user.id), 0);
+        await checkAdmin(session.user.id);
         // Check if email was just confirmed and generate welcome code
         if (event === "SIGNED_IN" && session.user.email_confirmed_at) {
           generateWelcomeCode().catch(console.error);
@@ -40,11 +40,11 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
       setLoading(false);
     });
 
-    supabase.auth.getSession().then(({ data: { session } }) => {
+    supabase.auth.getSession().then(async ({ data: { session } }) => {
       setSession(session);
       setUser(session?.user ?? null);
       if (session?.user) {
-        checkAdmin(session.user.id);
+        await checkAdmin(session.user.id);
       }
       setLoading(false);
     });
