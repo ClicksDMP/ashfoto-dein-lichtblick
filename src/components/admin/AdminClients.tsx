@@ -52,9 +52,22 @@ const AdminClients = ({ bookings, onRefreshBookings }: AdminClientsProps) => {
   };
 
   const handleDelete = async (id: string) => {
-    if (!confirm("Permanently delete this client profile?")) return;
-    await supabase.from("profiles").delete().eq("id", id);
-    fetchProfiles();
+    const profile = profiles.find(p => p.id === id);
+    if (!profile) return;
+    if (!confirm("Diesen Kunden vollständig löschen? Alle Buchungen, Fotos und Daten werden unwiderruflich entfernt.")) return;
+    
+    try {
+      const { data, error } = await supabase.functions.invoke("delete-user", {
+        body: { user_id: profile.user_id },
+      });
+      if (error) throw error;
+      toast.success("Kunde vollständig gelöscht!");
+      fetchProfiles();
+      onRefreshBookings();
+    } catch (err) {
+      console.error("Delete user error:", err);
+      toast.error("Kunde konnte nicht gelöscht werden.");
+    }
   };
 
   const handlePhotoUpload = async (booking: Booking, e: React.ChangeEvent<HTMLInputElement>) => {

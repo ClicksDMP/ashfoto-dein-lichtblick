@@ -6,6 +6,7 @@ import { BrowserRouter, Routes, Route } from "react-router-dom";
 import { AuthProvider } from "@/hooks/useAuth";
 import Index from "./pages/Index";
 import Login from "./pages/Login";
+import KundenAuth from "./pages/KundenAuth";
 import AdminDashboard from "./pages/AdminDashboard";
 import CustomerPortal from "./pages/CustomerPortal";
 import ServicePage from "./pages/ServicePage";
@@ -15,7 +16,6 @@ import Datenschutz from "./pages/Datenschutz";
 import AGB from "./pages/AGB";
 import Widerruf from "./pages/Widerruf";
 import CookieBanner from "./components/CookieBanner";
-
 const queryClient = new QueryClient();
 
 const App = () => (
@@ -28,6 +28,7 @@ const App = () => (
           <Routes>
             <Route path="/" element={<Index />} />
             <Route path="/login" element={<Login />} />
+            <Route path="/kunden" element={<KundenAuth />} />
             <Route path="/admin" element={<AdminDashboard />} />
             <Route path="/portal" element={<CustomerPortal />} />
             <Route path="/shooting/:slug" element={<ServicePage />} />

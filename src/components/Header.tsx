@@ -3,7 +3,7 @@ import { Link, useLocation } from "react-router-dom";
 import { Menu, X, User } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { motion, AnimatePresence } from "framer-motion";
-import SignUpDialog from "@/components/SignUpDialog";
+
 
 interface HeaderProps {
   onBookClick?: () => void;
@@ -12,7 +12,7 @@ interface HeaderProps {
 const Header = ({ onBookClick }: HeaderProps) => {
   const [scrolled, setScrolled] = useState(false);
   const [mobileOpen, setMobileOpen] = useState(false);
-  const [signUpOpen, setSignUpOpen] = useState(false);
+  
   const location = useLocation();
   const isHome = location.pathname === "/";
 
@@ -68,13 +68,10 @@ const Header = ({ onBookClick }: HeaderProps) => {
                       {link.label}
                     </button>
                   ))}
-                <Link to="/login" className="text-sm font-medium text-muted-foreground hover:text-foreground transition-colors flex items-center gap-1.5">
+                <Link to="/kunden" className="text-sm font-medium text-muted-foreground hover:text-foreground transition-colors flex items-center gap-1.5">
                   <User className="w-4 h-4" />
-                  Login
+                  Kundenbereich
                 </Link>
-                <Button size="sm" onClick={() => setSignUpOpen(true)}>
-                  Konto erstellen
-                </Button>
               </nav>
 
               {/* Mobile toggle */}
@@ -109,22 +106,18 @@ const Header = ({ onBookClick }: HeaderProps) => {
                         </button>
                       ))}
                     <Link
-                      to="/login"
+                      to="/kunden"
                       className="text-base font-medium text-muted-foreground hover:text-foreground transition-colors flex items-center gap-2"
+                      onClick={() => setMobileOpen(false)}
                     >
                       <User className="w-4 h-4" />
-                      Login
+                      Kundenbereich
                     </Link>
-                    <Button size="sm" className="w-full" onClick={() => { setMobileOpen(false); setSignUpOpen(true); }}>
-                      Konto erstellen
-                    </Button>
                   </div>
                 </motion.div>
               )}
             </AnimatePresence>
       </header>
-
-      <SignUpDialog open={signUpOpen} onOpenChange={setSignUpOpen} />
     </>
   );
 };

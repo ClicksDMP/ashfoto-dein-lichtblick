@@ -56,7 +56,7 @@ const CustomerPortal = () => {
   const [bookingUpgrades, setBookingUpgrades] = useState<Record<string, any[]>>({});
 
   useEffect(() => {
-    if (!loading && !user) navigate("/login");
+    if (!loading && !user) navigate("/kunden");
   }, [user, loading, navigate]);
 
   useEffect(() => {
