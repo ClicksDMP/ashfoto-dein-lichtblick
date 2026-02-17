@@ -7,7 +7,7 @@ import { Input } from "@/components/ui/input";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { format } from "date-fns";
-import { LogOut, Users, Calendar, Tag, Search, CalendarDays, ImageIcon, MessageSquare, ArrowUpCircle, PhoneCall } from "lucide-react";
+import { LogOut, Users, Calendar, Tag, Search, CalendarDays, ImageIcon, MessageSquare, ArrowUpCircle, PhoneCall, Palette } from "lucide-react";
 import type { Tables } from "@/integrations/supabase/types";
 import AdminCalendar from "@/components/admin/AdminCalendar";
 import AdminClients from "@/components/admin/AdminClients";
@@ -15,6 +15,7 @@ import AdminGallery from "@/components/admin/AdminGallery";
 import AdminCoupons from "@/components/admin/AdminCoupons";
 import AdminFeedbacks from "@/components/admin/AdminFeedbacks";
 import AdminConsultations from "@/components/admin/AdminConsultations";
+import AdminLogo from "@/components/admin/AdminLogo";
 import { toast } from "sonner";
 
 type Booking = Tables<"bookings">;
@@ -128,6 +129,7 @@ const AdminDashboard = () => {
             <TabsTrigger value="gallery" className="gap-2"><ImageIcon className="w-4 h-4" />Gallery</TabsTrigger>
             <TabsTrigger value="feedbacks" className="gap-2"><MessageSquare className="w-4 h-4" />Feedbacks</TabsTrigger>
             <TabsTrigger value="consultations" className="gap-2"><PhoneCall className="w-4 h-4" />Beratungen</TabsTrigger>
+            <TabsTrigger value="logo" className="gap-2"><Palette className="w-4 h-4" />Logo</TabsTrigger>
           </TabsList>
 
           <TabsContent value="calendar">
@@ -247,6 +249,7 @@ const AdminDashboard = () => {
           <TabsContent value="gallery"><AdminGallery /></TabsContent>
           <TabsContent value="feedbacks"><AdminFeedbacks /></TabsContent>
           <TabsContent value="consultations"><AdminConsultations /></TabsContent>
+          <TabsContent value="logo"><AdminLogo /></TabsContent>
         </Tabs>
       </div>
     </div>
