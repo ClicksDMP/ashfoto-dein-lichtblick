@@ -31,12 +31,23 @@ const Login = () => {
     e.preventDefault();
     setError("");
     setLoading(true);
-    const { error } = await supabase.auth.signInWithPassword({ email, password });
+    const { data, error } = await supabase.auth.signInWithPassword({ email, password });
     if (error) {
       if (error.message.includes("Email not confirmed")) {
         setError("Bitte bestätige zuerst deine E-Mail-Adresse. Überprüfe dein Postfach.");
       } else {
         setError("E-Mail oder Passwort ist falsch.");
+      }
+      setLoading(false);
+      return;
+    }
+    // Check admin role and navigate immediately
+    if (data.user) {
+      const { data: roleData } = await supabase.rpc("has_role", { _user_id: data.user.id, _role: "admin" });
+      if (roleData) {
+        navigate("/admin");
+      } else {
+        navigate("/kunden");
       }
     }
     setLoading(false);
